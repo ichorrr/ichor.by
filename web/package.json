@@ -1,0 +1,38 @@
+{
+  "name": "my-project",
+  "source": "src/index.html",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "scripts": {
+    "dev": "parcel src/index.html",
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "devDependencies": {
+    "next-transpile-modules": "^10.0.0",
+    "parcel": "latest",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.7.2",
+    "@loadable/component": "^5.15.2",
+    "@react-three/fiber": "^8.12.0",
+    "@types/three": "^0.149.0",
+    "apollo-cache-inmemory": "^1.6.6",
+    "apollo-link-context": "^1.0.20",
+    "apollo-link-state": "^0.4.2",
+    "graphql": "^15.8.0",
+    "handy-svg": "^1.0.8",
+    "jquery": "^3.6.4",
+    "nodemon": "^2.0.20",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0",
+    "react-markdown": "^8.0.4",
+    "react-router-dom": "^6.4.4",
+    "react-simplemde-editor": "^5.2.0",
+    "react-three-fiber": "^6.0.13",
+    "styled-components": "^5.3.6",
+    "three": "^0.150.1"
+  }
+}

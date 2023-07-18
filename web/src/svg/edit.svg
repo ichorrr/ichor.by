@@ -1,0 +1,29 @@
+<svg id="Группа_1" data-name="Группа 1" xmlns="http://www.w3.org/2000/svg" width="20" height="22" viewBox="0 0 20 22">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: #fff;
+        stroke-width: 1px;
+      }
+
+      .cls-1 {
+        stroke: #b8b8b8;
+      }
+
+      .cls-2 {
+        stroke: #a0a0a0;
+      }
+
+      .cls-2, .cls-3 {
+        fill-rule: evenodd;
+      }
+
+      .cls-3 {
+        fill: #77b97e;
+      }
+    </style>
+  </defs>
+  <rect id="Прямоугольник_скругл._углы_1" data-name="Прямоугольник, скругл. углы 1" class="cls-1" x="1" y="1" width="16" height="20" rx="3" ry="3"/>
+  <path id="Фигура_1" data-name="Фигура 1" class="cls-2" d="M10.64,17.182l-3.5.868,0.545-3.564,8.762-9.6,2.955,2.7Z"/>
+  <path id="Фигура_2" data-name="Фигура 2" class="cls-3" d="M12.354,6.354l-5,5L7,11l-0.354.354-3-3L5,7,7,9l4-4Z"/>
+</svg>

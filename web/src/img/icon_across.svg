@@ -1,0 +1,19 @@
+<svg id="Группа_1_копия" data-name="Группа 1 копия" xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-1, .cls-2 {
+        fill-rule: evenodd;
+      }
+
+      .cls-2 {
+        fill: #45abc5;
+      }
+    </style>
+  </defs>
+  <path id="Фигура_1" data-name="Фигура 1" class="cls-1" d="M18.636,25L17,24.222,22.546,19,17,13.778,18.636,13,25,19Z" transform="translate(-2 -2)"/>
+  <path id="Эллипс_1" data-name="Эллипс 1" class="cls-2" d="M19,2A17,17,0,1,1,2,19,17,17,0,0,1,19,2Zm0,2A15,15,0,1,1,4,19,15,15,0,0,1,19,4Z" transform="translate(-2 -2)"/>
+</svg>

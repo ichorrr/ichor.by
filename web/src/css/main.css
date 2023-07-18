@@ -1,0 +1,576 @@
+
+.empty-div {
+  padding: 3em 0 1em 0;
+  width: 100%;
+}
+
+code {
+  display: block;
+  background: #efefef;
+  padding: 0 2em;
+  width: 60vw;
+  min-width: 300px;
+  margin: 4em 0;
+  font-size: .7em;
+  height: 700px;
+  overflow-x: auto;
+  overflow-y: auto;
+  line-height: 1.5em;
+  border: #dfdfdf solid 1px;
+  color: #454545;
+}
+
+.algn-btn {
+  text-align: center;
+  padding: 3em 0;
+}
+
+.err-message {
+  position: absolute;
+  width: 50%;
+  left: 25%;
+  color: #d60000;
+  text-align: center;
+  bottom: 20px;
+}
+
+.custom-file-input::-webkit-file-upload-button {
+  visibility: hidden;
+}
+
+.custom-file-input::before {
+  content: 'Upload image';
+  display: inline-block;
+  background: #0077cc;
+  color: #fff;
+  font-size: 1.4em;
+  border: none;
+  border-radius: .3em;
+  padding: 25px 40px;
+
+  -webkit-user-select: none;
+  cursor: pointer;
+}
+
+.style-title input[type="text"] {
+  margin: 0 0 1em 0;
+  font-size: 2em;
+  width: 100%;
+  text-indent: .5em;
+}
+
+.testcss {
+  font-size: 6em;
+}
+
+.p-imageurl {
+  padding: 2em 0;
+}
+
+div.top-new-post {
+  padding: 3.5em 2% 1.5em 2%;
+  color: #000;
+  font-size: 2.5em;
+}
+
+.imageViewer {
+  display: block;
+  width: 100%;
+  background-color: #eaeaea;
+  text-align: center;
+  z-index: -999;
+  object-fit: cover;
+  padding: 4em 0;
+}
+
+.imageViewer img {
+  object-fit: cover;
+  max-width: 90%;
+
+}
+
+span.css-author {
+  color: #fff;
+}
+
+div.css-checkbox {
+  display: block;
+  background: #eaeaea;
+  height: 100px;
+  width: 100%;
+  padding: 0;
+}
+
+.css-checkbox p {
+  display: block;
+  color: #8b8b8b;
+  padding: 0 0 0 5em;
+  margin: -1.5em 0 0 1em;
+}
+
+.style-title .css-checkbox input {
+  float: left;
+  width: 40px;
+  padding: 0;
+  transform: scale(2);
+  margin: 3.5em .4em 0 2em;
+}
+
+.style-title .css-checkbox label {
+  display: inline;
+  width: 40px;
+  line-height: 3.6em;
+  padding-left: 1em;
+}
+
+ label {
+  margin-top: 2em;
+  font-size: 1.5em;
+}
+
+label.style-select {
+  padding: 0 0 1.5em 0;
+}
+
+.style-select span{
+  display: block;
+  padding: 0 2em 0 0;
+}
+.style-select select {
+  padding: .5em 0 .5em 0;
+  font-size: 1.1em;
+  width: 100%;
+  text-indent: .5em;
+}
+/* end input files */
+
+
+
+input.input-file {
+  padding: 1em 0;
+  font-size: 1.2em;
+  text-indent: 0;
+}
+
+.style-simplemde {
+  font-size: 2em;
+}
+
+span.empty-block {
+  display: block;
+  padding: 5em 0;
+}
+
+.css-txt {
+  display:block;
+  padding: 2em 1em 2em 0;
+  margin-top: 2em;
+  font-size: 2em;
+  line-height: 1.3em;
+}
+
+.css-txt p {
+  padding: .5em 0;
+  color: #595959;
+}
+
+.h2-position {
+  position: absolute;
+  z-index: 9999999999999;
+  left: 4vw;
+  bottom: 10vh;
+  font-size: 1.5em;
+  color: #fff;
+}
+
+div.absPostPart {
+  padding: 6em 4% 2em 4%;
+}
+
+.svg-plank {
+  font: normal 1em Arial, sans-serif;
+  padding: 0 .1em 2em .1em;
+  margin-top: -4px;
+  height: 25px;
+  cursor: pointer;
+  display: inline-block;
+  float: right;
+}
+
+.svg-plank svg {
+  padding: 1em;
+}
+
+.svg-plank:hover  {
+  background: #676767;
+}
+
+.svg-menu-plank {
+  z-index: -1;
+}
+
+.svg-menu-plank a {
+  color: #035367;
+  padding: 1em;
+  padding: 1em 20px 1em 38px;
+}
+
+.svg-menu-plank a:hover {
+  color: #a80000;
+}
+
+.dxnv {
+  height: 80px;
+transition: height 0.3s;
+}
+
+.dddd {
+  height: 0px;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  transition: height 0.3s;
+}
+
+.svg-menu-plank h4 {
+  font-weight: bold;
+  padding: .6em 1em 1em 1.1em;
+}
+
+.svg-menu-plank span {
+  margin-left: 10px;
+}
+
+.css-delete {
+  background: url(../svg/delete.svg) no-repeat;
+  background-position: 8px 12px;
+}
+
+.css-edit {
+  background: url(../svg/edit.svg) no-repeat;
+  background-position: 8px 13px;
+}
+
+.css-plank {
+  background-color: #c2f3ff;
+  display: inline-block;
+  overflow: hidden;
+  float: left;
+  border-radius: 6px;
+  margin: 2em  0 2em 0;
+}
+
+.css-plank .fp  {
+  opacity: 0.6;
+}
+
+.css-plank > a {
+  display: inline-block;
+  background: none;
+  text-decoration: none;
+  color: #035367;
+  padding: 1.1em;
+}
+
+.css-plank > a:hover {
+  color: #fff;
+  background-color: #1798bb;
+}
+
+/* css for fPost.js */
+
+.fPost {
+  position: absolute;
+  width: 100%;
+  height: 100vh;
+}
+
+.txtfPOst {
+  position: absolute;
+  z-index: 9;
+  margin-left: 10%;
+  width: 50vw;
+  padding-top: 20vh;
+}
+
+.txtfPOst h1 {
+  color: #fff;
+  font-size: 8em;
+}
+
+.rt-lenta-post  {
+  position: absolute;
+  float: right;
+  width: 20vw;
+  right: 2vw;
+  top: 20vh;
+}
+
+.rt-lenta-post a {
+  display: block;
+  color: #fff;
+  font-size: 1.3em;
+  padding: 1em 0;
+}
+
+.rt-lenta-post a:hover {
+  color: #e1c2af;
+}
+/* end input files */
+
+/* loading block */
+
+.loading-signinup {
+  width: 50%;
+  margin-top: 20vh;
+  margin-left: 25%;
+}
+
+.loading-signinup p {
+  font-size: 2em;
+  text-align: center;
+}
+
+/* UserForm style */
+
+.css-userform {
+  margin-top: 15vh;
+}
+
+.css-userform h2 {
+  padding: 0 0 .6em 0;
+  font-size: 3em;
+  text-align: center;
+}
+
+.css-userform button {
+  margin-top: 1.3em;
+  width: 100%;
+}
+
+/* start myposts li block */
+
+.myposts-li-block {
+  padding-top: 3em;
+}
+
+.myposts-li-block li {
+  padding: 2.5em 5% 6em;
+  display: block;
+  font-weight: bold;
+  border-bottom: 1px solid #c4c4c4;
+}
+
+.myposts-li-block a h1 {
+  font-size: 4em;
+  color: #0286ab;
+  padding-bottom: .4em;
+}
+
+.myposts-li-block a {
+  color: #0286ab;
+}
+
+.myposts-li-block a:hover h1 {
+  color: #47bc00;
+}
+
+/* start cat list news */
+
+.cats_block {
+  padding-top: 3em;
+}
+
+.cats_block li {
+  padding: 2.5em 5% 7em 5%;
+  display: block;
+  font-weight: bold;
+  border-bottom: 1px solid #c4c4c4;
+}
+
+.cats_block li h1 {
+  padding: .2em 0;
+  font-size: 4em;
+}
+
+.cats_block li h1:hover {
+  color: #47bc00;
+}
+
+.cat-post-li {
+  display: block;
+  padding-top: 5em;
+}
+
+.css-plank-cat {
+  display: block;
+  float: left;
+  padding: 1em 0;
+  background-color: #c2f3ff;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: normal;
+  overflow: hidden;
+}
+
+.css-plank-cat span {
+  padding: 2em 1em;
+}
+
+.css-plank-cat a {
+  padding: 1em;
+}
+
+.css-plank-cat a:hover {
+  background-color: #1798bb;
+  color: #fff;
+}
+
+.cats_block a  {
+  color: #0286ab;
+}
+
+.cats_block a:hover li  {
+  color: #47bc00;
+}
+
+.all-post-block {
+  width: 100%;
+  display: block;
+  float: left;
+}
+
+.all-post-block::before,
+.all-post-block::after {
+  content: "";
+  display: table;
+}
+.all-post-block::after {
+  clear: both;
+}
+.all-post-block {
+  clear: both;
+  zoom: 1;
+}
+
+.all_post {
+  padding: 1.2em 2em;
+  float: left;
+  margin: 5em 0 3em 5%;
+  background-color: #00b5e3;
+  color: #fff;
+  border-radius: 10px;
+}
+
+span.uname_weight {
+  font-weight: bold;
+}
+
+div.xclose:hover {
+		-o-transform: rotate(360deg);
+		-ms-transform: rotate(360deg);
+		-moz-transform: rotate(360deg);
+		-webkit-transform: rotate(360deg);
+    opacity: 1;
+		transform: rotate(360deg);
+	}
+
+  .xcls-1 {
+    z-index: 0;
+  }
+
+  .xcls-1, .xcls-2 {
+    fill-rule: evenodd;
+  }
+
+  .xcls-2 {
+    fill: #00b5e3;
+    z-index: 1;
+    transition: all .3s;
+    transform-origin: 50% 50%;
+  }
+
+  .xcls-1:hover + .xcls-2 {
+    -o-transform: rotate(360deg);
+		-ms-transform: rotate(360deg);
+		-moz-transform: rotate(360deg);
+		-webkit-transform: rotate(360deg);
+    opacity: 1;
+		transform: rotate(360deg);
+  }
+
+  .small-menu-01 {
+    fill: none;
+    stroke: #8ed9ed;
+    stroke-width: 2px;
+  }
+
+  .small-menu-02 {
+    fill: #8ed9ed;
+    fill-rule: evenodd;
+  }
+
+  .css-back{
+    right: 5%;
+    position: fixed;
+    top: 15%;
+    height: 80px;
+    width: 50px;
+    z-index: 999;
+  }
+
+  .css-back:hover::after {
+    content: "back";/* Положение подсказки */
+    z-index: 1; /* Отображаем подсказку поверх других элементов */
+    background: rgba(255,255,230,0.9); /* Полупрозрачный цвет фона */
+    font-family: Arial, sans-serif; /* Гарнитура шрифта */
+    font-size: 11px; /* Размер текста подсказки */
+    padding: 5px 10px; /* Поля */
+    border-radius: 3px;
+  }
+
+
+.htcanvas {
+  margin-bottom: -4em;
+  z-index: -99999;
+}
+
+.fp-canvas canvas {
+  height: 100vh;
+  z-index: -99999;
+}
+
+.post-canvas canvas {
+  height: 60vh;
+}
+/* POST style   */
+
+.img-post {
+  padding: 2em 0;
+}
+
+.img-post img {
+  max-width: 100%;
+}
+
+.imgStyle {
+  max-height: 500px;
+  overflow: hidden;
+}
+
+.imgStyle img {
+  object-fit: cover;
+  width: 100%;
+}
+
+input.script-url {
+  position: relative;
+  float: left;
+  transform: scale(2.0);
+}
+
+.script-url label {
+  position: relative;
+  margin-left: 8em;
+  transform: scale(2.0);
+}

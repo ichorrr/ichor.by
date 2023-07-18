@@ -1,0 +1,21 @@
+<svg id="Группа_1" data-name="Группа 1" xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
+  <defs>
+    <style>
+      .cls-1 {
+        z-index: 0;
+      }
+
+      .cls-1, .cls-2 {
+        fill-rule: evenodd;
+      }
+
+      .cls-2 {
+        fill: #00b5e3;
+        z-index: 1;
+      }
+    </style>
+  </defs>
+  <circle class="cls-1" cx="23" cy="23" r="23" stroke="#ededed" stroke-width="0" fill="#ededed" />
+  <path id="Прямоугольник_1" data-name="Прямоугольник 1" class="cls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
+
+</svg>
