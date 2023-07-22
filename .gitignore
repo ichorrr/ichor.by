@@ -1,0 +1,6 @@
+node_modules/
+node_modules/
+parcel-cache/
+web/dist
+.env
+web/src/components/ifelse.js
