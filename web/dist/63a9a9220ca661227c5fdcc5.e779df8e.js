@@ -645,7 +645,7 @@ $RefreshReg$(_c1, "Arts63a9a9220ca661227c5fdcc5");
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
 }
-},{"react/jsx-dev-runtime":"iTorj","@react-three/fiber":"iFo5u","react":"21dqq","three":"ktPTu","../shaders/vertexShader":"3GpBq","../shaders/fragmentShader":"8Jbme","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru","styled-components":"1U3k6"}],"3GpBq":[function(require,module,exports) {
+},{"react/jsx-dev-runtime":"iTorj","@react-three/fiber":"iFo5u","react":"21dqq","three":"ktPTu","styled-components":"1U3k6","../shaders/vertexShader":"3GpBq","../shaders/fragmentShader":"8Jbme","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","@parcel/transformer-react-refresh-wrap/lib/helpers/helpers.js":"km3Ru"}],"3GpBq":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 const vertexShader = `

@@ -18,7 +18,7 @@ class ArtPage extends React.Component {
         </Suspense>
       )}
 
-    if (csc == "63d6c9760bd1e238ecb595b5") {
+    if (csc == "64bc31b1de84de04f04768fb") {
 
       return (
         <Suspense fallback={<div>Loading...</div>}>
@@ -26,7 +26,7 @@ class ArtPage extends React.Component {
         </Suspense>
       )}
 
-      if (csc == "644d5f4cddda2a2f78cc00eb") {
+      if (csc == "64bc3545de84de04f04768fc") {
 
         return (
           <Suspense fallback={<div>Loading...</div>}>
