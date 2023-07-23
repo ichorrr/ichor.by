@@ -1,6 +1,0 @@
-/api/node_modules/
-/web/node_modules/
-/web/.parcel-cache/
-/web/dist/
-.env
-web/src/components/Ifelse
