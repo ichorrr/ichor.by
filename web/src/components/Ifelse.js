@@ -11,10 +11,9 @@ class ArtPage extends React.Component {
     const Pt = document.getElementById(`${csc}`);
 
     if (csc == "64b59f606597ee2f708dcdf1") {
-
       return (
         <Suspense fallback={<div>Loading...</div>}>
-          <Arts64b59f606597ee2f708dcdf1 />
+          <Arts64b59f606597ee2f708dcdf1 /> 
         </Suspense>
       )}
 
