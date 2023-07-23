@@ -3,4 +3,4 @@
 /web/.parcel-cache/
 /web/dist/
 .env
-*/Ifelse.js
+web/src/components/Ifelse
