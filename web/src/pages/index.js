@@ -17,6 +17,7 @@ import MyPosts from './myposts';
 import NewPost from './new';
 import EditPost from './edit';
 import ArtPost from './arts';
+import About from './about';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
@@ -41,6 +42,7 @@ let dnss = data.getPosts[1]._id;
         <Route path="/signup" element={< SignUp />} />
         <Route path="/signin" element={< SignIn type="signin"/>} />
         <Route path="/new" element={<NewPost />} />
+        <Route path="/about" element={<About />} />
         <Route path="/edit/:id" element={ < EditPost /> } />
       </Routes>
       </Layout>

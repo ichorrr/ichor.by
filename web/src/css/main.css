@@ -67,6 +67,26 @@ code {
   padding: 2em 0;
 }
 
+.tag-about {
+  margin: 2em 0 1em 0; 
+}
+
+.title-h2 {
+  color: #616161;
+  font-size: 2em;
+  margin-bottom: 1.5em;
+}
+
+.tag-about span {
+  display: block;
+  float: left;
+  margin: 0 .3em 1.5em .3em;
+  padding: .8em;
+  background-color: #e7e7e7;
+  border-radius: 6px;
+
+}
+
 div.top-new-post {
   padding: 3.5em 2% 1.5em 2%;
   color: #000;
