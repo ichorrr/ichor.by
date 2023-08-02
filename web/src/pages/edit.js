@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
@@ -11,6 +11,10 @@ const EditPost = () => {
   let ids = useParams();
   const navigate = useNavigate();
   const id = ids.id;
+
+  useEffect(() => {
+    document.title = 'Edit Posts - ICHOR.BY';
+  });
 
   const {data: userdata } = useQuery(GET_ME);
   const {  loading, error, data } = useQuery(GET_POST, { variables: { id } });

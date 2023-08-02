@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { GET_NOTES, GET_POST, GET_CAT } from '../gql/query';
 
 const CatPage = () => {
+
   let  { id } = useParams();
 
   const { loading, error, data, fetchMore } = useQuery(GET_CAT, {variables: {id},
@@ -14,6 +15,10 @@ const CatPage = () => {
   if (error) return <p>error...</p>;
 
   let cname = data.getCat.catname;
+
+  useEffect(() => {
+    document.title = 'Cats - ICHOR.BY';
+  });
 
   return (
   <div className="cats_block">

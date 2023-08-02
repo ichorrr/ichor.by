@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
@@ -18,6 +18,10 @@ const PostBlock = styled.div`
 `;
 
 const MyPosts = props => {
+
+  useEffect(() => {
+    document.title = 'My Posts - ICHOR.BY';
+  });
 
   const { loading, error, data, fetchMore } = useQuery( GET_MY_POST,
   {refetchQueries: [{query: GET_MY_POST }]} );

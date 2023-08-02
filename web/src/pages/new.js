@@ -37,7 +37,7 @@ const NewPost = props => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'NewPost - ICHOR.BY';
+    document.title = 'New Post - ICHOR.BY';
   });
 
   const [ data, { loading, error } ] = useMutation(NEW_POST, {

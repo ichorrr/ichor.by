@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { Link } from 'react-router-dom';
 
 import { useQuery, gql } from '@apollo/client';
@@ -15,6 +15,11 @@ const PostParagraph = styled.div`
 `;
 
 const Home = () => {
+
+  useEffect(() => {
+    document.title = 'ICHOR.BY';
+  });
+
   const {data, loading, error, fetchMore} = useQuery(GET_NOTES);
 
   if (loading) return <p>loading...</p>
