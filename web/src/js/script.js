@@ -1,4 +1,14 @@
 
+	function initCanvasStaff() {
+		var drawingStaff1 = setInterval(function(){
+		  arcIncrement1 += Math.PI / 180;
+		  var end1 = drawCanvasStaff(gauge1,arcIncrement1,"#45abc5");
+		  if(end1 > 1.65){
+		    clearInterval(drawingStaff1)
+		  }
+		},10)
+		
+	}
 
 		function drawCanvasBase(gauge) {
 		gauge.clearRect(0, 0, W, H);

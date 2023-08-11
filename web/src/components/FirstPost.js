@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
-import ReactMarkdown from 'react-markdown';
 import styled from 'styled-components';
-
 import UniBlock from '../components/UniBlock';
 
 const GET_FIRST_POST = gql`
@@ -43,6 +41,7 @@ const PostBlock = styled.div`
   display: block;
 `;
 
+
 const Fpost = ({post}) => {
 
   const { loading, error, data } = useQuery( GET_FIRST_POST, IS_LOGGED_IN);
@@ -55,7 +54,6 @@ const Fpost = ({post}) => {
 console.log(data.postFirst);
   return (
     <article>
-
     <div className="fPost">
       <div className="txtfPOst" >
           <Link to={`/posts/${data.postFirst._id}`}>
