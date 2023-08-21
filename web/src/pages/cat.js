@@ -16,10 +16,6 @@ const CatPage = () => {
 
   let cname = data.getCat.catname;
 
-  useEffect(() => {
-    document.title = 'Cats - ICHOR.BY';
-  });
-
   return (
   <div className="cats_block">
   <div className="all-post-block">
