@@ -1,21 +1,27 @@
 {
   "name": "my-project",
-  "source": "src/index.html",
+  "source": "public/index.html",
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
-    "dev": "parcel src/index.html",
-    "start": "parcel",
+    "dev": "parcel public/index.html",
+    "start": "parcel src/index.js",
     "build": "parcel build"
+  },
+  "staticFiles": {
+    "staticPath": "public",
+    "watcherGlob": "**"
   },
   "devDependencies": {
     "buffer": "^5.7.1",
     "next-transpile-modules": "^10.0.0",
     "parcel": "latest",
+    "parcel-plugin-static-files-copy": "^2.6.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10"
   },
   "dependencies": {
     "@apollo/client": "^3.7.2",
+    "@babel/preset-react": "^7.22.5",
     "@loadable/component": "^5.15.2",
     "@react-three/drei": "^9.80.1",
     "@react-three/fiber": "^8.13.6",

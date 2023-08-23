@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
+import { Canvas, useLoader } from "react-three-fiber";
+import Model from './components/Model'
 import {
   ApolloClient,
   NormalizedCacheObject,
@@ -46,11 +48,12 @@ import { IS_LOGGED_IN } from './gql/query';
  const App = () => {
    return(
    <ApolloProvider client={client}>
+      <Canvas>
+        <Model />
+      </Canvas>
      <Pages />
    </ApolloProvider>
  );
 };
 
-const container = document.getElementById('root');
-const root = createRoot(container);
-root.render(<App />);
+export default App;

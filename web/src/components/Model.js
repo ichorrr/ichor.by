@@ -2,20 +2,19 @@
 import React, { useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 
-export function Model(props) {
-  const { nodes, materials } = useGLTF("../dev/mobile.glb");
+const Model = (props) => {
+  
+  let url = new URL( "../../public/mobile.glb", import.meta.url );
+  let str = "" + url;
+
+  const { nodes, materials } = useGLTF(str)
   return (
     <group {...props} dispose={null}>
-      <mesh
-        castShadow
-        receiveShadow
-        geometry={nodes.Cube.geometry}
-        material={nodes.Cube.material}
-        position={[-0.142, 0.013, -0.001]}
-        scale={[1, 1, -0.36]}
-      />
+      <mesh geometry={nodes.Cube.geometry} material={nodes.Cube.material} position={[-0.142, 0.013, -0.001]} scale={[1, 1, -0.36]} />
     </group>
-  );
+  )
 }
 
-useGLTF.preload("../dev/mobile.glb");
+export default Model;
+
+
