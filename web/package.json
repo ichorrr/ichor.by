@@ -4,11 +4,7 @@
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
     "dev": "parcel public/index.html",
-<<<<<<< HEAD
-    "start": "parcel src/index.js",
-=======
-    "start": "parcel",
->>>>>>> 492e03c1218cfdae737f7c86330ea4f704759cf4
+    "start": "parcel public/index.html",
     "build": "parcel build"
   },
   "staticFiles": {
@@ -27,8 +23,8 @@
     "@apollo/client": "^3.7.2",
     "@babel/preset-react": "^7.22.5",
     "@loadable/component": "^5.15.2",
-    "@react-three/drei": "^9.80.3",
-    "@react-three/fiber": "^8.13.7",
+    "@react-three/drei": "^9.80.1",
+    "@react-three/fiber": "^8.13.6",
     "@types/three": "^0.149.0",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-link-context": "^1.0.20",
