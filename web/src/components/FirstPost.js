@@ -24,7 +24,7 @@ const GET_FIRST_POST = gql`
 `;
 
 const IS_LOGGED_IN = gql`
-  query IsUserLoggedIn {
+  query IsUserLoggedIn {  
     isLoggedIn @client
   }
 `;
