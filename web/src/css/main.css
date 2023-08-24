@@ -20,6 +20,16 @@ code {
   color: #454545;
 }
 
+.iphone-canvas {
+  position: fixed;
+  z-index: 999999999999999999999;
+  left: 40vw;
+  top: 72px;
+  width: 35vw;
+  height: calc(100vh - 72px);
+
+}
+
 .algn-btn {
   text-align: center;
   padding: 3em 0;
