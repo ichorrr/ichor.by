@@ -1,10 +1,10 @@
-import React, {Suspense} from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stats, OrbitControls } from '@react-three/drei'
+import { OrbitControls, Stage } from '@react-three/drei'
 import Model from './Model'
 
 const GET_FIRST_POST = gql`
@@ -46,7 +46,7 @@ const PostBlock = styled.div`
 
 
 const Fpost = ({post}) => {
-
+  const ref = useRef()
   const { loading, error, data } = useQuery( GET_FIRST_POST, IS_LOGGED_IN);
 
   if (loading) return <p>loading...</p>;
@@ -58,15 +58,16 @@ console.log(data.postFirst);
   return (
     <article>
       <div className='iphone-canvas'>
-      <Canvas camera={{ position: [-19, -5, -5], fov: 60,  }} shadows >
-      <ambientLight intensity={10.7} position={[-2, -5, -2]}  />
-      <spotLight intensity={20.5} angle={0.1} penumbra={1} position={[0, 0, 0]} castShadow />
+      <Canvas shadows dpr={[1, 2]} camera={{ fov: 50 }}>
       <Suspense fallback={null}>
-        <Model rotation={[0.3, Math.PI / 300.6, 0]}  position={[-2, -5, -2]} receiveShadow />
-      </Suspense> 
-        <fog attach="fog" args={["#000", 4, 30]}/>
-        <OrbitControls />
-      </Canvas>
+        <Stage controls={ref} preset="rembrandt" intensity={1}  environment="city">
+        false
+          <Model />
+        false
+        </Stage>
+      </Suspense>
+      <OrbitControls ref={ref} autoRotate />
+    </Canvas>
       </div>
     <div className="fPost">
       <div className="txtfPOst" >
