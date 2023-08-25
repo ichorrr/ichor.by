@@ -1,7 +1,8 @@
 
 import React, { useRef } from "react";
 import { useGLTF } from "@react-three/drei";
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
+import { TextureLoader } from 'three/src/loaders/TextureLoader.js'
 
 const Model = (props) => {
   
@@ -12,8 +13,14 @@ const Model = (props) => {
 
   const { nodes, materials } = useGLTF(str)
 
+  
+  let turl = new URL( "../models/texture/scotish.jpg", import.meta.url );
+  let tstr = "" + turl;
+
+  const texture_1 = useLoader(TextureLoader, tstr)
+
   useFrame((_, delta) => {
-    ref.current.rotation.y += 0.01 * delta
+    ref.current.rotation.y += 0.5 * delta
   })
 
   return (
@@ -21,6 +28,7 @@ const Model = (props) => {
       <group scale={.71}>
         <mesh geometry={nodes.UCttAeyROPsgmix.geometry} material={materials.KtvhjlxyToKjYkE} />
         <mesh geometry={nodes.XbtrdVaOWYmkEiU.geometry} material={materials.YiceMpFVTpnmoaq} />
+        
         <mesh geometry={nodes.YbXWdqEcjbfTKuN_0.geometry} material={materials.GFNYbWjyDVGUwJd} />
         <mesh geometry={nodes.rrqFqyfckTuyRuI.geometry} material={materials.CSNzlRnZuvCyxNL} />
         <mesh geometry={nodes.lxsKwuOPNvmzBKg_0.geometry} material={materials.KhJiSWFcsscOusf} />

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import styled from 'styled-components';
@@ -58,10 +58,13 @@ console.log(data.postFirst);
   return (
     <article>
       <div className='iphone-canvas'>
-      <Canvas camera={{ position: [10, 1, 5] }}>
-      <ambientLight intensity={0.7} />
-      <spotLight intensity={0.5} angle={0.1} penumbra={1} position={[10, 15, -5]} castShadow />
-        <Model rotation={[0.3, Math.PI / 300.6, 0]}  position={[-2, -5, -1]} />
+      <Canvas camera={{ position: [-19, -5, -5], fov: 60,  }} shadows >
+      <ambientLight intensity={10.7} position={[-2, -5, -2]}  />
+      <spotLight intensity={20.5} angle={0.1} penumbra={1} position={[0, 0, 0]} castShadow />
+      <Suspense fallback={null}>
+        <Model rotation={[0.3, Math.PI / 300.6, 0]}  position={[-2, -5, -2]} receiveShadow />
+      </Suspense> 
+        <fog attach="fog" args={["#000", 4, 30]}/>
         <OrbitControls />
       </Canvas>
       </div>
