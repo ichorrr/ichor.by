@@ -14,7 +14,7 @@ const H4R = styled.div`
 `;
 
 const H2 = styled.h2`
-  padding-top: .2em;
+  padding: .8em 0 0 0;
   font-family: Arial, sans-serif;
   font-size: 7em;
   width: 90vw;
@@ -36,17 +36,10 @@ const Post = ({ post }) => {
 
     <article>
 
-    <div id={post._id} ></div>
-    <div className="post-canvas" >
-      <UniBlock post={post._id}/>
-    </div>
-    <div className="imgStyle">
-      <img src={post.imageUrl} />
-    </div>
-
-    <div className="absPostPart">
+    <div className='top-block'>
+      <div id={post._id} ></div>
       <H2>{post.title}</H2>
-
+    
       <div className="all-post-block">
         <div className="css-plank">
           <Link  to={`/cats/${idcat}`}>
@@ -60,15 +53,29 @@ const Post = ({ post }) => {
             <PostUser post={post} />
         </div>
       </div>
+    </div>
 
-      <div className="css-txt">
-        <ReactMarkdown children={post.body}  />
-        {post.imageUrl2 ? (
-        <div className="img-post">
-          <img src={post.imageUrl2} />
-        </div>): <></>}
-        <ReactMarkdown children={post.body2}  />
-      </div>
+    <div className="post-canvas" >
+      <UniBlock post={post._id}/>
+    </div>
+    
+    {post.imageUrl && (<div className="imgStyle">
+      <img src={post.imageUrl} />
+    </div>)}
+
+      <div className="absPostPart">
+        <div className="css-txt">
+
+          <ReactMarkdown children={post.body}  />
+
+          {post.imageUrl2 && (
+          <div className="img-post">
+            <img src={post.imageUrl2} />
+          </div>)}
+
+          <ReactMarkdown children={post.body2}  />
+
+        </div>
       </div>
     </article>
   );

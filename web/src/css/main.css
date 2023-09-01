@@ -22,7 +22,7 @@ code {
 
 .iphone-canvas {
   position: fixed;
-  z-index: 999999999999999999999;
+  z-index: 999;
   left: 40vw;
   top: 72px;
   width: 35vw;
@@ -214,7 +214,7 @@ span.empty-block {
 }
 
 div.absPostPart {
-  padding: 6em 4% 2em 4%;
+  padding: 0 4% 2em 4%;
 }
 
 .svg-plank {
@@ -364,7 +364,9 @@ transition: height 0.3s;
 /* UserForm style */
 
 .css-userform {
-  margin-top: 15vh;
+  padding-top: 15vh;
+  background-color: #000;
+  height: 100vh;
 }
 
 .css-userform h2 {
@@ -464,6 +466,10 @@ transition: height 0.3s;
   color: #47bc00;
 }
 
+.top-block {
+  padding: 4em 4% 0 4%;
+}
+
 .all-post-block {
   width: 100%;
   display: block;
@@ -559,6 +565,13 @@ div.xclose:hover {
     border-radius: 3px;
   }
 
+  .loader-canvas {
+    position: fixed;
+    z-index: 99999999999999999999999999999999999;
+    width: 100%;
+    height: 100vh;
+    align-items: center
+  }
 
 .htcanvas {
   margin-bottom: -4em;
@@ -572,6 +585,7 @@ div.xclose:hover {
 
 .post-canvas canvas {
   height: 60vh;
+  margin-top: 2em;
 }
 /* POST style   */
 
@@ -584,13 +598,16 @@ div.xclose:hover {
 }
 
 .imgStyle {
+  float: left;
   max-height: 500px;
+  width: 100%;
+  padding: 0;
+  margin: 2em 0 5em 0;
   overflow: hidden;
 }
 
 .imgStyle img {
   object-fit: cover;
-  width: 100%;
 }
 
 input.script-url {

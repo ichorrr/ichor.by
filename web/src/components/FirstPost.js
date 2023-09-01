@@ -66,7 +66,7 @@ console.log(data.postFirst);
         false
         </Stage>
       </Suspense>
-      <OrbitControls ref={ref} autoRotate />
+      <OrbitControls ref={ref} autoRotate enableZoom={false}/>
     </Canvas>
       </div>
     <div className="fPost">

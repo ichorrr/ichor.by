@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react'
+import React from 'react'
 import {
   ApolloClient,
   NormalizedCacheObject,
@@ -9,6 +9,7 @@ import {
   useQuery,
 } from '@apollo/client'
 import Pages from './pages'
+import Loader from './components/Loader'
 import { IS_LOGGED_IN } from './gql/query'
 import { setContext } from '@apollo/client/link/context'
  const uri = process.env.API_URI;
@@ -42,6 +43,7 @@ import { setContext } from '@apollo/client/link/context'
  const App = () => {
    return(
    <ApolloProvider client={client}>
+    <Loader />
      <Pages />
    </ApolloProvider>
  );

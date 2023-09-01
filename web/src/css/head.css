@@ -37,7 +37,7 @@ A {
 	padding-top: 90px;
 	overflow: hidden;
 	background-color: rgba(0,0,0, 0.9);
-	z-index: 99999;
+	z-index: 99999999;
 }
 
 .dropdown-content {
