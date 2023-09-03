@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, InMemoryCache, writeQuery, useQuery, useApolloClient, NetworkStatus, gql } from '@apollo/client';
 
 import UserForm from '../components/UserForm';
+import Loader from '../components/Loader'
 const cache = new InMemoryCache();
 const SIGNIN_USER = gql`mutation signIn($email: String!, $password: String!){
   signIn(email: $email, password: $password)
@@ -40,9 +41,13 @@ const SignIn = props => {
     </div>
   )
   return (
+    <>
     <div className="css-userform">
       <UserForm action={signIn} formType="signIn" />
+      
     </div>
+    <Loader />
+    </>
   );
 };
 

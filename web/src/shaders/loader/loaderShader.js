@@ -15,8 +15,6 @@ vec2 random2(vec2 st){
 }
 
 
-// Gradient Noise by Inigo Quilez - iq/2013
-// https://www.shadertoy.com/view/XdXGW8
 float noise(vec2 st) {
     vec2 i = floor(st);
     vec2 f = fract(st);

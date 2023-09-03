@@ -3,37 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useApolloClient, gql } from '@apollo/client';
 import styled from 'styled-components';
 import Button from '../components/Button';
-import UserForm from '../components/UserForm';
-const Wrapper = styled.div`
-  border: 2px solid #000;
-  max-width: 500px;
-  padding: 3em 7em 5em 6em;
-  margin: 0 auto;
-  border-radius: 1em;
-  background: #e5f9fe;
-`;
+import UserForm from '../components/UserForm'
+import Loader from '../components/Loader'
 
-const Form = styled.form`
-  label,
-  input {
-    display: block;
-    line-height: 2em;
-  }
-
-  input {
-    width: calc(100% - 1.8em);
-    font-size: 1.3em;
-    margin-bottom: 1em;
-    padding: .4em .8em;
-    color: #000;
-    border-radius: .25em;
-    border-style: solid;
-  }
-  label {
-    font-size: 1.4em;
-    padding: .3em 0;
-  }
-`;
 
 const SIGNUP_USER = gql`mutation signUp($name: String!, $email: String!, $password: String!){
   signUp(name: $name, email: $email, password: $password)
@@ -76,9 +48,12 @@ if (error) return (
   </div>
 )
   return (
+    <>
     <div className="css-userform">
       <UserForm action={signUp} formType="signUp" />
     </div>
+    <Loader />
+    </>
   );
 };
 

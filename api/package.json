@@ -1,7 +1,7 @@
 {
-  "name": "notedly-api",
+  "name": "ichor.by-api",
   "version": "1.0.0",
-  "description": "API code examples for JavaScript Everywhere by Adam Scott, published by O'Reilly Media",
+  "description": "API ICHOR.BY - application development",
   "main": "src/index.js",
   "scripts": {
     "start": "nodemon src/index.js",

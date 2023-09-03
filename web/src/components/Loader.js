@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, StrictMode, useCallback } from 'react'
+import React, { useRef, useMemo, StrictMode } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Vector2 } from "three";
 
@@ -12,10 +12,10 @@ const CLoader = () => {
             u_resolution: { value: new Vector2(window.innerWidth, window.innerHeight) },
             u_time: {type: 'f'},
     
-        }), [useCallback]);
+        }), []);
 
     useFrame(({ clock }) => {
-        ref.current.material.uniforms.u_time.value = clock.oldTime * 0.001;
+        ref.current.material.uniforms.u_time.value = clock.oldTime * 0.0005;
       });
 
     return (
@@ -32,11 +32,11 @@ const CLoader = () => {
       );
 }
 
-const Loader =({ dpr = 1 }) => {
+const Loader =() => {
     return (
       <StrictMode>
       <div className="loader-canvas" >
-      <Canvas pixelRatio={dpr}  flat linear>
+      <Canvas>
         <CLoader />
       </Canvas>
       </div>

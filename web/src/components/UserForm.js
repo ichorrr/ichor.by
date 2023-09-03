@@ -6,12 +6,13 @@ import { useMutation, InMemoryCache, writeQuery, useQuery, useApolloClient, gql 
 import Button from './Button';
 
 const Wrapper = styled.div`
-  border: 2px solid #000;
+
   max-width: 500px;
   padding: 3em 7em 5em 6em;
   margin: 0 auto;
   border-radius: 1em;
-  background: #e5f9fe;
+  background-color: rgba(69, 214, 255, .1);
+  backdrop-filter: blur(20px);
 `;
 
 const Form = styled.form`
@@ -19,20 +20,22 @@ const Form = styled.form`
   input {
     display: block;
     line-height: 2em;
+    font-size: 1.3em;
   }
 
   input {
     width: calc(100% - 1.8em);
-    font-size: 1.3em;
     margin-bottom: 1em;
     padding: .4em .8em;
     color: #000;
     border-radius: .25em;
     border-style: solid;
   }
+  
   label {
     font-size: 1.4em;
     padding: .3em 0;
+    color: #fff;
   }
 `;
 
@@ -69,7 +72,7 @@ const UserForm = props => {
       >
       {props.formType === 'signUp' &&(
         <React.Fragment>
-      <label htmlFor="name">Username:</label>
+      <label htmlFor="name">Username</label>
       <input
         required
         type="text"
@@ -79,7 +82,7 @@ const UserForm = props => {
         onChange={onChange}
       />
     </React.Fragment>)}
-      <label htmlFor="email">Email:</label>
+      <label htmlFor="email">Email</label>
         <input
           required
           type="text"
@@ -88,7 +91,7 @@ const UserForm = props => {
           placeholder="Email"
           onChange={onChange}
         />
-        <label htmlFor="password">Password:</label>
+        <label htmlFor="password">Password</label>
         <input
           required
           type="password"
@@ -97,7 +100,7 @@ const UserForm = props => {
           placeholder="Password"
           onChange={onChange}
         />
-        <Button type="submit">Submit</Button>
+        {props.formType === 'signUp' ? (<Button type="submit">Create Account</Button>) :(<Button type="submit">Log in now</Button>)}
       </Form>
     </Wrapper>
   );
