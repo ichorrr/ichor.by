@@ -578,6 +578,7 @@ div.xclose:hover {
 .htcanvas {
   margin-bottom: -4em;
   z-index: -99999;
+  position: relative;
 }
 
 .fp-canvas canvas {
@@ -585,7 +586,12 @@ div.xclose:hover {
   z-index: -99999;
 }
 
+.post-canvas {
+  align-content: center;
+}
+
 .post-canvas canvas {
+  position: relative;
   height: 60vh;
   margin-top: 2em;
 }

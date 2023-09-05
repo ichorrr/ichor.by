@@ -44,7 +44,7 @@ vec3 rgb2hsb( in vec3 c ){
 }
 
 float shape(vec2 st, float radius) {
-	st = vec2(0.5)-st;
+	st = vec2(0.5);
     float r = length(st)*2.248;
     float a = atan(st.y,st.x);
 	
@@ -66,7 +66,6 @@ mat2 rotate2d(float _angle){
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
     st.x *= u_resolution.x/u_resolution.y;
-
     vec3 color = vec3(0.);
     
     
@@ -86,8 +85,6 @@ void main() {
     
     color += mix(color.r, color.g, r*-0.438)*noise(st)*sin(u_time)*7.2;
     color += mix(color.r, color.b, r*1.522*noise(st)*sin(u_time)*7.2);
-    
-	
 
     gl_FragColor = vec4(color,1.0);
 }

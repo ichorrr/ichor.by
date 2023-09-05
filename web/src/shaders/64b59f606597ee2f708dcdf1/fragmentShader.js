@@ -24,17 +24,16 @@ vec3 path(vec2 _st, float xx){
 
 void main() {
   vec2 st = gl_FragCoord.xy/u_resolution.xy;
-  st.x *= u_resolution.x/u_resolution.y;
-  vec3 color = vec3(.0);
-
+    vec3 color = vec3(.0);
+  st -= vec2(.5);
   // Scale
-  st *= 3.;
+  st *= 4.;
 
   // Tile the space
   vec2 i_st = floor(st);
   vec2 f_st = fract(st);
 
-  st = st - vec2(1.5)+-vec2(0.010,0.010);
+
 float r = length(st);
 float a = atan(st.y, st.x);
 
