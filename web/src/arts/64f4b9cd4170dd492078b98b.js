@@ -13,26 +13,22 @@ const LabyRinths = () => {
   const { width, height } = useThree((state) => state.gl.domElement);
   const viewport = useThree();
 
-  console.log(width)
-
-  const [uniforms, setUniforms] = useState(() => ({
+   const [uniforms, setUniforms] = useState(() => ({
     u_resolution: { type: "v2", value: new Vector2() },
     u_time: {type: 'f'},
   }));
-  
-  
 
-  const [piu, setPiu] = useState(height / width);
-
-  console.log(piu)
-  useEffect(() => {
-
-    setPiu(height / width)
+ useEffect(() => {
+     
+  function setPi(width, height) {
+    width > height ? width = height : height = width;
+    return width;
+  }
 
     setUniforms((u) => ({
       ...u,
       u_resolution: {
-        value: u.u_resolution.value.set(width*piu , height)
+        value: u.u_resolution.value.set(setPi(width, height) , setPi(width, height))
       }
     }));
   }, [width, height]);
@@ -53,11 +49,9 @@ const LabyRinths = () => {
 
 const Arts63addba80407bc4b94f5d964 =() => {
   return (
-
     <Canvas>
       <LabyRinths />
     </Canvas>
-
   );
 }
 

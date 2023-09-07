@@ -24,7 +24,8 @@ vec3 path(vec2 _st, float xx){
 
 void main() {
   vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    vec3 color = vec3(.0);
+
+  vec3 color = vec3(.0);
   st -= vec2(.5);
   // Scale
   st *= 4.;
