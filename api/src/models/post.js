@@ -15,6 +15,9 @@ const Post = mongoose.model(
       imageUrl2: {
         type: String,
       },
+      imageUrl3: {
+        type: String,
+      },
       scriptUrl: {
         type: Boolean,
         default: false
@@ -32,6 +35,9 @@ const Post = mongoose.model(
         required: true
       },
       body2: {
+        type: String,
+      },
+      body3: {
         type: String,
       },
       author: {

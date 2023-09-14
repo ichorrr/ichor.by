@@ -32,10 +32,13 @@ const PostForm = props => {
   // set the default state of the form\
   const inputFileRef = useRef(null);
   const inputFileRef2 = useRef(null);
+  const inputFileRef3 = useRef(null);
   const [body, setBody] = useState({body: props.body || ''});
   const [body2, setBody2] = useState({body2: props.body2 || ''});
+  const [body3, setBody3] = useState({body3: props.body3 || ''});
   const [imageUrl, setImageUrl] = useState({imageUrl: props.imageUrl || ''});
   const [imageUrl2, setImageUrl2] = useState({imageUrl2: props.imageUrl2 || ''});
+  const [imageUrl3, setImageUrl3] = useState({imageUrl3: props.imageUrl3 || ''});
   const [scriptUrl, setScriptUrl] = useState({scriptUrl: props.scriptUrl || false});
   const [value, setValue] = useState( { category: props.category, title: props.title || ''} );
 
@@ -53,6 +56,10 @@ const PostForm = props => {
 
   const onChangeMDE2 = (body2) => {
     setBody2({body2});
+  };
+
+  const onChangeMDE3 = (body3) => {
+    setBody3({body3});
   };
 
   const onChangeCHK = (event) => {
@@ -74,7 +81,6 @@ const PostForm = props => {
           const data = await res.json();
           imageUrl = await data.url;
           setImageUrl({ imageUrl});
-
   }
 
   const handleChangeFile2 = async (imageUrl2) =>{
@@ -89,8 +95,21 @@ const PostForm = props => {
           const data2 = await res2.json();
           imageUrl2 = await data2.url;
           setImageUrl2({ imageUrl2});
-
   }
+
+  const handleChangeFile3 = async (imageUrl3) =>{
+
+    const formData3 = new FormData();
+    const file3 = event.target.files[0];
+    formData3.append('imageUrl3', file3);
+    const res3 = await fetch('http://localhost:4000/upload3', {
+      method: 'POST',
+      body: formData3,
+    });
+    const data3 = await res3.json();
+    imageUrl3 = await data3.url;
+    setImageUrl3({ imageUrl3});
+}
 
   const onClickRemoveImage =() => {
     setImageUrl('');
@@ -98,6 +117,10 @@ const PostForm = props => {
 
   const onClickRemoveImage2 =() => {
     setImageUrl2('');
+  };
+
+  const onClickRemoveImage3 =() => {
+    setImageUrl3('');
   };
 
   return (
@@ -111,8 +134,10 @@ const PostForm = props => {
               ...value,
               ...body,
               ...body2,
+              ...body3,
               ...imageUrl,
               ...imageUrl2,
+              ...imageUrl3,
               ...scriptUrl
             }
           });
@@ -233,6 +258,48 @@ const PostForm = props => {
                      />
         </div>
       </div>
+
+      <div className="empty-div"></div>
+
+            <div className="imageUrl">
+            <input
+              ref={inputFileRef3}
+              className="custom-file-input"
+              type="file"
+              name="imageUrl3"
+              id="imageUrl3"
+              onChange={handleChangeFile3}
+              value={value.props}
+              />
+
+              {imageUrl3.imageUrl3 && (
+              <>
+                <Button variant="contained" onClick={ onClickRemoveImage3}  >Remove image</Button>
+                <p className="p-imageurl">{imageUrl3.imageUrl3}</p>
+              </>
+             )}
+              </div>
+            {imageUrl3.imageUrl3 && (
+
+              <div className="imageViewer">
+                <img src={imageUrl3.imageUrl3} />
+              </div>
+
+            )}
+            <div className="empty-div"></div>
+        <label htmlFor="title">News Content 3:</label>
+        <div className="style-simplemde" >
+             <SimpleMDE
+                       required
+                       type="text"
+                       name="body3"
+                       id="body3"
+                       placeholder="Post content"
+                       onChange={onChangeMDE3}
+                       value={body3.body3}
+                     />
+        </div>
+    
       <div className="algn-btn">
         <Button type="submit"> Save note</Button>
         </div>

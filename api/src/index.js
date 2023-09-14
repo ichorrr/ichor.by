@@ -11,6 +11,7 @@ const cors = require('cors');
 const depthLimit = require('graphql-depth-limit');
 const { createComplexityLimitRule } = require('graphql-validation-complexity');
 const multer = require('multer')
+const fs = require('fs');
 
 require('dotenv').config();
 const db = require('./db');
@@ -33,6 +34,7 @@ const typeDefs = gql`
     _id: ID!
     imageUrl: String
     imageUrl2: String
+    imageUrl3: String
     scriptUrl: Boolean
     title: String!
     createdAt: DateTime!
@@ -41,6 +43,7 @@ const typeDefs = gql`
     viewsCount: String!
     body: String!
     body2: String
+    body3: String
     author: User!
     comments: [Comment!]!
   }
@@ -72,9 +75,9 @@ const typeDefs = gql`
 
     createCat(catname: String!): Cat!
     deleteCat(_id: String!): Boolean!
-    createPost(title: String!, imageUrl: String, imageUrl2: String, scriptUrl: Boolean, category: String!, body: String!, body2: String): Post!
+    createPost(title: String!, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, category: String!, body: String!, body2: String, body3: String): Post!
     deletePost(_id: String!): Boolean!
-    updatePost(_id: String!, title: String!,  imageUrl: String, imageUrl2: String, scriptUrl: Boolean, body: String!, body2: String): Post!
+    updatePost(_id: String!, title: String!,  imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
     createComment(text: String!, post: String!): Comment!
   }
 
@@ -226,6 +229,7 @@ const resolvers = {
     },
 
     deletePost: async (parent, { _id }, { models, user }) => {
+      
       // if not a user, throw an Authentication Error
       if (!user) {
         throw new AuthenticationError('You must be signed in to delete a note');
@@ -233,6 +237,7 @@ const resolvers = {
 
       // find the note
       const note = await models.Post.findById(_id);
+      
       // if the note owner and current user don't match, throw a forbidden error
       if (note && String(note.author) !== user.id) {
         throw new ForbiddenError(
@@ -242,6 +247,26 @@ const resolvers = {
 
       try {
         // if everything checks out, remove the note
+        
+        if (note.imageUrl) {
+          var name = note.imageUrl.split("/").pop();
+          var pth = "./uploads/" + name;
+          console.log(pth);
+          fs.unlinkSync(pth, 'Content_For_Writing');
+        }
+        if (note.imageUrl2) {
+        var name2 = note.imageUrl2.split("/").pop();
+        var pth2 = "./imgposts/" + name2;
+        console.log(pth2);
+        fs.unlinkSync(pth2, 'Content_For_Writing');
+        }
+        if (note.imageUrl3) {
+        var name3 = note.imageUrl3.split("/").pop();
+        var pth3 = "./imgposts/" + name3;
+        console.log(pth3);
+        fs.unlinkSync(pth3, 'Content_For_Writing');
+        }
+
         await note.remove();
         return true;
       } catch (err) {
@@ -250,7 +275,7 @@ const resolvers = {
       }
     },
 
-    updatePost: async (parent, { imageUrl, imageUrl2, scriptUrl, title, body, body2, _id }, { models, user }) => {
+    updatePost: async (parent, { imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
       // if not a user, throw an Authentication Error
       if (!user) {
         throw new AuthenticationError('You must be signed in to update a note');
@@ -273,8 +298,10 @@ const resolvers = {
             title,
             body,
             body2,
+            body3,
             imageUrl,
             imageUrl2,
+            imageUrl3,
             scriptUrl
           }
         },
@@ -293,9 +320,11 @@ const resolvers = {
         title: args.title,
         imageUrl: args.imageUrl,
         imageUrl2: args.imageUrl2,
+        imageUrl3: args.imageUrl3,
         scriptUrl: args.scriptUrl,
         body: args.body,
         body2: args.body2,
+        body3: args.body3,
         category: args.category,
         author: mongoose.Types.ObjectId(user.id)
       });
@@ -420,9 +449,21 @@ const storage2 = multer.diskStorage({
   }
 });
 
+const storage3 = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'imgposts')
+  },
+  filename: (req, file, cb) => {
+    console.log(file)
+    cb(null, file.originalname)
+  }
+});
+
 const upload = multer({storage: storage});
 
 const upload2 = multer({ storage: storage2   });
+
+const upload3 = multer({ storage: storage3  });
 
 app.use(express.json());
 
@@ -438,6 +479,13 @@ app.post('/upload', upload.single('imageUrl'), (req, res) => {
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
+  res.json({
+    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+  })
+  console.log(req.file)
+})
+
+app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
     url: `http://localhost:4000/imgposts/${req.file.originalname}`,
   })

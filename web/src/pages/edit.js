@@ -1,8 +1,6 @@
 import React, {useEffect} from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, gql } from '@apollo/client';
-import ReactMarkdown from 'react-markdown';
-import styled from 'styled-components';
 import PostForm from '../components/PostForm';
 import { GET_POST, GET_ME } from '../gql/query';
 import {EDIT_POST} from '../gql/mutation';
@@ -39,7 +37,7 @@ if(userdata.me._id !== data.getPost.author._id)
   <h1>Edit Post - edit post, change category, publish</h1>
   </div>
   <div>
-  <PostForm body={data.getPost.body} body2={data.getPost.body2} imageUrl={data.getPost.imageUrl} imageUrl2={data.getPost.imageUrl2} scriptUrl={data.getPost.scriptUrl} title={data.getPost.title} category={data.getPost.category._id} action={editPost}/>
+  <PostForm body={data.getPost.body} body2={data.getPost.body2} body3={data.getPost.body3} imageUrl={data.getPost.imageUrl} imageUrl2={data.getPost.imageUrl2} imageUrl3={data.getPost.imageUrl3} scriptUrl={data.getPost.scriptUrl} title={data.getPost.title} category={data.getPost.category._id} action={editPost}/>
 </div>
 
 </div>

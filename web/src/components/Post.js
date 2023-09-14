@@ -75,6 +75,13 @@ const Post = ({ post }) => {
 
           <ReactMarkdown children={post.body2}  />
 
+         
+          <div className="img-post">
+            <img src={post.imageUrl3} />
+          </div>
+
+          <ReactMarkdown children={post.body3}  />
+
         </div>
       </div>
     </article>

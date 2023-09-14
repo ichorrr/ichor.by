@@ -1,12 +1,33 @@
 import { gql } from '@apollo/client';
 
 const EDIT_POST = gql`
-  mutation updatePost($id: String!, $imageUrl: String, $imageUrl2: String, $scriptUrl: Boolean, $title: String!, $body: String!, $body2: String) {
-    updatePost(_id: $id, imageUrl: $imageUrl, imageUrl2: $imageUrl2, scriptUrl: $scriptUrl, title: $title, body: $body, body2: $body2) {
+  mutation updatePost(
+      $id: String!, 
+      $imageUrl: String, 
+      $imageUrl2: String, 
+      $imageUrl3: String,
+      $scriptUrl: Boolean, 
+      $title: String!, 
+      $body: String!, 
+      $body2: String, 
+      $body3: String
+    ) {
+    updatePost(
+        _id: $id, 
+        imageUrl: $imageUrl, 
+        imageUrl2: $imageUrl2, 
+        imageUrl3: $imageUrl3, 
+        scriptUrl: $scriptUrl, 
+        title: $title, 
+        body: $body, 
+        body2: $body2, 
+        body3: $body3
+      ) {
       _id
         title
         imageUrl
         imageUrl2
+        imageUrl3
         scriptUrl
         createdAt
         category{
@@ -15,6 +36,7 @@ const EDIT_POST = gql`
         }
         body
         body2
+        body3
         author {
           _id
           name

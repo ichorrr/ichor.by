@@ -8,12 +8,13 @@ import PostForm from '../components/PostForm';
 import { GET_MY_POST, GET_NOTES } from '../gql/query';
 
 const NEW_POST = gql`
-  mutation createPost($title: String!, $imageUrl: String, $imageUrl2: String, $scriptUrl: Boolean, $category: String!, $body: String!, $body2: String!) {
-    createPost(title: $title, imageUrl: $imageUrl, imageUrl2: $imageUrl2, scriptUrl: $scriptUrl, category: $category, body: $body, body2: $body2) {
+  mutation createPost($title: String!, $imageUrl: String, $imageUrl2: String, $imageUrl3: String, $scriptUrl: Boolean, $category: String!, $body: String!, $body2: String!, $body3: String!) {
+    createPost(title: $title, imageUrl: $imageUrl, imageUrl2: $imageUrl2, imageUrl3: $imageUrl3, scriptUrl: $scriptUrl, category: $category, body: $body, body2: $body2, body3: $body3 ) {
       _id
         title
         imageUrl
         imageUrl2
+        imageUrl3
         scriptUrl
         category{
           _id
@@ -21,6 +22,7 @@ const NEW_POST = gql`
         }
         body
         body2
+        body3
         author {
           _id
           name

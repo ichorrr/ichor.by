@@ -64,6 +64,7 @@ const GET_NOTES = gql`
         title
         imageUrl
         imageUrl2
+        imageUrl3
         scriptUrl
         createdAt
         category {
@@ -73,6 +74,7 @@ const GET_NOTES = gql`
         viewsCount
         body
         body2
+        body3
         author {
           _id
           name
@@ -92,6 +94,7 @@ const GET_MY_POST = gql`
         _id
         title
         imageUrl2
+        imageUrl3
         createdAt
         viewsCount
         category {
@@ -136,6 +139,7 @@ const GET_POST = gql`
       title
       imageUrl
       imageUrl2
+      imageUrl3
       scriptUrl
       createdAt
       updatedAt
@@ -146,6 +150,7 @@ const GET_POST = gql`
       }
       body
       body2
+      body3
       author {
         _id
         name
@@ -162,6 +167,7 @@ const GET_POSTS = gql`
       title
       imageUrl
       imageUrl2
+      imageUrl3
       scriptUrl
       createdAt
       updatedAt
@@ -172,6 +178,7 @@ const GET_POSTS = gql`
       }
       body
       body2
+      body3
       author {
         _id
         name
