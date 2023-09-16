@@ -157,7 +157,7 @@ const PostForm = props => {
 
             {imageUrl.imageUrl && (
             <>
-              <Button variant="contained" onClick={ onClickRemoveImage}  >Remove image</Button>
+              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Remove image</Button>
               <p className="p-imageurl">{imageUrl.imageUrl}</p>
             </>
            )}
@@ -171,7 +171,7 @@ const PostForm = props => {
 
         )}
       <div className="empty-div"></div>
-      <label htmlFor="title">Title Post:</label>
+      <label htmlFor="title">Title Post</label>
       <input
         required
         type="text"
@@ -193,7 +193,7 @@ const PostForm = props => {
         <div className="empty-div"></div>
 
       <label htmlFor="category" className="style-select">
-      <span>Category Post:</span>
+      <span>Category Post</span>
                <select onChange={onChange} type="text"
                  id="category" name="category" value={value.category}>
                  <option >enter category</option>
@@ -205,7 +205,7 @@ const PostForm = props => {
 
         <div className="empty-div"></div>
 
-        <label htmlFor="title">News Content:</label>
+        <label htmlFor="title">News Content</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
@@ -232,11 +232,12 @@ const PostForm = props => {
 
               {imageUrl2.imageUrl2 && (
               <>
-                <Button variant="contained" onClick={ onClickRemoveImage2}  >Remove image</Button>
+                <Button className='i-delete' variant="contained" onClick={ onClickRemoveImage2}  >Remove image</Button>
                 <p className="p-imageurl">{imageUrl2.imageUrl2}</p>
               </>
              )}
               </div>
+            
             {imageUrl2.imageUrl2 && (
 
               <div className="imageViewer">
@@ -245,7 +246,8 @@ const PostForm = props => {
 
             )}
             <div className="empty-div"></div>
-        <label htmlFor="title">News Content 2:</label>
+        
+        <label htmlFor="title">News Content 2</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
@@ -274,7 +276,7 @@ const PostForm = props => {
 
               {imageUrl3.imageUrl3 && (
               <>
-                <Button variant="contained" onClick={ onClickRemoveImage3}  >Remove image</Button>
+                <Button variant="contained" className='i-delete' onClick={ onClickRemoveImage3}  >Remove image</Button>
                 <p className="p-imageurl">{imageUrl3.imageUrl3}</p>
               </>
              )}
@@ -287,7 +289,7 @@ const PostForm = props => {
 
             )}
             <div className="empty-div"></div>
-        <label htmlFor="title">News Content 3:</label>
+        <label htmlFor="title">News Content 3</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
@@ -301,7 +303,7 @@ const PostForm = props => {
         </div>
     
       <div className="algn-btn">
-        <Button type="submit"> Save note</Button>
+        <button className="save-note" type="submit" > Save note</button>
         </div>
       </Form>
     </Wrapper>

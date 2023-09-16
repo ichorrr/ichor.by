@@ -157,6 +157,7 @@ A {
 	margin-left: 2em;
 	margin-top: 12px;
 	border-radius: 10px;
+	letter-spacing: .02em;
 }
 
 .log-out-mb {
@@ -398,7 +399,7 @@ noindex:-o-prefocus, #ahead p  {
 
 .top_head .active {
 	background: #159dc3;
-	color: #dddddd;
+	color: #fff;
 	transition: all 0.5s ease-out;
 }
 

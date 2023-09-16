@@ -19,7 +19,7 @@ const H2 = styled.h2`
   font-size: 7em;
   width: 90vw;
   line-height: 1.3em;
-  color: #000;
+  color: #363636;
 `;
 
 const Post = ({ post }) => {

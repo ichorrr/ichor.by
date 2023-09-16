@@ -1,9 +1,8 @@
 import React from 'react';
-import { useMutation, gql } from '@apollo/client';
-import { withRouter, useNavigate, Link } from 'react-router-dom';
-import styled from 'styled-components';
+import { useMutation } from '@apollo/client';
+import { useNavigate, Link } from 'react-router-dom';
 import { DELETE_POST } from '../gql/mutation';
-import {GET_POST, GET_CATS, GET_NOTES, GET_MY_POST} from '../gql/query';
+import {GET_CATS, GET_NOTES, GET_MY_POST} from '../gql/query';
 
 const DeletePost = props => {
 

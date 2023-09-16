@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useApolloClient, gql } from '@apollo/client';
-import styled from 'styled-components';
-import Button from '../components/Button';
+
 import UserForm from '../components/UserForm'
 import Loader from '../components/Loader'
 

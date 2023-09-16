@@ -19,21 +19,18 @@ const Form = styled.form`
   label,
   input {
     display: block;
-    line-height: 2em;
-    font-size: 1.3em;
   }
 
   input {
     width: calc(100% - 1.8em);
     margin-bottom: 1em;
-    padding: .4em .8em;
+    padding: .6em .8em;
     color: #000;
     border-radius: .25em;
     border-style: solid;
   }
   
   label {
-    font-size: 1.4em;
     padding: .3em 0;
     color: #fff;
   }
@@ -100,8 +97,10 @@ const UserForm = props => {
           placeholder="Password"
           onChange={onChange}
         />
+        <div className='empty-div-half'></div>
         {props.formType === 'signUp' ? (<Button type="submit">Create Account</Button>) :(<Button type="submit">Log in now</Button>)}
       </Form>
+      <div className='empty-div'></div>
     </Wrapper>
   );
 };

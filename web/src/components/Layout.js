@@ -4,11 +4,11 @@ import Navigation from './Navigation';
 
 const Main = styled.main`
   width: 100%;
-  position: absolute;
+
   margin-top: 3.5em;
   margin: 0;
   top: 0;
-  height: 100vh;
+
 
 `;
 

@@ -3,17 +3,21 @@ import styled from 'styled-components';
 const Button = styled.button`
 position: relative;
 z-index: 1;
-  padding: 25px 40px;
+float: right;
+  padding: 20px 30px 20px 51px;
   border: none;
   display: inline;
-  border-radius: .3em;
-  font-size: 1.1em;
-  color: #fff;
-  background-color: #0077cc;
+  border-radius: .6em;
+  font-size: .9em;
+  color: #727272;
+  font-weight: bold;
+  background-color: #dadada;
   cursor: pointer;
+  letter-spacing: .03em;
 
   :hover {
     background-color: #aa0606;
+    color: #fff;
   }
 
   :active {
