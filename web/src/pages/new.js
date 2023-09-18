@@ -55,7 +55,7 @@ const NewPost = props => {
       {loading && <p> loading...</p>}
       {error && <p>Error saving the note</p>}
       <div className="top-new-post">
-      <h1>NewPost - create post, choose category, publish</h1>
+      <h1><span className='bold-class'>New Post</span></h1><p className='p-newpost'>Create post, choose category, upload images and publish.</p>
       </div>
       <PostForm action={data} />
     </React.Fragment>

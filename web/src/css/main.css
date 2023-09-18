@@ -9,6 +9,17 @@
   width: 100%;
 }
 
+.bold-class {
+  font-weight: bold;
+  font-size: 1.4em;
+}
+
+.p-newpost {
+  padding-top: .4em;
+  color: #a0a0a0;
+  font-size: 1.4em;
+}
+
 code {
   display: block;
   background: #efefef;
