@@ -98,9 +98,8 @@ const UserForm = props => {
           onChange={onChange}
         />
         <div className='empty-div-half'></div>
-        {props.formType === 'signUp' ? (<Button type="submit">Create Account</Button>) :(<Button type="submit">Log in now</Button>)}
+        {props.formType === 'signUp' ? (<button className="save-note" type="submit">Create Account</button>) :(<button className="save-note" type="submit">Log in now</button>)}
       </Form>
-      <div className='empty-div'></div>
     </Wrapper>
   );
 };

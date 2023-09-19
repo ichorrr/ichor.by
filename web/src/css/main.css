@@ -52,6 +52,7 @@ code {
 
 .algn-btn {
   float: left;
+  width: 100%;
   padding: 3em 0;
 }
 
@@ -96,17 +97,18 @@ code {
 
 .save-note {
   position: relative;
-z-index: 1;
-  padding: 20px 60px;
+  z-index: 1;
+  padding: 20px;
   border: none;
-  display: inline;
   border-radius: .6em;
-  font-size: .9em;
+  font-size: 1.1em;
   color: #fff;
   font-weight: bold;
   background-color: #159dc3;
   cursor: pointer;
-  letter-spacing: .03em;
+  display: block;
+  width: 100%;
+  letter-spacing: .02em;
 }
 
 .i-delete {
