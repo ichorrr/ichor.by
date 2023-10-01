@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
-
+import { format } from 'date-fns';
 import { GET_NOTES, GET_POST, GET_CAT } from '../gql/query';
 
 const CatPage = () => {
@@ -31,7 +31,7 @@ const CatPage = () => {
             <h1>{post.title}</h1>
         </Link>
               <div className="css-plank-cat">
-                <span>{post.createdAt}</span>
+                <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
                   <Link  to={`/users/${post.author._id}`}>
                     {`author ${post.author.name}`}
                   </Link>

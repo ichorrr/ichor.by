@@ -1,3 +1,6 @@
+body {
+  background-color: #f7f7f7;
+}
 
 .empty-div {
   padding: 3em 0 1em 0;
@@ -147,6 +150,10 @@ div.top-new-post {
   padding: 3.5em 2% 1.5em 2%;
   color: #000;
   font-size: 2.5em;
+}
+
+.top-new-post h1,  .top-new-post p {
+  padding-left: 3%;
 }
 
 .imageViewer {
@@ -420,7 +427,6 @@ transition: height 0.3s;
 }
 
 .css-userform h2 {
-  padding: 0 0 .4em 0;
   font-size: 4em;
   text-align: left;
   color: #fff;

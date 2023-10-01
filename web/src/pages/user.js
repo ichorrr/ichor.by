@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
-import ReactMarkdown from 'react-markdown';
+import { format } from 'date-fns';
 import { Link, useParams } from 'react-router-dom';
 
 import { GET_USER } from '../gql/query';
@@ -34,7 +34,7 @@ const GetUser = () => {
         <Link  to={`/cats/${post.category._id}`}>
           {`${post.category.catname}`}
         </Link>
-          <span>{post.createdAt}</span>
+          <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
           <span>{`views ${post.viewsCount}`}</span>
         </div>
         </li>

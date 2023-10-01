@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
 import styled from 'styled-components';
+import { format } from 'date-fns';
 import { GET_MY_POST } from '../gql/query';
 
 const PostParagraph = styled.div`
@@ -49,7 +50,7 @@ const MyPosts = props => {
           <Link  to={`/cats/${post.category._id}`}>
             {`${post.category.catname}`}
           </Link>
-            <span>{post.createdAt}</span>
+            <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
             <span>{`views ${post.viewsCount}`}</span>
           </div>
           </li>

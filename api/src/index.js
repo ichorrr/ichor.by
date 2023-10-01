@@ -251,19 +251,16 @@ const resolvers = {
         if (note.imageUrl) {
           var name = note.imageUrl.split("/").pop();
           var pth = "./uploads/" + name;
-          console.log(pth);
           fs.unlinkSync(pth, 'Content_For_Writing');
         }
         if (note.imageUrl2) {
         var name2 = note.imageUrl2.split("/").pop();
         var pth2 = "./imgposts/" + name2;
-        console.log(pth2);
         fs.unlinkSync(pth2, 'Content_For_Writing');
         }
         if (note.imageUrl3) {
         var name3 = note.imageUrl3.split("/").pop();
         var pth3 = "./imgposts/" + name3;
-        console.log(pth3);
         fs.unlinkSync(pth3, 'Content_For_Writing');
         }
 

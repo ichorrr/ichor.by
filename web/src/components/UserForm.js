@@ -8,7 +8,7 @@ import Button from './Button';
 const Wrapper = styled.div`
 
   max-width: 500px;
-  padding: 3em 7em 5em 6em;
+  padding: 3em 7em 4em 6em;
   margin: 0 auto;
   border-radius: 1em;
   background-color: rgba(69, 214, 255, .1);

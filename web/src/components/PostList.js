@@ -5,6 +5,7 @@ import { useQuery, gql } from '@apollo/client';
 import PostUser from './PostUser';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
+import { format } from 'date-fns';
 
 const IS_LOGGED_IN = gql`
   query IsUserLoggedIn {
@@ -78,7 +79,7 @@ const PostList = ({ post }) => {
       <Link style={linkStyle} to={`/cats/${idcat}`}>
         <H4R>{post.category.catname}</H4R>
       </Link>
-      <H4R>{post.createdAt}</H4R>
+      <H4R>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</H4R>
       <Link style={linkStyle} to={`/users/${iduser}`}>
         <H4R>{`author ${post.author.name}`}</H4R>
       </Link>
