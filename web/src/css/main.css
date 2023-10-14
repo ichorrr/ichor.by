@@ -144,7 +144,7 @@ code {
 }
 
 .title-h2 {
-  color: #797979;
+  color: #159dc3;
   font-size: 3em;
   margin: 1.5em 0;
 }
@@ -172,6 +172,19 @@ div.top-new-post {
   padding-left: 3%;
 }
 
+.top-new-post p {
+  margin: 2em 6em 1em 2.5em;
+}
+
+.txtColumn {
+  font-size: 1.8em;
+  line-height: 1.5em;
+  padding: 4em 2em 1em 2em;
+  column-width: 40%;
+	column-count: 2;
+	column-gap: 7%;
+  color: #707070;
+}
 .imageViewer {
   display: block;
   width: 100%;
