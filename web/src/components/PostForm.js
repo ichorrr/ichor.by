@@ -22,11 +22,7 @@ const Form = styled.form`
   }
 `;
 
-const SimpleMDE = styled.textarea`
-  width: 95%;
-  height: 200px;
-  font-size: 2.5em;
-`;
+
 
 const PostForm = props => {
   // set the default state of the form\
