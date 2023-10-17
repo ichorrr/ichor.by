@@ -5,10 +5,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-/web/src/components/Ifelse.js
+
 web/.parcel-cache/
 */.parcel-cache/
 web/dist/
+
+.gitignore
 
 dist/
 # Runtime data
