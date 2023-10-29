@@ -458,7 +458,7 @@ const storage3 = multer.diskStorage({
 
 const upload = multer({storage: storage});
 
-const upload2 = multer({ storage: storage2   });
+const upload2 = multer({ storage: storage2 });
 
 const upload3 = multer({ storage: storage3  });
 
