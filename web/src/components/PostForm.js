@@ -68,7 +68,7 @@ const PostForm = props => {
           const formData = new FormData();
           const file = event.target.files[0];
           formData.append('imageUrl', file);
-          const res = await fetch('http://localhost:4000/upload', {
+          const res = await fetch('https://ichorby-api.onrender.com/upload', {
             method: 'POST',
             body: formData,
           });
@@ -82,7 +82,7 @@ const PostForm = props => {
           const formData2 = new FormData();
           const file2 = event.target.files[0];
           formData2.append('imageUrl2', file2);
-          const res2 = await fetch('http://localhost:4000/upload2', {
+          const res2 = await fetch('https://ichorby-api.onrender.com/upload2', {
             method: 'POST',
             body: formData2,
           });
@@ -96,7 +96,7 @@ const PostForm = props => {
     const formData3 = new FormData();
     const file3 = event.target.files[0];
     formData3.append('imageUrl3', file3);
-    const res3 = await fetch('http://localhost:4000/upload3', {
+    const res3 = await fetch('https://ichorby-api.onrender.com/upload3', {
       method: 'POST',
       body: formData3,
     });
