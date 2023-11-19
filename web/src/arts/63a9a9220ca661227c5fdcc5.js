@@ -1,7 +1,7 @@
-import { Canvas } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { Canvas, useThree, events } from "@react-three/fiber";
+import { useRef, useEffect, useState } from "react";
 import { Vector2 } from "three";
-import styled from 'styled-components';
+import { Stats, OrbitControls } from '@react-three/drei'
 
 import vertexShader from '../shaders/vertexShader';
 import fragmentShader from '../shaders/fragmentShader';
@@ -9,13 +9,46 @@ import fragmentShader from '../shaders/fragmentShader';
 const BritPattern = () => {
 
   const mesh = useRef();
-  const uniforms = useMemo(
-    () => ({
-      u_resolution: { value: new Vector2(1050, 1050) },
-      u_time: { value: 1.0 },
-    }), []);
+  const { width, height } = useThree((state) => state.gl.domElement);
+  const [size, setSize] = useState(() => ({ width: 0, height: 0 }));
+
+
+  const [uniforms, setUniforms] = useState(() => ({
+    u_resolution: { type: "v2", value: new Vector2() },
+    u_time: {type: 'f'},
+  }));
+
+  useEffect(() => {
+     
+    function onResize() {
+      // get wrapper dimension without CSS transforms
+      if (mesh.current) {
+        setSize({
+          width: mesh.width,
+          height: mesh.height
+        });
+      }
+    }
+
+    window.addEventListener("resize", onResize);
+
+    onResize();
+
+    function setPi(width, height) {
+      window.innerWidth > window.innerHeight ? width = height : height = width;
+      return width;
+    }
+  
+      setUniforms((u) => ({
+        ...u,
+        u_resolution: {
+          value: u.u_resolution.value.set((width, height)*(width/height) , setPi(width, height))
+        }
+      }));
+    }, [width, height]);
 
   return (
+    
     <mesh
       ref={mesh} >
       <planeGeometry args={[2., 2.]} />
@@ -33,7 +66,9 @@ const Arts63a9a9220ca661227c5fdcc5 =() => {
     <div className="htcanvas" >
     <Canvas>
       <BritPattern />
+      <OrbitControls />
     </Canvas>
+    
     </div>
   );
 }

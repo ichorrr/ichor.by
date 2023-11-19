@@ -2,8 +2,9 @@ import React, { useRef, useEffect, useState, StrictMode } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Vector2 } from "three";
 
-import vertexShader from '../shaders/loader/vertexShader';
-import fragmentShader from '../shaders/loader/loaderShader';
+import vertexShader from '../shaders/backshader/vertexShader';
+import fragmentShader from '../shaders/backshader/backShader';
+import useWindowSize from "./UseWindowSize";
 
 const CLoader = () => {
 
@@ -51,12 +52,11 @@ const [uniforms, setUniforms] = useState(() => ({
 
       });
 
-
     return (
         <mesh
         ref={ref}  >
           <planeGeometry args={[2., 2.]}  />
-          <shaderMaterial
+          <shaderMaterial 
             fragmentShader={fragmentShader}
             vertexShader={vertexShader}
             uniforms={uniforms}
@@ -66,10 +66,12 @@ const [uniforms, setUniforms] = useState(() => ({
       );
 }
 
-const Loader =() => {
+const BgShader =() => {
+  
+  const windowSize = useWindowSize();
     return (
       <StrictMode>
-      <div className="loader-canvas" >
+      <div className="bg-canvas" >
       <Canvas>
         <CLoader />
       </Canvas>
@@ -79,4 +81,4 @@ const Loader =() => {
     );
   }
 
-export default Loader;
+export default BgShader;

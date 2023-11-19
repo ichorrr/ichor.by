@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMutation, InMemoryCache, writeQuery, useQuery, useApolloClient, NetworkStatus, gql } from '@apollo/client';
 
 import UserForm from '../components/UserForm';
-import Loader from '../components/Loader'
+import BgShader from '../components/BackShader'
 const cache = new InMemoryCache();
 const SIGNIN_USER = gql`mutation signIn($email: String!, $password: String!){
   signIn(email: $email, password: $password)
@@ -46,7 +46,7 @@ const SignIn = props => {
       <UserForm action={signIn} formType="signIn" />
       
     </div>
-    <Loader />
+    <BgShader />
     </>
   );
 };

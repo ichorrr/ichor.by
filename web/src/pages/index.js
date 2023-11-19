@@ -1,10 +1,10 @@
 import React from 'react';
-import loadable from "@loadable/component";
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useQuery, gql } from '@apollo/client';
-import { GET_POSTS, GET_NOTES } from '../gql/query';
+import { useQuery } from '@apollo/client';
+import { GET_POSTS } from '../gql/query';
 import Layout from '../components/Layout';
+import Loader from '../components/Loader';
 
 import Home from './home';
 import PostPage from './posts';
@@ -21,7 +21,7 @@ import About from './about';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
-  if (loading) return <p>loading...</p>;
+  if (loading) return <div><Loader /></div>;
   if (error) return <p>error...</p>;
 
 let dnss = data.getPosts[1]._id;

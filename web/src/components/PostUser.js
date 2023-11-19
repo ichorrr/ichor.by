@@ -1,7 +1,6 @@
 import React, {useEffect, useState, useRef } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
 import {GET_ME} from '../gql/query';
 import DeletePost from './DeletePost.js';
 
@@ -9,7 +8,6 @@ const PostUser = props => {
 
   const rootEl = useRef(null);
   const [alert, setAlert] = useState(false);
-
 
   useEffect(() => {
 

@@ -74,6 +74,7 @@ console.log(data.postFirst);
           <Link to={`/posts/${data.postFirst._id}`}>
             <h1>{data.postFirst.title}</h1>
           </Link>
+          <p><br></br><br></br><br></br></p>
           <div className="css-plank">
             <Link  to={`/cats/${idcat}`}>
               {data.postFirst.category.catname}
@@ -83,9 +84,7 @@ console.log(data.postFirst);
             </Link>
           </div>
         </div>
-        <div className="fp-canvas" >
           <UniBlock post={data.postFirst._id}/>
-        </div>
       </div>
     </article>
   );

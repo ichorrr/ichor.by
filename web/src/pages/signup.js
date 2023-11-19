@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useApolloClient, gql } from '@apollo/client';
 
 import UserForm from '../components/UserForm'
-import Loader from '../components/Loader'
+import BgShader from '../components/BackShader'
 
 
 const SIGNUP_USER = gql`mutation signUp($name: String!, $email: String!, $password: String!){
@@ -51,7 +51,7 @@ if (error) return (
     <div className="css-userform">
       <UserForm action={signUp} formType="signUp" />
     </div>
-    <Loader />
+    <BgShader />
     </>
   );
 };

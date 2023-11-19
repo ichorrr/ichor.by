@@ -1,12 +1,14 @@
-import React from 'react';
+import React, {useState} from 'react';
 import { useMutation } from '@apollo/client';
 import { useNavigate, Link } from 'react-router-dom';
 import { DELETE_POST } from '../gql/mutation';
 import {GET_CATS, GET_NOTES, GET_MY_POST} from '../gql/query';
+import Modal from './ModalWin';
 
 const DeletePost = props => {
 
   const navigate = useNavigate();
+  const [modal, setModal] = useState(false); 
 
   const [deletePost] = useMutation(DELETE_POST, {
     variables: {
@@ -18,7 +20,16 @@ const DeletePost = props => {
     }
   });
 
-  return <Link onClick={deletePost} className="css-delete">Delete Post</Link>
+  return (
+    <>
+  
+  <Link onClick={() => setModal(true)} className="css-delete">Delete Post</Link>
+    <Modal act={modal} setAct={setModal} >
+      <div className='tert'>
+        <p>Are you sure you want to <Link onClick={deletePost} >delete</Link> the Post?</p>
+      </div>
+    </Modal>
+</>)
 };
 
 export default DeletePost;

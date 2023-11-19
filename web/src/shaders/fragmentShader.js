@@ -9,6 +9,13 @@ const fragmentShader = `
       	uniform vec2 u_resolution;
       	uniform float u_time;
 
+		
+float random (vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(0.550,0.590)))*
+        43758.5453123);
+}
+
       	vec2 rotate2D(vec2 _st, float _angle){
       	    _st -= 0.5;
       	    _st =  mat2(cos(_angle),-sin(_angle),
@@ -50,7 +57,7 @@ const fragmentShader = `
       void main(){
       	vec2 st = gl_FragCoord.xy/u_resolution.xy;
           	st.x *= u_resolution.x/u_resolution.y;
-
+			vec2 stsx = st;
           	vec3 color = vec3(0.14,0.14,0.15);
 
 
@@ -156,7 +163,16 @@ const fragmentShader = `
               }
 
       	    	float dln =0.468- length(st*0.908 - vec2(0.380,0.290));
+				  float dls = 1.-length(st*1.424 - vec2(0.50,0.40));
+			  	float dlsx = 1.-length(stsx*.424 - vec2(0.50,0.50));
+
+
       				color *= mix(vec3(1.), vec3(0.), dln);
+			  		color *= vec3(dls);
+					color *= vec3(dlsx*1.2);
+
+			  		float rnd = random( st );
+			  		color *=vec3(rnd)*.8 + .6;
 
       	    gl_FragColor = vec4(color,1.0);
 

@@ -10,7 +10,7 @@ const LabyRinths = () => {
 
   const mesh = useRef();
 
-  const { width, height } = useThree((state) => state.gl.domElement);
+  const [width, height] = useWindowSize()
   const viewport = useThree();
 
    const [uniforms, setUniforms] = useState(() => ({
