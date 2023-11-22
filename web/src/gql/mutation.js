@@ -3,6 +3,7 @@ import { gql } from '@apollo/client';
 const EDIT_POST = gql`
   mutation updatePost(
       $id: String!, 
+      $iconPost: String,
       $imageUrl: String, 
       $imageUrl2: String, 
       $imageUrl3: String,
@@ -13,7 +14,8 @@ const EDIT_POST = gql`
       $body3: String
     ) {
     updatePost(
-        _id: $id, 
+        _id: $id,
+        iconPost: $iconPost,
         imageUrl: $imageUrl, 
         imageUrl2: $imageUrl2, 
         imageUrl3: $imageUrl3, 
@@ -25,6 +27,7 @@ const EDIT_POST = gql`
       ) {
       _id
         title
+        iconPost
         imageUrl
         imageUrl2
         imageUrl3

@@ -27,9 +27,12 @@ const PostForm = props => {
   const inputFileRef = useRef(null);
   const inputFileRef2 = useRef(null);
   const inputFileRef3 = useRef(null);
+  const iref = useRef(null);
   const [body, setBody] = useState({body: props.body || ''});
   const [body2, setBody2] = useState({body2: props.body2 || ''});
   const [body3, setBody3] = useState({body3: props.body3 || ''});
+
+  const [iconPost, setIconPost] = useState({iconPost: props.iconPost || ''});
   const [imageUrl, setImageUrl] = useState({imageUrl: props.imageUrl || ''});
   const [imageUrl2, setImageUrl2] = useState({imageUrl2: props.imageUrl2 || ''});
   const [imageUrl3, setImageUrl3] = useState({imageUrl3: props.imageUrl3 || ''});
@@ -68,7 +71,7 @@ const PostForm = props => {
           const formData = new FormData();
           const file = event.target.files[0];
           formData.append('imageUrl', file);
-          const res = await fetch('https://ichorby-api.onrender.com/upload', {
+          const res = await fetch('http://localhost:4000/upload', {
             method: 'POST',
             body: formData,
           });
@@ -82,7 +85,7 @@ const PostForm = props => {
           const formData2 = new FormData();
           const file2 = event.target.files[0];
           formData2.append('imageUrl2', file2);
-          const res2 = await fetch('https://ichorby-api.onrender.com/upload2', {
+          const res2 = await fetch('http://localhost:4000/upload2', {
             method: 'POST',
             body: formData2,
           });
@@ -96,13 +99,27 @@ const PostForm = props => {
     const formData3 = new FormData();
     const file3 = event.target.files[0];
     formData3.append('imageUrl3', file3);
-    const res3 = await fetch('https://ichorby-api.onrender.com/upload3', {
+    const res3 = await fetch('http://localhost:4000/upload3', {
       method: 'POST',
       body: formData3,
     });
     const data3 = await res3.json();
     imageUrl3 = await data3.url;
     setImageUrl3({ imageUrl3});
+}
+
+const ihandleChangeFile = async (iconPost) =>{
+
+  const iformData = new FormData();
+  const ifile = event.target.files[0];
+  iformData.append('iconPost', ifile);
+  const ires = await fetch('http://localhost:4000/upload4', {
+    method: 'POST',
+    body: iformData,
+  });
+  const idata = await ires.json();
+  iconPost = await idata.url;
+  setIconPost({ iconPost });
 }
 
   const onClickRemoveImage =() => {
@@ -117,6 +134,10 @@ const PostForm = props => {
     setImageUrl3('');
   };
 
+  const onClickRemoveIcon =() => {
+    setIconPost('');
+  };
+
   return (
     <Wrapper>
       <Form
@@ -129,6 +150,7 @@ const PostForm = props => {
               ...body,
               ...body2,
               ...body3,
+              ...iconPost,
               ...imageUrl,
               ...imageUrl2,
               ...imageUrl3,
@@ -162,7 +184,6 @@ const PostForm = props => {
             <div className="imageViewer">
               <img src={imageUrl.imageUrl} />
             </div>
-
         )}
       <div className="empty-div"></div>
       <label htmlFor="title">Title Post</label>
@@ -177,6 +198,39 @@ const PostForm = props => {
       />
 
       <div className="empty-div"></div>
+
+
+{/* Model Icon Upload */}
+        <div className="iconBlock">
+
+            <div className="iconViewer">
+                  {iconPost.iconPost && (
+                    <img src={iconPost.iconPost} />
+                  )}
+            </div>
+            <div className="iblock"  >   
+            <input
+              ref={iref}
+              className="custom-icon-input"
+              type="file"
+              name="iconPost"
+              id="iconPost"
+              onChange={ihandleChangeFile}
+              value={value.props}
+              />
+
+            {iconPost.iconPost && (
+            <>
+              <Button variant="contained" className='i-delete'  onClick={ setIconPost }  >Remove image</Button>
+              <p className="p-imageurl">{iconPost.iconPost}</p>
+            </>
+            )}
+            </div>
+        </div>
+     
+{/* End Model Icon Upload */}
+
+<div className="empty-div"></div>
 
       	<div className="css-checkbox" >
           <input type="checkbox" id="scriptUrl" name="scriptUrl" checked={scriptUrl.scriptUrl} onChange={onChangeCHK}  />

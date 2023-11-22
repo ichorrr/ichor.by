@@ -9,6 +9,9 @@ const Post = mongoose.model(
         type: String,
         required: true
       },
+      iconPost: {
+        type: String,
+      },
       imageUrl: {
         type: String,
       },

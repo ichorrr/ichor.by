@@ -32,6 +32,7 @@ const typeDefs = gql`
 
   type Post {
     _id: ID!
+    iconPost: String
     imageUrl: String
     imageUrl2: String
     imageUrl3: String
@@ -74,10 +75,9 @@ const typeDefs = gql`
     signUp(name: String!, email: String!, password: String!): String!
 
     createCat(catname: String!): Cat!
-    deleteCat(_id: String!): Boolean!
-    createPost(title: String!, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, category: String!, body: String!, body2: String, body3: String): Post!
+    createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, category: String!, body: String!, body2: String, body3: String): Post!
     deletePost(_id: String!): Boolean!
-    updatePost(_id: String!, title: String!,  imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
+    updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
     createComment(text: String!, post: String!): Comment!
   }
 
@@ -219,14 +219,6 @@ const resolvers = {
       const createdCat = await newCat.save();
       return createdCat;
     },
-    async deleteCat(_, { _id: id }, { models }) {
-      try {
-        await models.Cat.findOneAndRemove({ _id: id });
-        return true;
-      } catch (err) {
-        return false;
-      }
-    },
 
     deletePost: async (parent, { _id }, { models, user }) => {
       
@@ -263,6 +255,11 @@ const resolvers = {
         var pth3 = "./imgposts/" + name3;
         fs.unlinkSync(pth3, 'Content_For_Writing');
         }
+        if (note.iconPost) {
+          var iname = note.iconPost.split("/").pop();
+          var ipth = "./imgposts/" + iname;
+          fs.unlinkSync(ipth, 'Content_For_Writing');
+          }
 
         await note.remove();
         return true;
@@ -272,7 +269,7 @@ const resolvers = {
       }
     },
 
-    updatePost: async (parent, { imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
+    updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
       // if not a user, throw an Authentication Error
       if (!user) {
         throw new AuthenticationError('You must be signed in to update a note');
@@ -296,6 +293,7 @@ const resolvers = {
             body,
             body2,
             body3,
+            iconPost,
             imageUrl,
             imageUrl2,
             imageUrl3,
@@ -315,6 +313,7 @@ const resolvers = {
 
       const newPost = await models.Post({
         title: args.title,
+        iconPost: args.iconPost,
         imageUrl: args.imageUrl,
         imageUrl2: args.imageUrl2,
         imageUrl3: args.imageUrl3,
@@ -456,11 +455,23 @@ const storage3 = multer.diskStorage({
   }
 });
 
+const istorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'imgposts')
+  },
+  filename: (req, file, cb) => {
+    console.log(file)
+    cb(null, file.originalname)
+  }
+});
+
 const upload = multer({storage: storage});
 
 const upload2 = multer({ storage: storage2 });
 
-const upload3 = multer({ storage: storage3  });
+const upload3 = multer({ storage: storage3 });
+
+const upload4 = multer({ storage: istorage });
 
 app.use(express.json());
 
@@ -470,21 +481,28 @@ app.use('/imgposts', express.static('imgposts'));
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   res.json({
-    url: `https://ichorby-api.onrender.com/uploads/${req.file.originalname}`,
+    url: `http://localhost:4000/uploads/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   res.json({
-    url: `https://ichorby-api.onrender.com/imgposts/${req.file.originalname}`,
+    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
-    url: `https://ichorby-api.onrender.com/imgposts/${req.file.originalname}`,
+    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+  })
+  console.log(req.file)
+})
+
+app.post('/upload4', upload3.single('iconPost'), (req, res) => {
+  res.json({
+    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })

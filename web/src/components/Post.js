@@ -19,7 +19,7 @@ const H2 = styled.h2`
   font-family: Arial, sans-serif;
   font-size: 8em;
   width: 90vw;
-  line-height: 1.3em;
+  line-height: 1.2em;
   color: #363636;
 `;
 

@@ -22,6 +22,7 @@ const GET_CAT = gql`
       catname
       posts {
         _id
+        iconPost
         title
         createdAt
         viewsCount
@@ -62,6 +63,7 @@ const GET_NOTES = gql`
       posts {
         _id
         title
+        iconPost
         imageUrl
         imageUrl2
         imageUrl3
@@ -93,6 +95,7 @@ const GET_MY_POST = gql`
       posts {
         _id
         title
+        iconPost
         imageUrl2
         imageUrl3
         createdAt
@@ -137,6 +140,7 @@ const GET_POST = gql`
     getPost(_id: $id) {
       _id
       title
+      iconPost
       imageUrl
       imageUrl2
       imageUrl3
@@ -165,6 +169,7 @@ const GET_POSTS = gql`
     getPosts {
       _id
       title
+      iconPost
       imageUrl
       imageUrl2
       imageUrl3

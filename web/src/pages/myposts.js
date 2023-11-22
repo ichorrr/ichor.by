@@ -42,17 +42,23 @@ const MyPosts = props => {
     <div className="cat-post-li">
     <ul>
       {data.me.posts.map(post => (
-          <li key={post._id}>
-            <Link to={`/posts/${post._id}`}>
-              <h1>{post.title}</h1>
-            </Link>
-          <div className="css-plank-cat">
-          <Link  to={`/cats/${post.category._id}`}>
-            {`${post.category.catname}`}
-          </Link>
-            <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
-            <span>{`views ${post.viewsCount}`}</span>
-          </div>
+        
+          <li key={post._id} className='li-post-flex'>
+            <div className="iconPost">
+              <img src={post.iconPost} />
+            </div>
+            <div className='post-cont'>
+              <Link to={`/posts/${post._id}`}>
+                <h1>{post.title}</h1>
+              </Link>
+              <div className="css-plank-cat">
+                <Link  to={`/cats/${post.category._id}`}>
+                  {`${post.category.catname}`}
+                </Link>
+                <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
+                <span>{`views ${post.viewsCount}`}</span>
+              </div>
+            </div>
           </li>
       ))}
     </ul>

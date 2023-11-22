@@ -26,7 +26,11 @@ const CatPage = () => {
   <div className="cat-post-li">
     <ul>
       {data.getCat.posts.map(post => (
-        <li key={post._id} className="mypost_li">
+        <li key={post._id} className="mypost_li li-post-flex">
+            <div className="iconPost">
+              <img src={post.iconPost} />
+            </div>
+            <div className='post-cont'>
         <Link  to={`/cats/${cname}/post/${post._id}`}>
             <h1>{post.title}</h1>
         </Link>
@@ -36,6 +40,7 @@ const CatPage = () => {
                     {`author ${post.author.name}`}
                   </Link>
                 <span>{`views ${post.viewsCount}`}</span>
+              </div>
               </div>
           </li>
       ))}
