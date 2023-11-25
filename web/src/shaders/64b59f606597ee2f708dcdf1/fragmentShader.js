@@ -14,6 +14,7 @@ uniform float u_time;
 
 vec3 crcl(vec2 v, vec2 _st, float n){
   float rr = length(_st - v);
+  
   return vec3(smoothstep(-0.265, -0.210, rr*n-0.33) - smoothstep(-0.16, -0.096, rr*n-.376));
 }
 
@@ -24,16 +25,15 @@ vec3 path(vec2 _st, float xx){
 
 void main() {
   vec2 st = gl_FragCoord.xy/u_resolution.xy;
-
+  st.x *= u_resolution.x/u_resolution.y;
   vec3 color = vec3(.0);
-  st -= vec2(.5);
+  st = st -vec2((u_resolution.x/ 2.)/u_resolution.y,0.5);
   // Scale
-  st *= 4.;
+  st *= 3.;
 
   // Tile the space
   vec2 i_st = floor(st);
   vec2 f_st = fract(st);
-
 
 float r = length(st);
 float a = atan(st.y, st.x);

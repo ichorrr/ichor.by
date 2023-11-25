@@ -1,5 +1,5 @@
-import React,  {Component, useRef, Suspense, lazy } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import React,  { Suspense, lazy } from 'react';
+
 import {Canvas} from "@react-three/fiber";
 const Arts63a9a9220ca661227c5fdcc5 = lazy(() => import('../arts/63a9a9220ca661227c5fdcc5'));
 const Arts644d5f4cddda2a2f78cc00eb = lazy(() => import('../arts/644d5f4cddda2a2f78cc00eb'));
@@ -11,7 +11,7 @@ class ArtPage extends React.Component {
     let csc = this.props.id;
     const Pt = document.getElementById(`${csc}`);
 
-    if (csc == "64b59f606597ee2f708dcdf1") {
+    if (csc == "655f93168a388b43bc3acf5d") {
       
             return (
         <Suspense fallback={<div>Loading...</div>}>
