@@ -500,7 +500,7 @@ app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   console.log(req.file)
 })
 
-app.post('/upload4', upload3.single('iconPost'), (req, res) => {
+app.post('/upload4', upload4.single('iconPost'), (req, res) => {
   res.json({
     url: `https://ichorby-api.onrender.com/imgposts/${req.file.originalname}`,
   })
