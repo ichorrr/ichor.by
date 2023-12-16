@@ -29,6 +29,7 @@
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-link-context": "^1.0.20",
     "apollo-link-state": "^0.4.2",
+    "axios": "^1.6.2",
     "date-fns": "^2.30.0",
     "graphql": "^15.8.0",
     "handy-svg": "^1.0.8",

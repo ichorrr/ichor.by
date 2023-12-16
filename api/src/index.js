@@ -416,6 +416,7 @@ const resolvers = {
 
 const port = process.env.PORT || 4000;
 const DB_HOST = process.env.DB_HOST;
+const url_host = process.env.URL_HOST;
 
 const app = express();
 db.connect(DB_HOST);
@@ -481,28 +482,28 @@ app.use('/imgposts', express.static('imgposts'));
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/uploads/${req.file.originalname}`,
+    url: `${url_host}/uploads/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `${url_host}/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `${url_host}/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `${url_host}/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
