@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+import { model, Schema, Types } from 'mongoose';
 
-const Cat = mongoose.model(
+const Cat = model(
   'Cat',
 
-  new mongoose.Schema(
+  new Schema(
     {
       catname: {
         type: String,
@@ -12,7 +12,7 @@ const Cat = mongoose.model(
 
       posts: [
         {
-          type: mongoose.Types.ObjectId,
+          type: Types.ObjectId,
           ref: 'Post'
         }
       ]
@@ -22,4 +22,4 @@ const Cat = mongoose.model(
     }
   )
 );
-module.exports = Cat;
+export default Cat;

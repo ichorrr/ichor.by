@@ -37,7 +37,9 @@ if(userdata.me._id !== data.getPost.author._id)
   <h1>Edit Post - edit post, change category, publish</h1>
   </div>
   <div>
+    
   <PostForm iconPost={data.getPost.iconPost} body={data.getPost.body} body2={data.getPost.body2} body3={data.getPost.body3} imageUrl={data.getPost.imageUrl} imageUrl2={data.getPost.imageUrl2} imageUrl3={data.getPost.imageUrl3} scriptUrl={data.getPost.scriptUrl} title={data.getPost.title} category={data.getPost.category._id} action={editPost}/>
+  {console.log(data)}
 </div>
 
 </div>

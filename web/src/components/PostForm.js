@@ -66,6 +66,26 @@ const PostForm = props => {
   setScriptUrl({scriptUrl});
   };
 
+  const onClickRemoveImage =  async (imageUrl) => {
+    imageUrl = '';
+    setImageUrl({imageUrl});
+  };
+
+  const onClickRemoveImage2 = async (imageUrl2) => {
+    imageUrl2 = '';
+    setImageUrl2({imageUrl2});
+  };
+
+  const onClickRemoveImage3 = async (imageUrl3) => {
+    imageUrl3 = '';
+    setImageUrl3({imageUrl3});
+  };
+
+  const onClickRemoveIcon = async (iconPost) => {
+    iconPost = '';
+    setIconPost({iconPost});
+  };
+
   const handleChangeFile = async (imageUrl) =>{
 
           const formData = new FormData();
@@ -122,22 +142,6 @@ const ihandleChangeFile = async (iconPost) =>{
   setIconPost({ iconPost });
 }
 
-  const onClickRemoveImage =() => {
-    setImageUrl('');
-  };
-
-  const onClickRemoveImage2 =() => {
-    setImageUrl2('');
-  };
-
-  const onClickRemoveImage3 =() => {
-    setImageUrl3('');
-  };
-
-  const onClickRemoveIcon =() => {
-    setIconPost('');
-  };
-
   return (
     <Wrapper>
       <Form
@@ -159,6 +163,8 @@ const ihandleChangeFile = async (iconPost) =>{
           });
         }}
       >
+
+        
       <div className="style-title">
         <div className="imageUrl">
             <input
@@ -170,7 +176,9 @@ const ihandleChangeFile = async (iconPost) =>{
               onChange={handleChangeFile}
               value={value.props}
               />
-
+{console.log(imageUrl.imageUrl)}
+{console.log(imageUrl)}
+{console.log(props)}
             {imageUrl.imageUrl && (
             <>
               <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Remove image</Button>
@@ -221,7 +229,7 @@ const ihandleChangeFile = async (iconPost) =>{
 
             {iconPost.iconPost && (
             <>
-              <Button variant="contained" className='i-delete'  onClick={ setIconPost }  >Remove image</Button>
+              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveIcon }  >Remove icon</Button>
               <p className="p-imageurl">{iconPost.iconPost}</p>
             </>
             )}

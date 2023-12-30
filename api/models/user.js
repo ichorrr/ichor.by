@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+import { model, Schema, Types } from 'mongoose';
 
-const User = mongoose.model(
+const User = model(
   'User',
 
-  new mongoose.Schema(
+  new Schema(
     {
       name: {
         type: String,
@@ -25,14 +25,14 @@ const User = mongoose.model(
       },
       posts: [
         {
-          type: mongoose.Types.ObjectId,
+          type: Types.ObjectId,
           ref: 'Post'
         }
       ],
 
       comments: [
         {
-          type: mongoose.Types.ObjectId,
+          type: Types.ObjectId,
           ref: 'Comment'
         }
       ]
@@ -42,4 +42,4 @@ const User = mongoose.model(
     }
   )
 );
-module.exports = User;
+export default User;

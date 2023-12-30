@@ -1,9 +1,9 @@
-const mongoose = require('mongoose');
+import { model, Schema, Types } from 'mongoose';
 
-const Post = mongoose.model(
+const Post = model(
   'Post',
 
-  new mongoose.Schema(
+  new Schema(
     {
       title: {
         type: String,
@@ -26,7 +26,7 @@ const Post = mongoose.model(
         default: false
       },
       category: {
-        type: mongoose.Types.ObjectId,
+        type: Types.ObjectId,
         ref: 'Cat'
       },
       viewsCount: {
@@ -44,13 +44,13 @@ const Post = mongoose.model(
         type: String,
       },
       author: {
-        type: mongoose.Types.ObjectId,
+        type: Types.ObjectId,
         ref: 'User',
         required: true
       },
       comments: [
         {
-          type: mongoose.Types.ObjectId,
+          type: Types.ObjectId,
           ref: 'Comment'
         }
       ]
@@ -61,4 +61,4 @@ const Post = mongoose.model(
   )
 );
 
-module.exports = Post;
+export default Post;
