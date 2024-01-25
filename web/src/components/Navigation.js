@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink, useParams, useNavigate, withRouter } from 'react-router-dom';
-import styled from 'styled-components';
-import { useQuery, useMutation, useApolloClient, gql } from '@apollo/client';
+import { Link, NavLink, useNavigate, withRouter } from 'react-router-dom';
+import { useQuery, gql } from '@apollo/client';
 import { GET_ME } from '../gql/query';
-import ButtonAsLink from './ButtonAsLink';
 import CatsPage from '../pages/cats';
 
-const IS_LOGGED_IN = gql`
-  query IsUserLoggedIn {
-    isLoggedIn @client
-  }
-`;
 
  const tkn = {
    isLoggedIn: !!localStorage.getItem('token')

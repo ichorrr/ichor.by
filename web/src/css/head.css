@@ -32,8 +32,9 @@ A {
 #nav {
 	position: fixed;
 	height: 1200px;
-	width: 100vw;
+	width: 100%;
 	top: 0;
+	left: 0;
 	padding-top: 90px;
 	overflow: hidden;
 	background-color: rgba(0,0,0, 0.9);
@@ -577,6 +578,9 @@ fill: #fff;  }
 
 	#ahead .top_head li:not(.logotype) {
 	display: none;
+	}
+	.log-out {
+		display: none;
 	}
 
 }
