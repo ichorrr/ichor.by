@@ -2,21 +2,8 @@ import React, {useEffect} from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import ReactMarkdown from 'react-markdown';
-import styled from 'styled-components';
 import { format } from 'date-fns';
 import { GET_MY_POST } from '../gql/query';
-
-const PostParagraph = styled.div`
-    background-color: #dae6f7;
-    width: 100%;
-    display: block;
-    margin-bottom: 1em;
-`;
-
-const PostBlock = styled.div`
-  padding-bottom: 4em;
-  display: block;
-`;
 
 const MyPosts = props => {
 
@@ -33,7 +20,7 @@ const MyPosts = props => {
   let uname = data.me.name;
 
   return (
-    <div className="myposts-li-block">
+    <div className="cats_block">
     <div className="all-post-block">
       <div className="all_post">
         <span className="uname_weight">{uname}</span> (all posts: {data.me.posts.length})
@@ -43,7 +30,7 @@ const MyPosts = props => {
     <ul>
       {data.me.posts.map(post => (
         
-          <li key={post._id} className='li-post-flex'>
+          <li key={post._id} className='mypost_li li-post-flex'>
             <div className="iconPost">
               <img src={post.iconPost} />
             </div>

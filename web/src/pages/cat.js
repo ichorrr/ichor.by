@@ -18,11 +18,11 @@ const CatPage = () => {
 
   return (
   <div className="cats_block">
-  <div className="all-post-block">
-    <div className="all_post">
-      {data.getCat.catname}
+    <div className="all-post-block">
+      <div className="all_post">
+        {data.getCat.catname}
+      </div>
     </div>
-  </div>
   <div className="cat-post-li">
     <ul>
       {data.getCat.posts.map(post => (

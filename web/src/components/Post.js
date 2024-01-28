@@ -14,15 +14,6 @@ const H4R = styled.div`
   padding: 1.1em;
 `;
 
-const H2 = styled.h2`
-  padding: .8em 0 0 0;
-  font-family: Arial, sans-serif;
-  font-size: 8em;
-  width: 90vw;
-  line-height: 1.2em;
-  color: #363636;
-`;
-
 const Post = ({ post }) => {
   console.log(format)
   let idcat = post.category._id;
@@ -38,7 +29,7 @@ const Post = ({ post }) => {
 
     <div className='top-block'>
       <div id={post._id} ></div>
-      <H2>{post.title}</H2>
+      <h2>{post.title}</h2>
     
       <div className="all-post-block">
         <div className="css-plank">
