@@ -1,7 +1,7 @@
 {
   "name": "ichor.by",
   "source": "public/index.html",
-  "homepage": "http://iichor.by",
+  "homepage": "https://ichor.by",
   "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
     "dev": "parcel public/index.html",

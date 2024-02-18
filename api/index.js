@@ -438,39 +438,42 @@ const upload3 = multer({ storage: storage3 });
 
 const upload4 = multer({ storage: istorage });
 
-
 app.use('/uploads', express.static('uploads'));
 
 app.use('/imgposts', express.static('imgposts'));
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   res.json({
-    url: `https://ichor-api.onrender.com/uploads/${req.file.originalname}`,
+    url: `https://api.ichor.by/uploads/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   res.json({
-    url: `https://ichor-api.onrender.com/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
-    url: `https://ichor-api.onrender.com/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   res.json({
-    url: `https://ichor-api.onrender.com/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
+app.use(express.static("/"));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "/", "index.html"));
+});
 
   function getUser(token) {
     if (token) {
@@ -511,4 +514,4 @@ app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   );
 
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at https://ichor-api.onrender.com/graphql`);
+  console.log(`🚀 Server ready at https://api.ichor.by/graphql`);

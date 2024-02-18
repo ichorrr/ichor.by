@@ -26,12 +26,13 @@ const SignIn = props => {
 
     }});
   if (networkStatus === NetworkStatus.refetch)
-      return <p>Выполнение повторного запроса...</p>
+      return <p>re-query execution...</p>
       if (loading) return (
         <div className="loading-signinup">
           <p>loading...</p>
         </div>)
   if (error) return (
+    <>
     <div className="css-userform">
     <div className="err-message">
       <h3>{error.message}</h3>
@@ -39,12 +40,13 @@ const SignIn = props => {
     </div>
       <UserForm action={signIn} formType="signIn" />
     </div>
+    <BgShader />
+    </>
   )
   return (
     <>
     <div className="css-userform">
       <UserForm action={signIn} formType="signIn" />
-      
     </div>
     <BgShader />
     </>

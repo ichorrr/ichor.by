@@ -18,9 +18,7 @@ body {
 }
 
 .p-newpost {
-  padding-top: .4em;
   color: #a0a0a0;
-  font-size: 1.4em;
 }
 
 code {
@@ -97,11 +95,10 @@ code {
 
 .err-message {
   position: absolute;
-  width: 50%;
-  left: 25%;
   color: #d60000;
   text-align: center;
   bottom: 20px;
+  z-index: 9;
 }
 
 /* input uplod icon for post */
@@ -161,15 +158,27 @@ code {
 .save-note {
   position: relative;
   z-index: 1;
-  padding: 20px;
   border: none;
   border-radius: .6em;
-  font-size: 1.1em;
   color: #fff;
   font-weight: bold;
   align-items: center;
   background: #159dc3 url(../img/i_load.gif) no-repeat;
-  background-position: calc(50% - 67px) calc(50% - 3px);
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  letter-spacing: .02em;
+}
+
+.save-note-in {
+  position: relative;
+  z-index: 1;
+  border: none;
+  border-radius: .6em;
+  color: #fff;
+  font-weight: bold;
+  align-items: center;
+  background: #159dc3 url(../img/i_load.gif) no-repeat;
   cursor: pointer;
   display: block;
   width: 100%;
@@ -331,11 +340,6 @@ div.css-checkbox {
   padding-left: 1em;
 }
 
- label {
-  margin-top: 2em;
-  font-size: 1.5em;
-}
-
 label.style-select {
   padding: 0 0 1.5em 0;
 }
@@ -351,10 +355,6 @@ label.style-select {
   text-indent: .5em;
 }
 /* end input files */
-
-#password {
-  font-size: 1.5em;
-}
 
 input.input-file {
   padding: 1em 0;
@@ -522,6 +522,20 @@ transition: height 0.3s;
 }
 /* end input files */
 
+
+/* wrapper signup signin */
+
+.wrapper {
+  max-width: 500px;
+  margin: 0 auto;
+  border-radius: 1em;
+  background-color: rgba(69, 214, 255, .1);
+  backdrop-filter: blur(20px);
+}
+
+/* end wrapper */
+
+
 /* loading block */
 
 .loading-signinup {
@@ -539,19 +553,15 @@ transition: height 0.3s;
 
 .css-userform {
   padding-top: 15vh;
-  width: 60vw;
-  margin: 0 20%;
   position: absolute;
 }
 
 .css-userform h2 {
-  font-size: 4em;
   text-align: left;
   color: #fff;
 }
 
 .css-userform button {
-  margin-top: 1.3em;
   width: 100%;
 }
 
@@ -804,11 +814,6 @@ div.xclose:hover {
   max-width: 100%;
 }
 
-input[type="text"] {
-  font-size: 1.5em;
-  
-}
-
 .imgStyle {
   float: left;
   width: 100%;
@@ -899,6 +904,11 @@ input.script-url {
   padding:1em 0;
 }
 
+.imgStyle {
+  max-height: 450px;
+  margin: 1em 0 2em 0;
+}
+
 .cats_block li h1 {
   padding: .2em 0;
   font-size: 2.5em;
@@ -913,8 +923,63 @@ input.script-url {
 }
 
 .top-new-post h1 {
-  font-size: 2em;
+  font-size: 1.8em;
 }
+
+.p-newpost {
+  font-size: .7em;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 2.5em;
+}
+
+.css-userform {
+  padding-top: 18vh;
+  width: 80vw;
+  margin: 0 10%;
+}
+
+.css-userform h2 {
+  font-size: 2.4em;
+}
+
+label {
+  margin-top: 1.3em;
+  font-size: 1.2em;
+}
+
+input[type="text"], #password {
+  font-size: 1.1em;
+}
+
+.css-userform button {
+  width: 100%;
+}
+
+.save-note, .save-note-in {
+  padding: 19px 10px 19px 35px;
+  font-size: 1em;
+  background-size: 1.4em;
+}
+.save-note {
+  background-position: calc(50% - 65px) calc(50% - 2px);
+}
+.save-note-in {
+  background-position: calc(50% - 50px) calc(50% - 2px);
+}
+
+.err-message {
+    width: 90%;
+    left: 5%;
+    bottom: -6em;
+}
+
+.up { 
+  bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 
 @media  screen and (min-width: 576px) and (max-width: 960px) {
@@ -975,6 +1040,11 @@ input.script-url {
   margin: 4em 0 0 5%;
 }
 
+.imgStyle {
+  max-height: 450px;
+  margin: 1em 0 2em 0;
+}
+
 .top-block h2 {
   padding: 1em 0 0 0;
   font-size: 4em;
@@ -1009,6 +1079,61 @@ input.script-url {
 .top-new-post h1 {
   font-size: 2.5em;
 }
+
+.p-newpost {
+  font-size: 1em;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 3em;
+}
+
+.css-userform {
+  padding-top: 20vh;
+  width: 60vw;
+  margin: 0 20%;
+}
+
+.css-userform h2 {
+  font-size: 2.7em;
+}
+
+label {
+  margin-top: 1.5em;
+  font-size: 1.2em;
+}
+
+input[type="text"], #password {
+  font-size: 1.2em;
+}
+
+.css-userform button {
+  width: 100%;
+}
+
+.save-note, .save-note-in {
+  padding: 19px 10px 19px 35px;
+  font-size: 1em;
+  background-size: 1.4em;
+}
+.save-note {
+  background-position: calc(50% - 65px) calc(50% - 2px);
+}
+.save-note-in {
+  background-position: calc(50% - 50px) calc(50% - 2px);
+}
+
+.err-message {
+    width: 90%;
+    left: 5%;
+    bottom: -6em;
+}
+
+.up { 
+  bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 
 @media  screen and (max-width: 376px) {
@@ -1038,6 +1163,31 @@ input.script-url {
   .rt-lenta-post {
     display: none;
   }
+
+
+/* EDIT PAGE */
+
+.iconBlock {
+  display: block;
+  padding: 0 1em;
+}
+
+.iblock button {
+  margin: 2em 0;
+  float:none;
+}
+
+.p-imageurl {
+  padding: 0 1em 0 0;
+}
+
+.iblock {
+  display: block;
+  padding-top: 1.5em;
+}
+
+/* END EDIT PAGE */
+
 /* END FIRST PAGE */
 
   .myposts-li-block a h1 {
@@ -1098,7 +1248,7 @@ input.script-url {
 
 .imgStyle {
   max-height: 500px;
-  margin: 2em 0 2.5em 0;
+  margin: 1em 0 2em 0;
 }
 
 .css-plank {
@@ -1121,6 +1271,61 @@ input.script-url {
 .top-new-post h1 {
   font-size: 1.5em;
 }
+
+.p-newpost {
+  font-size: .6em;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 2em;
+}
+
+.css-userform {
+  padding-top: 15vh;
+  width: 90vw;
+  margin: 0 5%;
+}
+
+.css-userform h2 {
+  font-size: 1.5em;
+}
+
+label {
+  margin-top: 1em;
+  font-size: 1.2em;
+}
+
+input[type="text"], #password {
+  font-size: 1em;
+}
+
+.css-userform button {
+  width: 100%;
+}
+
+.save-note, .save-note-in {
+  padding: 16px 10px 16px 35px;
+  font-size: .9em;
+  background-size: 1.4em;
+}
+.save-note {
+  background-position: calc(50% - 65px) calc(50% - 2px);
+}
+.save-note-in {
+  background-position: calc(50% - 50px) calc(50% - 2px);
+}
+
+.err-message {
+    width: 90%;
+    left: 5%;
+    bottom: -6em;
+}
+
+.up { 
+  bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 @media  screen and (min-width: 960px) and (max-width: 1200px) {
 
@@ -1207,6 +1412,66 @@ input.script-url {
 .cats_block ul {
   margin-top: 9.5em;
 }
+
+.top-new-post h1 {
+  font-size: 2.5em;
+}
+
+.p-newpost {
+  font-size: 1.1em;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 3em 5em 3em 5em;
+}
+
+.css-userform {
+  padding-top: 18vh;
+  width: 50vw;
+  margin: 0 25%;
+}
+
+.css-userform h2 {
+  font-size: 2.8em;
+}
+
+label {
+  margin-top: 1.5em;
+  font-size: 1.2em;
+}
+
+input[type="text"], #password {
+  font-size: 1.2em;
+}
+
+.css-userform button {
+  width: 100%;
+}
+
+.save-note, .save-note-in {
+  padding: 19px 10px 19px 35px;
+  font-size: 1em;
+  background-size: 1.4em;
+}
+.save-note {
+  background-position: calc(50% - 65px) calc(50% - 2px);
+}
+.save-note-in {
+  background-position: calc(50% - 50px) calc(50% - 2px);
+}
+
+.err-message {
+    width: 90%;
+    left: 5%;
+    bottom: -6em;
+}
+
+.up { 
+  bottom: -4em;
+}
+/* end wrapper sign in & up */
+
 }
 
 @media  screen and (min-width: 1200px) and (max-width: 1366px) {
@@ -1295,6 +1560,65 @@ input.script-url {
   .cats_block ul {
     margin-top: 10em;
   }
+
+  .top-new-post h1 {
+    font-size: 2.5em;
+  }
+
+  .p-newpost {
+    font-size: 1em;
+  }
+
+/* wrapper sign up & in */
+.wrapper {
+    padding: 3em 7em 3em 6em;
+}
+
+.css-userform {
+  padding-top: 18vh;
+  width: 50vw;
+  margin: 0 25%;
+}
+
+.css-userform h2 {
+  font-size: 3.5em;
+}
+
+label {
+  margin-top: 1.5em;
+  font-size: 1.4em;
+}
+
+input[type="text"], #password {
+  font-size: 1.4em;
+}
+
+.css-userform button {
+  width: 100%;
+}
+
+.save-note, .save-note-in {
+  padding: 20px 10px 20px 35px;
+  font-size: 1.1em;
+  background-size: 1.2em;
+}
+.save-note {
+  background-position: calc(50% - 75px) calc(50% - 2px);
+}
+.save-note-in {
+  background-position: calc(50% - 60px) calc(50% - 2px);
+}
+
+.err-message {
+    width: 90%;
+    left: 5%;
+    bottom: -5em;
+}
+
+.up { 
+  bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 
 @media  screen and (min-width: 1366px) and (max-width: 1920px)  {
@@ -1385,6 +1709,64 @@ input.script-url {
   margin-top: 10em;
 }
 
+.top-new-post h1 {
+  font-size: 2.5em;
+}
+
+.p-newpost {
+  font-size: 1em;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 3em 7em 3em 6em;
+}
+
+.css-userform {
+padding-top: 18vh;
+width: 50vw;
+margin: 0 25%;
+}
+
+.css-userform h2 {
+font-size: 3.5em;
+}
+
+label {
+margin-top: 1.5em;
+font-size: 1.4em;
+}
+
+input[type="text"], #password {
+font-size: 1.4em;
+}
+
+.css-userform button {
+width: 100%;
+}
+
+.save-note, .save-note-in {
+padding: 20px 10px 20px 35px;
+font-size: 1.1em;
+background-size: 1.2em;
+}
+.save-note {
+background-position: calc(50% - 75px) calc(50% - 2px);
+}
+.save-note-in {
+background-position: calc(50% - 60px) calc(50% - 2px);
+}
+
+.err-message {
+  width: 90%;
+  left: 5%;
+  bottom: -5em;
+}
+
+.up { 
+bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 
 @media screen and (min-width: 1920px) {
@@ -1459,7 +1841,7 @@ input.script-url {
   }
 
   .imgStyle {
-    max-height: 500px;
+    max-height: 800px; 
     margin: 2em 0 5em 0;
   }
 
@@ -1476,5 +1858,82 @@ input.script-url {
   margin-top: 10em;
 }
 
+.top-new-post h1 {
+  font-size: 2.5em;
+}
+
+.p-newpost {
+  font-size: 1em;
+}
+
+.css-userform h2 {
+  font-size: 4em;
+}
+
+.wrapper {
+  padding: 3em 7em 4em 6em;
+}
+
+label {
+  margin-top: 2em;
+  font-size: 1.5em;
+}
+
+.css-userform button {
+  margin-top: 1.3em;
+  width: 100%;
+}
+
+/* wrapper sign up & in */
+.wrapper {
+  padding: 3em 7em 3em 6em;
+}
+
+.css-userform {
+padding-top: 18vh;
+width: 50vw;
+margin: 0 25%;
+}
+
+.css-userform h2 {
+font-size: 3.5em;
+}
+
+label {
+margin-top: 1.5em;
+font-size: 1.4em;
+}
+
+input[type="text"], #password {
+font-size: 1.4em;
+}
+
+.css-userform button {
+width: 100%;
+}
+
+.save-note, .save-note-in {
+padding: 20px 10px 20px 35px;
+font-size: 1.1em;
+background-size: 1.2em;
+top: -1em;
+}
+.save-note {
+background-position: calc(50% - 75px) calc(50% - 2px);
+}
+.save-note-in {
+background-position: calc(50% - 60px) calc(50% - 2px);
+}
+
+.err-message {
+  width: 90%;
+  left: 5%;
+  bottom: -5em;
+}
+
+.up { 
+bottom: -4em;
+}
+/* end wrapper sign in & up */
 }
 

@@ -1,9 +1,8 @@
 import React, { Suspense, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
-import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from '@react-three/drei'
 import Model from './Model'
 
@@ -31,19 +30,6 @@ const IS_LOGGED_IN = gql`
     isLoggedIn @client
   }
 `;
-
-const PostParagraph = styled.div`
-    background-color: #dae6f7;
-    width: 100%;
-    display: block;
-    margin-bottom: 1em;
-`;
-
-const PostBlock = styled.div`
-  padding-bottom: 4em;
-  display: block;
-`;
-
 
 const Fpost = ({post}) => {
   const ref = useRef()
