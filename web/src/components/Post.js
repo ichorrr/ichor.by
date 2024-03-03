@@ -37,7 +37,7 @@ const Post = ({ post }) => {
             {post.category.catname}
           </Link>
      
-          <H4R>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</H4R>
+          <H4R>{format(new Date(post.createdAt), 'dd LLL yyyy  HH:mm')}</H4R>
           <Link  to={`/users/${iduser}`}>
             {`author ${post.author.name}`}
           </Link>

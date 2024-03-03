@@ -16,7 +16,7 @@ const TitleList = ({ posts }) => {
       {posts.map(post => (
         <PostBlock key={post._id}>
           <Link to={`posts/${post._id}`}>{post.title}</Link>
-          {format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')} <span className="css-author"> {post.author.name}</span>
+          {format(new Date(post.createdAt), 'dd LLL yyyy')} <span className="css-author"> {post.author.name}</span>
         </PostBlock>
       ))}
     </>

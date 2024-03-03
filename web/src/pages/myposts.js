@@ -42,7 +42,7 @@ const MyPosts = props => {
                 <Link  to={`/cats/${post.category._id}`}>
                   {`${post.category.catname}`}
                 </Link>
-                <span>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</span>
+                <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                 <span>{`views ${post.viewsCount}`}</span>
               </div>
             </div>
