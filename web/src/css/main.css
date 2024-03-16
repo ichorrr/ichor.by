@@ -208,6 +208,7 @@ code {
   position: relative;
   background-color: #000;
   border-radius: 10px;
+  overflow: hidden;
 }
 
 .tag-about {
@@ -251,9 +252,6 @@ div.top-new-post {
   font-size: 1.8em;
   line-height: 1.5em;
   padding: 4em 2em 1em 2em;
-  column-width: 40%;
-	column-count: 2;
-	column-gap: 7%;
   color: #707070;
 }
 
@@ -643,11 +641,11 @@ transition: height 0.3s;
 }
 
 .css-plank-cat span {
-  padding: 2em 1em;
+  padding: 2em .7em;
 }
 
 .css-plank-cat a {
-  padding: 1em;
+  padding: 1em .7em;
 }
 
 .css-plank-cat a:hover {
@@ -756,6 +754,7 @@ div.xclose:hover {
     height: 80px;
     width: 50px;
     z-index: 999;
+    opacity: .8;
   }
 
   .css-back:hover::after {
@@ -783,6 +782,10 @@ div.xclose:hover {
     height: 100%;
   }
 
+  .bg-canvas img {
+    height:100vh;
+  }
+
   .black_bg{
     position: absolute;
     background-color: #000;
@@ -794,7 +797,6 @@ div.xclose:hover {
 .htcanvas {
   margin-bottom: -4em;
   z-index: -99999;
-
   height: 100%;
   width: 100%;
 }
@@ -900,6 +902,11 @@ input.script-url {
   line-height: 1.3em;
 }
 
+.css-txt a {
+  padding: 1px;
+  background: #45abc5;
+}
+
 .img-post {
   padding:1em 0;
 }
@@ -988,7 +995,7 @@ input[type="text"], #password {
   .txtfPOst h1 {
     font-size: 4em;
     width: 50vw;
-    line-height: .9em;
+    line-height: 1.1em;
   }
   .rt-lenta-post {
     display: flex;
@@ -1621,6 +1628,24 @@ input[type="text"], #password {
 /* end wrapper sign in & up */
 }
 
+
+
+@media screen and (min-width: 1336px) {
+  .txtColumn {
+    column-count: 2;
+    column-width: 40%;
+    column-gap: 7%;
+  }
+  
+}
+
+@media screen and (max-width: 1336px) {
+  .txtColumn {
+    column-count: none;
+  }
+  
+}
+
 @media  screen and (min-width: 1366px) and (max-width: 1920px)  {
 
   /* FIRST PAGE */
@@ -1675,7 +1700,7 @@ input[type="text"], #password {
 
 .top-block h2 {
   padding: .8em 0 0 0;
-  font-size: 8em;
+  font-size: 7em;
   line-height: 1.2em;
 }
 
@@ -1824,7 +1849,7 @@ bottom: -4em;
 
   .top-block h2 {
     padding: .8em 0 0 0;
-    font-size: 8em;
+    font-size: 7.5em;
     line-height: 1.2em;
   }
 

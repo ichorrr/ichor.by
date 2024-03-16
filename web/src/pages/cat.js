@@ -35,7 +35,7 @@ const CatPage = () => {
             <h1>{post.title}</h1>
         </Link>
               <div className="css-plank-cat">
-                <span>{format(new Date(post.createdAt), 'dd LLLL yyyy')}</span>
+                <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                   <Link  to={`/users/${post.author._id}`}>
                     {`author ${post.author.name}`}
                   </Link>

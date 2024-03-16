@@ -12,6 +12,7 @@ const GET_FIRST_POST = gql`
       _id
       title
       scriptUrl
+      imageUrl
       viewsCount
       category {
         _id
@@ -71,6 +72,9 @@ console.log(data.postFirst);
           </div>
         </div>
           <UniBlock post={data.postFirst._id}/>
+          <div className='bg-canvas'>
+          <img src={`${data.postFirst.imageUrl}`}></img>
+          </div>
       </div>
     </article>
   );
