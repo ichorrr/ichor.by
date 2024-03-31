@@ -41,7 +41,7 @@ const Fpost = ({post}) => {
 
   let idcat = data.postFirst.category._id;
   let iduser = data.postFirst.author._id;
-console.log(data.postFirst);
+
   return (
     <article>
       <div className='iphone-canvas'>

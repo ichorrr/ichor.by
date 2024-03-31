@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
 import http from 'http';
+import path from 'path';
 import { typeDefs } from './schema/index.js';
 import bcrypt from 'bcrypt';
 import depthLimit from 'graphql-depth-limit';
@@ -55,16 +56,21 @@ const resolvers = {
       async getUser(parent, args, { models }) {
         return await models.User.findById(args._id);
       },
+
+
       async me(parent, args, { models, user }) {
+
         return await models.User.findById(user.id);
       },
+
+
       async getCats() {
         const cats = await models.Cat.find({});
         return cats;
       },
   
       async getPosts() {
-        return await models.Post.find().limit(100);
+        return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
       },
   
       async getComments() {
@@ -116,9 +122,9 @@ const resolvers = {
           cursor: newCursor,
           hasNextPage
         };
-      }
-    },
-  
+      },
+  },
+
     Mutation: {
       signUp: async (parent, { name, email, password }, { models }) => {
         // normalize email address
@@ -330,7 +336,7 @@ const resolvers = {
   
     User: {
       async posts(parent, args, { models }) {
-        return await models.Post.find({ author: parent._id });
+        return await models.Post.find({ author: parent._id}).sort({createdAt: -1, updatedAt: -1});
       },
   
       async comments(parent) {
@@ -340,7 +346,7 @@ const resolvers = {
   
     Cat: {
       async posts(parent) {
-        return await models.Post.find({ category: parent._id });
+        return await models.Post.find({ category: parent._id }).sort({createdAt: -1, updatedAt: -1});
       }
     },
   
@@ -471,9 +477,10 @@ app.post('/upload4', upload3.single('iconPost'), (req, res) => {
 })
 
 app.use(express.static("/"));
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "/", "index.html"));
-});
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "/", "index.html"));
+// });
 
   function getUser(token) {
     if (token) {

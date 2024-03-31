@@ -163,7 +163,6 @@ const ihandleChangeFile = async (iconPost) =>{
           });
         }}
       >
-
         
       <div className="style-title">
         <div className="imageUrl">
@@ -176,9 +175,7 @@ const ihandleChangeFile = async (iconPost) =>{
               onChange={handleChangeFile}
               value={value.props}
               />
-{console.log(imageUrl.imageUrl)}
-{console.log(imageUrl)}
-{console.log(props)}
+
             {imageUrl.imageUrl && (
             <>
               <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Remove image</Button>

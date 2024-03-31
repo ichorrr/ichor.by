@@ -1,8 +1,6 @@
 import React, {useEffect} from 'react';
-import { Link } from 'react-router-dom';
 
 import { useQuery, gql } from '@apollo/client';
-import ReactMarkdown from 'react-markdown';
 import TitleList from '../components/TitleList';
 import styled from 'styled-components';
 import Fpost from '../components/FirstPost';
@@ -17,7 +15,7 @@ const PostParagraph = styled.div`
 const Home = () => {
 
   useEffect(() => {
-    document.title = 'ICHOR.BY';
+    document.title = 'ICHOR.BY - application development';
   });
 
   const {data, loading, error, fetchMore} = useQuery(GET_NOTES);

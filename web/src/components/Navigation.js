@@ -31,7 +31,7 @@ const handleToggle = () => {
 
 const { data, loading, error } = useQuery(GET_ME);
 if (loading) return <p>Loading...</p>;
-console.log(data)
+
   return (
     <div id="ahead">
     <div className="top_head">
