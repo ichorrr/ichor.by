@@ -795,14 +795,17 @@ div.xclose:hover {
 }
 
 .htcanvas {
-  margin-bottom: -4em;
   z-index: -99999;
   height: 100%;
   width: 100%;
+  margin-bottom: 4em;
 }
 
 .post-canvas {
   align-content: center;
+  position: relative;
+  float: left;
+  width: 100vw;
 }
 
 .post-canvas canvas {

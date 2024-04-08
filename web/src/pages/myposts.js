@@ -11,10 +11,14 @@ const MyPosts = () => {
     document.title = 'My Posts - ICHOR.BY';
   });
 
+
+
+
   return (
-    <>
+    <div>
       <MyProf />
-    </>
+
+    </div>
   );
 };
 
