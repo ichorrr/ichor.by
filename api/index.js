@@ -97,11 +97,9 @@ const resolvers = {
               return pos;
           },
   
-      postFeed: async (parent, { cursor }, { models }) => {
-        const limit = 3;
+      postFeed: async (parent, {limit, cursor}, { models }) => {
         let hasNextPage = false;
         let cursorQuery = {};
-  
         if (cursor) {
           cursorQuery = { _id: { $lt: cursor } };
         }
@@ -119,6 +117,7 @@ const resolvers = {
   
         return {
           posts,
+          limit,
           cursor: newCursor,
           hasNextPage
         };
