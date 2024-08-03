@@ -588,6 +588,15 @@ transition: height 0.3s;
   color: #363636;
 }
 
+.clickMore {
+  background-color: #e6e6e6;
+  padding: 2em 0;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
 /* start cat list news */
 
 .cats_block {

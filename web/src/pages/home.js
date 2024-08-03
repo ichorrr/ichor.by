@@ -18,11 +18,10 @@ const Home = () => {
     document.title = 'ICHOR.BY - application development';
   });
 
-  const {data, loading, error, fetchMore} = useQuery(GET_NOTES, {
-    variables: {
-      limit: 2
-    },
-  }
+  const {data, loading, error} = useQuery(GET_NOTES, 
+    { variables: {
+      limit: 3
+    } }
   );
   if (error) return <p>error</p>
   if (loading) return <p>loading...</p>

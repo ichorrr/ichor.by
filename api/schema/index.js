@@ -73,7 +73,7 @@ type Query {
   getComments: [Comment!]!
   getPost(_id: ID!): Post!
   getCat(_id: ID!): Cat!
-  postFeed(cursor: String, limit: Int!): postFeed
+  postFeed(cursor: String, limit: Int, qualifier: String): postFeed
   postFirst: Post!
 }
 `;

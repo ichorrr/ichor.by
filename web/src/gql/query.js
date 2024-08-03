@@ -56,8 +56,8 @@ const GET_USER = gql`
 `;
 
 const GET_NOTES = gql`
-  query postFeed($cursor: String, $limit: Int!) {
-    postFeed(cursor: $cursor, limit: $limit) {
+  query postFeed($cursor: String, $limit: Int, $qualifier: String) {
+    postFeed(cursor: $cursor, limit: $limit, qualifier: $qualifier) {
       cursor
       hasNextPage
       posts {

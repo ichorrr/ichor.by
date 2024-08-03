@@ -97,14 +97,25 @@ const resolvers = {
               return pos;
           },
   
-      postFeed: async (parent, {limit, cursor}, { models }) => {
+      postFeed: async (parent, { qualifier, limit, cursor }, { models}) => {
+
         let hasNextPage = false;
-        let cursorQuery = {};
-        if (cursor) {
-          cursorQuery = { _id: { $lt: cursor } };
+        let totalQuery = {}
+
+        if (cursor, qualifier) {
+          totalQuery = { author: new mongoose.Types.ObjectId(qualifier), _id: { $lt: cursor } };
         }
-  
-        let posts = await models.Post.find(cursorQuery)
+
+        if(cursor && !qualifier){
+          totalQuery = { _id: { $lt: cursor } };
+        }
+
+        
+        if (!cursor && qualifier) {
+          totalQuery = { author: new mongoose.Types.ObjectId(qualifier) };
+        }
+
+        let posts = await models.Post.find(totalQuery)
           .sort({ _id: -1 })
           .limit(limit + 1);
   
@@ -117,7 +128,6 @@ const resolvers = {
   
         return {
           posts,
-          limit,
           cursor: newCursor,
           hasNextPage
         };

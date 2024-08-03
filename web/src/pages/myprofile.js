@@ -15,7 +15,7 @@ const MyProf = () => {
     if (loading) return <p>loading...</p>;
     if (error) return <p>error...</p>;
 
-    const myposts = data.me.posts;
+    const myposts = data.me;
   return (
   <>
         <MyPosts posts={myposts} />
