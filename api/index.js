@@ -103,16 +103,15 @@ const resolvers = {
         let totalQuery = {}
 
         if (cursor, qualifier) {
-          totalQuery = { author: new mongoose.Types.ObjectId(qualifier), _id: { $lt: cursor } };
+          totalQuery = { $or: [{author: qualifier}, {category: qualifier}], _id: { $lt: cursor } };
         }
 
         if(cursor && !qualifier){
           totalQuery = { _id: { $lt: cursor } };
         }
-
         
         if (!cursor && qualifier) {
-          totalQuery = { author: new mongoose.Types.ObjectId(qualifier) };
+          totalQuery = { $or: [{author: qualifier}, {category: qualifier}] };
         }
 
         let posts = await models.Post.find(totalQuery)
