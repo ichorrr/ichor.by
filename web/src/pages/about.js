@@ -21,7 +21,7 @@ const About = () => {
     const navigate = useNavigate();
   
     useEffect(() => {
-      document.title = 'About - ICHOR.BY';
+      document.title = 'About > ICHOR.BY';
     });
 
     let vurl = new URL( "../video/logo_output.mp4", import.meta.url );

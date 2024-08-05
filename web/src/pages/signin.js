@@ -12,7 +12,7 @@ const SIGNIN_USER = gql`mutation signIn($email: String!, $password: String!){
 const SignIn = props => {
   useEffect(() => {
     // update the document title
-    document.title = 'Sign In — ICHOR.BY aplication development';
+    document.title = 'Sign In > ICHOR.BY aplication development';
   });
   const navigate = useNavigate();
 

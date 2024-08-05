@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { GET_NOTES } from '../gql/query';
 
-const CatPosts = ({posts}) => {
+const UserPosts = ({posts}) => {
 
   useEffect(() => {
-    document.title = `${posts.catname} Category > ichor.by`;;
+    document.title = `${posts.name} Posts > ichor.by`;
   });
 
   let uname = posts.id;
@@ -26,34 +26,27 @@ const CatPosts = ({posts}) => {
     <div className="cats_block">
     <div className="all-post-block">
       <div className="all_post">
-        <span className="uname_weight">{uname}</span> total posts: {posts.posts.length}
+        <span className="uname_weight">
+          {posts.name} </span> total posts: {posts.posts.length}
       </div>
     </div>
-    <div className="cat-post-li">
     <ul>
-      { 
-      data.postFeed.posts.map(post => (
-        
-          <li key={post._id} className='mypost_li li-post-flex'>
-            <div className="iconPost">
-              <img src={post.iconPost} />
-            </div>
-            <div className='post-cont'>
-              <Link to={`/posts/${post._id}`}>
-                <h1>{post.title}</h1>
-              </Link>
-              <div className="css-plank-cat">
-                <Link  to={`/cats/${post.category._id}`}>
-                  {`${post.category.catname}`}
-                </Link>
-                <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-                <span>{`views ${post.viewsCount}`}</span>
-              </div>
-            </div>
+      {data.postFeed.posts.map(post => (
+        <li key={post._id} className="mypost_li">
+        <Link  to={`/users/${uname}/post/${post._id}`}>
+          <h1>{post.title}</h1>
+        </Link>
+          <div className="css-plank-cat">
+          <Link  to={`/cats/${post.category._id}`}>
+            {`${post.category.catname}`}
+          </Link>
+            <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
+            <span>{`views ${post.viewsCount}`}</span>
+          </div>
           </li>
-      )) }
-    </ul>
-    </div>
+      ))}
+      </ul>
+
     {data.postFeed.hasNextPage && (
     <div className='clickMore' onClick={() =>
             fetchMore({
@@ -79,4 +72,4 @@ const CatPosts = ({posts}) => {
   );
 };
 
-export default CatPosts;
+export default UserPosts;

@@ -8,10 +8,10 @@ import { GET_NOTES } from '../gql/query';
 const MyPosts = ({posts}) => {
 
   useEffect(() => {
-    document.title = 'My Posts - ICHOR.BY';
+    document.title = 'My Posts > ichor.by';
   });
 
-  let uname = posts.id;
+  let uname = posts.name;
 
   const {data, loading, error, fetchMore } = useQuery(GET_NOTES, 
     { variables: {

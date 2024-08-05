@@ -22,7 +22,7 @@ const onChange = event => {
 };
 
   useEffect(() => {
-    document.title = 'Sign Up — ICHOR.BY aplication development';
+    document.title = 'Sign Up > ICHOR.BY aplication development';
   });
 
   const [signUp, { loading, error, refetch, networkStatus  }] = useMutation(SIGNUP_USER, {
