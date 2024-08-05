@@ -22,9 +22,6 @@ const CatPosts = ({posts}) => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error!</p>;
 
-  console.log(posts);
-  console.log(data.postFeed);
-
   return (
     <div className="cats_block">
     <div className="all-post-block">
