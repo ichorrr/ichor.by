@@ -1,19 +1,5 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useMutation, InMemoryCache, writeQuery, useQuery, useApolloClient, gql } from '@apollo/client';
-
-
-import Button from './Button';
-
-const Wrapper = styled.div`
-
-  max-width: 500px;
-  padding: 3em 7em 4em 6em;
-  margin: 0 auto;
-  border-radius: 1em;
-  background-color: rgba(69, 214, 255, .1);
-  backdrop-filter: blur(20px);
-`;
 
 const Form = styled.form`
   label,
@@ -51,7 +37,7 @@ const UserForm = props => {
   };
 
   return (
-    <Wrapper>
+    <div className='wrapper'>
 
       {/* Display the appropriate form header */}
       {props.formType === 'signUp' ? <h2>Sign Up</h2> : <h2>Sign In</h2>}
@@ -98,9 +84,9 @@ const UserForm = props => {
           onChange={onChange}
         />
         <div className='empty-div-half'></div>
-        {props.formType === 'signUp' ? (<button className="save-note" type="submit">Create Account</button>) :(<button className="save-note" type="submit">Log in now</button>)}
+        {props.formType === 'signUp' ? (<button className="save-note" type="submit">Create Account</button>) :(<button className="save-note-in" type="submit">Log in now</button>)}
       </Form>
-    </Wrapper>
+    </div>
   );
 };
 

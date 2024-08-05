@@ -1,9 +1,8 @@
 import React, { Suspense, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
-import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stage } from '@react-three/drei'
 import Model from './Model'
 
@@ -13,6 +12,7 @@ const GET_FIRST_POST = gql`
       _id
       title
       scriptUrl
+      imageUrl
       viewsCount
       category {
         _id
@@ -32,19 +32,6 @@ const IS_LOGGED_IN = gql`
   }
 `;
 
-const PostParagraph = styled.div`
-    background-color: #dae6f7;
-    width: 100%;
-    display: block;
-    margin-bottom: 1em;
-`;
-
-const PostBlock = styled.div`
-  padding-bottom: 4em;
-  display: block;
-`;
-
-
 const Fpost = ({post}) => {
   const ref = useRef()
   const { loading, error, data } = useQuery( GET_FIRST_POST, IS_LOGGED_IN);
@@ -54,7 +41,7 @@ const Fpost = ({post}) => {
 
   let idcat = data.postFirst.category._id;
   let iduser = data.postFirst.author._id;
-console.log(data.postFirst);
+
   return (
     <article>
       <div className='iphone-canvas'>
@@ -74,7 +61,7 @@ console.log(data.postFirst);
           <Link to={`/posts/${data.postFirst._id}`}>
             <h1>{data.postFirst.title}</h1>
           </Link>
-          <p><br></br><br></br><br></br></p>
+          <p><br></br><br></br></p>
           <div className="css-plank">
             <Link  to={`/cats/${idcat}`}>
               {data.postFirst.category.catname}
@@ -85,6 +72,9 @@ console.log(data.postFirst);
           </div>
         </div>
           <UniBlock post={data.postFirst._id}/>
+          <div className='bg-canvas'>
+          <img src={`${data.postFirst.imageUrl}`}></img>
+          </div>
       </div>
     </article>
   );

@@ -38,13 +38,16 @@ const onChange = event => {
       <p>loading...</p>
     </div>)
 if (error) return (
+<>
 <div className="css-userform">
-<div className="err-message">
+<div className="up err-message">
   <h3>{error.message}</h3>
   <span>incorrect email or password</span>
   </div>
     <UserForm action={signUp} formType="signUp" />
   </div>
+  <BgShader />
+</>
 )
   return (
     <>

@@ -32,8 +32,9 @@ A {
 #nav {
 	position: fixed;
 	height: 1200px;
-	width: 100vw;
+	width: 100%;
 	top: 0;
+	left: 0;
 	padding-top: 90px;
 	overflow: hidden;
 	background-color: rgba(0,0,0, 0.9);
@@ -188,7 +189,7 @@ A {
 	text-align: right;
 	right: 2%;
 	cursor: pointer;
-	padding: 13px 0;
+	padding: 17px 0;
 	z-index: 9999999999;
 }
 
@@ -272,7 +273,6 @@ A {
 	overflow: hidden;
 	display: block;
 	color: #159dc3;
-	z-index: 1020;
 	font-weight: bold;
 	width: 100%;
 	z-index: 9996;
@@ -577,6 +577,9 @@ fill: #fff;  }
 
 	#ahead .top_head li:not(.logotype) {
 	display: none;
+	}
+	.log-out {
+		display: none;
 	}
 
 }

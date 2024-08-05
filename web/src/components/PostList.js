@@ -79,7 +79,7 @@ const PostList = ({ post }) => {
       <Link style={linkStyle} to={`/cats/${idcat}`}>
         <H4R>{post.category.catname}</H4R>
       </Link>
-      <H4R>{format(new Date(post.createdAt), 'dd LLLL yyyy  HH:mm')}</H4R>
+      <H4R>{format(new Date(post.createdAt), 'dd LLL yyyy')}</H4R>
       <Link style={linkStyle} to={`/users/${iduser}`}>
         <H4R>{`author ${post.author.name}`}</H4R>
       </Link>

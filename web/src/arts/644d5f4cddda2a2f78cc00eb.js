@@ -1,8 +1,6 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { Vector2 } from "three";
-import styled from 'styled-components';
-
 
 import vertexShader from '../shaders/644d5f4cddda2a2f78cc00eb/vertexShader';
 import fragmentShader from '../shaders/644d5f4cddda2a2f78cc00eb/fragmentShader';
@@ -10,8 +8,6 @@ import fragmentShader from '../shaders/644d5f4cddda2a2f78cc00eb/fragmentShader';
 const RainBow = () => {
 
   const mesh = useRef();
-
-
 
   const uniforms = useMemo(
     () => ({

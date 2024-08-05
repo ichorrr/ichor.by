@@ -5,11 +5,21 @@ const Arts63a9a9220ca661227c5fdcc5 = lazy(() => import('../arts/63a9a9220ca66122
 const Arts644d5f4cddda2a2f78cc00eb = lazy(() => import('../arts/644d5f4cddda2a2f78cc00eb'));
 const Arts64b59f606597ee2f708dcdf1 = lazy(() => import('../arts/64b59f606597ee2f708dcdf1'));
 const Arts64f4b9cd4170dd492078b98b = lazy(() => import('../arts/64f4b9cd4170dd492078b98b'));
+const Arts65eb50fabdd8940584456597 = lazy(() => import('../arts/65eb50fabdd8940584456597'));
 class ArtPage extends React.Component {
 
   render() {
     let csc = this.props.id;
     const Pt = document.getElementById(`${csc}`);
+
+
+    if (csc == "65eb50fabdd8940584456597") {
+
+      return (
+        <Suspense fallback={<div>Loading...</div>}>
+          <Arts65eb50fabdd8940584456597 />
+        </Suspense>
+      )}
 
     if (csc == "655f93168a388b43bc3acf5d") {
       

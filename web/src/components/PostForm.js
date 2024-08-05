@@ -91,7 +91,7 @@ const PostForm = props => {
           const formData = new FormData();
           const file = event.target.files[0];
           formData.append('imageUrl', file);
-          const res = await fetch('http://localhost:4000/upload', {
+          const res = await fetch('https://api.ichor.by/upload', {
             method: 'POST',
             body: formData,
           });
@@ -105,7 +105,7 @@ const PostForm = props => {
           const formData2 = new FormData();
           const file2 = event.target.files[0];
           formData2.append('imageUrl2', file2);
-          const res2 = await fetch('http://localhost:4000/upload2', {
+          const res2 = await fetch('https://api.ichor.by/upload2', {
             method: 'POST',
             body: formData2,
           });
@@ -119,7 +119,7 @@ const PostForm = props => {
     const formData3 = new FormData();
     const file3 = event.target.files[0];
     formData3.append('imageUrl3', file3);
-    const res3 = await fetch('http://localhost:4000/upload3', {
+    const res3 = await fetch('https://api.ichor.by/upload3', {
       method: 'POST',
       body: formData3,
     });
@@ -133,7 +133,7 @@ const ihandleChangeFile = async (iconPost) =>{
   const iformData = new FormData();
   const ifile = event.target.files[0];
   iformData.append('iconPost', ifile);
-  const ires = await fetch('http://localhost:4000/upload4', {
+  const ires = await fetch('https://api.ichor.by/upload4', {
     method: 'POST',
     body: iformData,
   });
@@ -163,7 +163,6 @@ const ihandleChangeFile = async (iconPost) =>{
           });
         }}
       >
-
         
       <div className="style-title">
         <div className="imageUrl">
@@ -176,9 +175,7 @@ const ihandleChangeFile = async (iconPost) =>{
               onChange={handleChangeFile}
               value={value.props}
               />
-{console.log(imageUrl.imageUrl)}
-{console.log(imageUrl)}
-{console.log(props)}
+
             {imageUrl.imageUrl && (
             <>
               <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Remove image</Button>
