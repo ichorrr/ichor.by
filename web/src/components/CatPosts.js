@@ -15,7 +15,7 @@ const CatPosts = ({posts}) => {
 
   const {data, loading, error, fetchMore } = useQuery(GET_NOTES, 
     { variables: {
-      limit: 2,
+      limit: 10,
       qualifier: posts._id
     }, }
   );
