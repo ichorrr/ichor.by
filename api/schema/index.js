@@ -8,6 +8,8 @@ type User {
   avatar: String
   posts: [Post!]!
   comments: [Comment!]!
+  cursor: String!
+  hasNextPage: Boolean!
 }
 
 type Post {
@@ -65,13 +67,13 @@ type Query {
   isLoggedIn: Boolean!
   getUsers: [User!]!
   getUser(_id: ID!): User
-  me: User
+  me(cursor: String): User
   getCats: [Cat!]!
   getPosts: [Post!]!
   getComments: [Comment!]!
   getPost(_id: ID!): Post!
   getCat(_id: ID!): Cat!
-  postFeed(cursor: String): postFeed
+  postFeed(cursor: String, limit: Int, qualifier: String): postFeed
   postFirst: Post!
 }
 `;

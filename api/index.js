@@ -5,6 +5,7 @@ import { GraphQLError } from 'graphql';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import cors from 'cors';
 import http from 'http';
+import path from 'path';
 import { typeDefs } from './schema/index.js';
 import bcrypt from 'bcrypt';
 import depthLimit from 'graphql-depth-limit';
@@ -55,16 +56,21 @@ const resolvers = {
       async getUser(parent, args, { models }) {
         return await models.User.findById(args._id);
       },
+
+
       async me(parent, args, { models, user }) {
+
         return await models.User.findById(user.id);
       },
+
+
       async getCats() {
         const cats = await models.Cat.find({});
         return cats;
       },
   
       async getPosts() {
-        return await models.Post.find().limit(100);
+        return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
       },
   
       async getComments() {
@@ -91,16 +97,24 @@ const resolvers = {
               return pos;
           },
   
-      postFeed: async (parent, { cursor }, { models }) => {
-        const limit = 3;
+      postFeed: async (parent, { qualifier, limit, cursor }, { models}) => {
+
         let hasNextPage = false;
-        let cursorQuery = {};
-  
-        if (cursor) {
-          cursorQuery = { _id: { $lt: cursor } };
+        let totalQuery = {}
+
+        if (cursor, qualifier) {
+          totalQuery = { $or: [{author: qualifier}, {category: qualifier}], _id: { $lt: cursor } };
         }
-  
-        let posts = await models.Post.find(cursorQuery)
+
+        if(cursor && !qualifier){
+          totalQuery = { _id: { $lt: cursor } };
+        }
+        
+        if (!cursor && qualifier) {
+          totalQuery = { $or: [{author: qualifier}, {category: qualifier}] };
+        }
+
+        let posts = await models.Post.find(totalQuery)
           .sort({ _id: -1 })
           .limit(limit + 1);
   
@@ -116,9 +130,9 @@ const resolvers = {
           cursor: newCursor,
           hasNextPage
         };
-      }
-    },
-  
+      },
+  },
+
     Mutation: {
       signUp: async (parent, { name, email, password }, { models }) => {
         // normalize email address
@@ -330,7 +344,7 @@ const resolvers = {
   
     User: {
       async posts(parent, args, { models }) {
-        return await models.Post.find({ author: parent._id });
+        return await models.Post.find({ author: parent._id}).sort({createdAt: -1, updatedAt: -1});
       },
   
       async comments(parent) {
@@ -340,7 +354,7 @@ const resolvers = {
   
     Cat: {
       async posts(parent) {
-        return await models.Post.find({ category: parent._id });
+        return await models.Post.find({ category: parent._id }).sort({createdAt: -1, updatedAt: -1});
       }
     },
   
@@ -438,39 +452,43 @@ const upload3 = multer({ storage: storage3 });
 
 const upload4 = multer({ storage: istorage });
 
-
 app.use('/uploads', express.static('uploads'));
 
 app.use('/imgposts', express.static('imgposts'));
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/uploads/${req.file.originalname}`,
+    url: `https://api.ichor.by/uploads/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   res.json({
-    url: `http://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
+app.use(express.static("/"));
+
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "/", "index.html"));
+// });
 
   function getUser(token) {
     if (token) {
@@ -511,4 +529,4 @@ app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   );
 
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+  console.log(`🚀 Server ready at https://api.ichor.by/graphql`);
