@@ -29,7 +29,6 @@ code {
   min-width: 300px;
   margin: 4em 0;
   font-size: .7em;
-  height: 700px;
   overflow-x: auto;
   overflow-y: auto;
   line-height: 1.5em;
@@ -534,6 +533,17 @@ transition: height 0.3s;
 /* end wrapper */
 
 
+.ErrorBlock {
+  width: 40%;
+  line-height: 1.4em;;
+  height: 100px;
+  font-weight: bold;
+  color:rgba(0, 0, 0, 0.6);
+  margin: 15% 10% 0 5%;
+  position: absolute;
+  font-size: 4em;
+}
+
 /* loading block */
 
 .loading-signinup {
@@ -620,6 +630,12 @@ transition: height 0.3s;
 .li-post-flex {
   display:flex;
   margin-top: .3em;
+}
+
+.iconPost img.no-avatar {
+  position: absolute;
+  float: left;
+  object-fit:none;
 }
 
 .iconPost {
@@ -814,7 +830,7 @@ div.xclose:hover {
   align-content: center;
   position: relative;
   float: left;
-  width: 100vw;
+  width: 100%;
 }
 
 .post-canvas canvas {

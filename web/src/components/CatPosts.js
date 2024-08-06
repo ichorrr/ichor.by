@@ -4,6 +4,7 @@ import { useQuery, gql } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { GET_NOTES } from '../gql/query';
+import Error from './Error';
 
 const CatPosts = ({posts}) => {
 
@@ -20,7 +21,7 @@ const CatPosts = ({posts}) => {
     }, }
   );
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error!</p>;
+  if (error) return <p><Error text="The category is empty. You must public first post." /></p>;
 
   return (
     <div className="cats_block">
@@ -36,7 +37,7 @@ const CatPosts = ({posts}) => {
         
           <li key={post._id} className='mypost_li li-post-flex'>
             <div className="iconPost">
-              <img src={post.iconPost} />
+              {post.iconPost ? <img src={post.iconPost} /> : <img src='http://localhost:4000/uploads/no_avatar.png' className='no-avatar'/> }
             </div>
             <div className='post-cont'>
               <Link to={`/posts/${post._id}`}>

@@ -36,7 +36,7 @@ const MyPosts = ({posts}) => {
         
           <li key={post._id} className='mypost_li li-post-flex'>
             <div className="iconPost">
-              <img src={post.iconPost} />
+              {post.iconPost ? <img src={post.iconPost} /> : <img src='http://localhost:4000/uploads/no_avatar.png' className='no-avatar'/> }
             </div>
             <div className='post-cont'>
               <Link to={`/posts/${post._id}`}>
