@@ -44,8 +44,8 @@ const CatPosts = ({posts}) => {
                 <h1>{post.title}</h1>
               </Link>
               <div className="css-plank-cat">
-                <Link  to={`/cats/${post.category._id}`}>
-                  {`${post.category.catname}`}
+                <Link  to={`/users/${post.author._id}`}>
+                  {`${post.author.name}`}
                 </Link>
                 <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                 <span>{`views ${post.viewsCount}`}</span>
