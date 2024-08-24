@@ -139,13 +139,11 @@ const resolvers = {
         email = email.trim().toLowerCase();
         // hash the password
         const hashed = await bcrypt.hash(password, 10);
-        // create the gravatar url
-        const avatar = gravatar(email);
+
         try {
           const username = await models.User.create({
             name,
             email,
-            avatar,
             password: hashed
           });
   
