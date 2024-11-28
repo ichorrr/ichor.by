@@ -27,7 +27,7 @@ const UserPosts = ({posts}) => {
     <div className="all-post-block">
       <div className="all_post">
         <span className="uname_weight">
-          {posts.name} </span> total posts: {posts.posts.length}
+          {posts.name} </span> Всего {posts.posts.length} записей
       </div>
     </div>
     <ul>

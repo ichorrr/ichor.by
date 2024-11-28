@@ -20,14 +20,14 @@ const CatPosts = ({posts}) => {
       qualifier: posts._id
     }, }
   );
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <p>Загрузка...</p>;
   if (error) return <p><Error text="The category is empty. You must public first post." /></p>;
 
   return (
     <div className="cats_block">
     <div className="all-post-block">
       <div className="all_post">
-        <span className="uname_weight">{uname}</span> total posts: {posts.posts.length}
+        <span className="uname_weight">{uname}</span> Всего {posts.posts.length} записей
       </div>
     </div>
     <div className="cat-post-li">
@@ -75,7 +75,7 @@ const CatPosts = ({posts}) => {
                 } };
               }
             })
-}>more</div>)}
+}> следующие записи</div>)}
     </div>
   );
 };

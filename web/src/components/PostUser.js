@@ -34,10 +34,10 @@ const PostUser = props => {
     </div>
 )}
   <div className={"svg-menu-plank" +" " +`${(alert) ? "dxnv" : "dddd"}`} >
-  <h4>Control panel for post</h4>
+  <h4>Панель управления</h4>
   <React.Fragment>
   <span>
-    <Link to={`/edit/${props.post._id}`} className="css-edit">Edit</Link>
+    <Link to={`/edit/${props.post._id}`} className="css-edit">Редактировать</Link>
     <DeletePost postId={props.post._id} />
   </span>
   </React.Fragment>

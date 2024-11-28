@@ -23,6 +23,10 @@ const User = model(
       avatar: {
         type: String
       },
+      isAdmin: {
+        type: Boolean,
+        default: false
+      },
       posts: [
         {
           type: Types.ObjectId,

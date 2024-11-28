@@ -1,7 +1,6 @@
 import React, {useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
-import styled from 'styled-components';
 
 import PostForm from '../components/PostForm';
 
@@ -56,7 +55,7 @@ const NewPost = props => {
       {loading && <p> loading...</p>}
       {error && <p>Error saving the note</p>}
       <div className="top-new-post">
-      <h1><span className='bold-class'>New Post</span></h1><p className='p-newpost'>Create post, choose category, upload images and publish.</p>
+      <h1><span className='bold-class'>Новая запись</span></h1><p className='p-newpost'>Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
       </div>
       <PostForm action={data} />
     </React.Fragment>

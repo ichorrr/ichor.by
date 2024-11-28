@@ -67,7 +67,7 @@ const Fpost = ({post}) => {
               {data.postFirst.category.catname}
             </Link>
             <Link  to={`/users/${iduser}`}>
-              {`author ${data.postFirst.author.name}`}
+              {`Автор ${data.postFirst.author.name}`}
             </Link>
           </div>
         </div>

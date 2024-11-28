@@ -6,6 +6,7 @@ const Arts644d5f4cddda2a2f78cc00eb = lazy(() => import('../arts/644d5f4cddda2a2f
 const Arts64b59f606597ee2f708dcdf1 = lazy(() => import('../arts/64b59f606597ee2f708dcdf1'));
 const Arts64f4b9cd4170dd492078b98b = lazy(() => import('../arts/64f4b9cd4170dd492078b98b'));
 const Arts65eb50fabdd8940584456597 = lazy(() => import('../arts/65eb50fabdd8940584456597'));
+const Art673c774d95daf934a0cfd64a = lazy(() => import('../arts/673c774d95daf934a0cfd64a'));
 class ArtPage extends React.Component {
 
   render() {
@@ -28,6 +29,14 @@ class ArtPage extends React.Component {
           <Arts64b59f606597ee2f708dcdf1 /> 
         </Suspense>
       )}
+
+      if (csc == "673c774d95daf934a0cfd64a") {
+      
+        return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Art673c774d95daf934a0cfd64a /> 
+    </Suspense>
+  )}
 
     if (csc == "64bc31b1de84de04f04768fb") {
 
@@ -53,23 +62,6 @@ class ArtPage extends React.Component {
           </Suspense>
         )}
 
-      if (csc == "64b59f606597ee2f708dcdf1") {
-
-        let lth = "<div style='background: #000;'><H1>WELCOME</H1></div>" +
-        "<div><h2>MEGA DEN</h2></div>"
-        Pt.innerHTML = lth;
-
-        return (
-
-            <Canvas>
-            <pointLight position={[3, 1, 3]} />
-              <mesh position={[5, 1, 3]}>
-                <sphereGeometry />
-                <meshStandardMaterial color="red" />
-              </mesh>
-            </Canvas>
-
-        )}
   }};
 
 export default ArtPage;

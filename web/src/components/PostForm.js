@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
+import { useQuery, gql } from '@apollo/client';
 import styled from 'styled-components';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-
+import IsAdmin from './isAdmin.js';
 import Button from './Button';
 
 const Wrapper = styled.div`
@@ -23,6 +24,8 @@ const Form = styled.form`
 `;
 
 const PostForm = props => {
+
+
   // set the default state of the form\
   const inputFileRef = useRef(null);
   const inputFileRef2 = useRef(null);
@@ -38,6 +41,9 @@ const PostForm = props => {
   const [imageUrl3, setImageUrl3] = useState({imageUrl3: props.imageUrl3 || ''});
   const [scriptUrl, setScriptUrl] = useState({scriptUrl: props.scriptUrl || false});
   const [value, setValue] = useState( { category: props.category, title: props.title || ''} );
+  
+
+console.log(<IsAdmin />);
 
   // update the state when a user types in the form
   const onChange = event => {
@@ -178,7 +184,7 @@ const ihandleChangeFile = async (iconPost) =>{
 
             {imageUrl.imageUrl && (
             <>
-              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Remove image</Button>
+              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Удалить изображение</Button>
               <p className="p-imageurl">{imageUrl.imageUrl}</p>
             </>
            )}
@@ -191,13 +197,13 @@ const ihandleChangeFile = async (iconPost) =>{
             </div>
         )}
       <div className="empty-div"></div>
-      <label htmlFor="title">Title Post</label>
+      <label htmlFor="title">Название записи</label>
       <input
         required
         type="text"
         name="title"
         id="title"
-        placeholder="enter title"
+        placeholder="Введите название"
         onChange={onChange}
         value={value.title}
       />
@@ -226,7 +232,7 @@ const ihandleChangeFile = async (iconPost) =>{
 
             {iconPost.iconPost && (
             <>
-              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveIcon }  >Remove icon</Button>
+              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveIcon }  >Удалить</Button>
               <p className="p-imageurl">{iconPost.iconPost}</p>
             </>
             )}
@@ -236,36 +242,38 @@ const ihandleChangeFile = async (iconPost) =>{
 {/* End Model Icon Upload */}
 
 <div className="empty-div"></div>
-
+      { <IsAdmin /> && (
+        <>
       	<div className="css-checkbox" >
           <input type="checkbox" id="scriptUrl" name="scriptUrl" checked={scriptUrl.scriptUrl} onChange={onChangeCHK}  />
-          <label htmlFor="scriptUrl">Put in desktop</label>
+          <label htmlFor="scriptUrl">Опубликовать на главной странице</label>
           <p>{scriptUrl.scriptUrl ? "checkedd" : "unchecked"}</p>
         </div>
-
         <div className="empty-div"></div>
+        </>
+      )}
 
       <label htmlFor="category" className="style-select">
-      <span>Category Post</span>
+      <span>Выберите категорию записи</span>
                <select onChange={onChange} type="text"
                  id="category" name="category" value={value.category}>
-                 <option >enter category</option>
-                 <option value="6251ef28413373118838bbdd">news</option>
-                 <option value="6251f1532f7a51343c8ed7df">arts</option>
-                 <option value="6251f1632f7a51343c8ed7e0">notes</option>
+                 <option >Введите категорию</option>
+                 <option value="6251ef28413373118838bbdd">Новости</option>
+                 <option value="6251f1532f7a51343c8ed7df">Статьи</option>
+                 <option value="6251f1632f7a51343c8ed7e0">Заметки</option>
                </select>
              </label>
 
         <div className="empty-div"></div>
 
-        <label htmlFor="title">News Content</label>
+        <label htmlFor="title">Текстовый блок №1</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
                        type="text"
                        name="body"
                        id="body"
-                       placeholder="Post content"
+                       placeholder="Содердание"
                        onChange={onChangeMDE}
                        value={body.body}
                      />
@@ -300,14 +308,14 @@ const ihandleChangeFile = async (iconPost) =>{
             )}
             <div className="empty-div"></div>
         
-        <label htmlFor="title">News Content 2</label>
+        <label htmlFor="title">Текстовый блок №2</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
                        type="text"
                        name="body2"
                        id="body2"
-                       placeholder="Post content"
+                       placeholder="Содердание"
                        onChange={onChangeMDE2}
                        value={body2.body2}
                      />
@@ -342,21 +350,21 @@ const ihandleChangeFile = async (iconPost) =>{
 
             )}
             <div className="empty-div"></div>
-        <label htmlFor="title">News Content 3</label>
+        <label htmlFor="title">Текстовый блок №3</label>
         <div className="style-simplemde" >
              <SimpleMDE
                        required
                        type="text"
                        name="body3"
                        id="body3"
-                       placeholder="Post content"
+                       placeholder="Содердание"
                        onChange={onChangeMDE3}
                        value={body3.body3}
                      />
         </div>
     
       <div className="algn-btn">
-        <button className="save-note" type="submit" > Save note</button>
+        <button className="save-note" type="submit" > Сохранить запись</button>
         </div>
       </Form>
     </Wrapper>

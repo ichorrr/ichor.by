@@ -30,7 +30,7 @@ const About = () => {
     return (
       <React.Fragment>
         <div className="top-new-post">
-        <H1R>What About Me</H1R>
+        <H1R>Что на счет меня?</H1R>
 
         </div>
         <div className='block_about'>
@@ -41,15 +41,11 @@ const About = () => {
                 </center>
             </div>
             <div className='txtColumn'>
-                <p><b>Hello! It's my first post in this project. I welcome all visitors.</b> 
-                  This site is my first application development and is intended to publish my works in the field of web application development. 
-                  Despite the fact that the site is located in the .by domain zone, all my content is published in English - 
-                  this is a form of consolidation and development of my skills, incl. in English. 
-                  Guests can publish in any language they deem appropriate here.
-                  This project will develop in parallel with my acquisition of new skills.
+                <p>Привет! Этот сайт является моей первой разработкой и служит платформой для публикации моих работ.
+Этот проект будет развиваться параллельно с приобретением мной новых навыков.
                 </p>
             </div>
-        <p className='title-h2'>What skills did i use to create the project</p>
+        <p className='title-h2'>Мои скилсы использованные в проекте</p>
         <div className='tag-about'>
         <span>CSS</span><span>HTML</span><span>JS</span><span>REACT</span><span>WEBGL</span><span>FRAGMENT SHAIDER</span><span>THREE.JS</span><span>MONGODB</span><span>BLENDER</span><span>PHOTOSHOP</span><span>GIT</span><span>FIBER</span><span>3DSMAX</span>
         </div>

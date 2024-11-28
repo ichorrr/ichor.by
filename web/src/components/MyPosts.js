@@ -15,7 +15,7 @@ const MyPosts = ({posts}) => {
 
   const {data, loading, error, fetchMore } = useQuery(GET_NOTES, 
     { variables: {
-      limit: 10,
+      limit: 3,
       qualifier: posts._id
     }, }
   );
@@ -26,7 +26,7 @@ const MyPosts = ({posts}) => {
     <div className="cats_block">
     <div className="all-post-block">
       <div className="all_post">
-        <span className="uname_weight">{uname}</span> total posts: {posts.posts.length}
+        Всего {posts.posts.length} записей <span className="uname_weight">{uname}</span>
       </div>
     </div>
     <div className="cat-post-li">
@@ -47,7 +47,7 @@ const MyPosts = ({posts}) => {
                   {`${post.category.catname}`}
                 </Link>
                 <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-                <span>{`views ${post.viewsCount}`}</span>
+                <span>{`Просмотров ${post.viewsCount}`}</span>
               </div>
             </div>
           </li>
@@ -74,7 +74,7 @@ const MyPosts = ({posts}) => {
                 } };
               }
             })
-}>more</div>)}
+}>следующие записи</div>)}
     </div>
   );
 };

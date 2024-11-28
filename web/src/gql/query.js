@@ -92,6 +92,7 @@ const GET_MY_POST = gql`
       _id
       name
       email
+      isAdmin
       posts {
         _id
         title

@@ -11,6 +11,7 @@ type User {
   comments: [Comment!]!
   cursor: String!
   hasNextPage: Boolean!
+  isAdmin: Boolean
 }
 
 type Post {

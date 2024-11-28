@@ -15,7 +15,7 @@ const H4R = styled.div`
 `;
 
 const Post = ({ post }) => {
-  console.log(format)
+
   let idcat = post.category._id;
   let iduser = post.author._id;
   const { loading, error, data } = useQuery(IS_LOGGED_IN);
@@ -39,9 +39,9 @@ const Post = ({ post }) => {
      
           <H4R>{format(new Date(post.createdAt), 'dd LLL yyyy  HH:mm')}</H4R>
           <Link  to={`/users/${iduser}`}>
-            {`author ${post.author.name}`}
+            {`Автор ${post.author.name}`}
           </Link>
-          <H4R>{`views ${post.viewsCount}`}</H4R>
+          <H4R>{`Просмотров ${post.viewsCount}`}</H4R>
             <PostUser post={post} />
         </div>
       </div>
@@ -67,10 +67,10 @@ const Post = ({ post }) => {
 
           <ReactMarkdown children={post.body2}  />
 
-         
+          {post.imageUrl3 && (
           <div className="img-post">
             <img src={post.imageUrl3} />
-          </div>
+          </div>)}
 
           <ReactMarkdown children={post.body3}  />
 

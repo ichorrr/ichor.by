@@ -40,7 +40,7 @@ const UserForm = props => {
     <div className='wrapper'>
 
       {/* Display the appropriate form header */}
-      {props.formType === 'signUp' ? <h2>Sign Up</h2> : <h2>Sign In</h2>}
+      {props.formType === 'signUp' ? <h2>Регистрация</h2> : <h2>Авторизация</h2>}
       {/* perform the mutation when a user submits the form */}
       <Form
         onSubmit={event => {
@@ -55,7 +55,7 @@ const UserForm = props => {
       >
       {props.formType === 'signUp' &&(
         <React.Fragment>
-      <label htmlFor="name">Username</label>
+      <label htmlFor="name">Имя пользователя</label>
       <input
         required
         type="text"
@@ -65,7 +65,7 @@ const UserForm = props => {
         onChange={onChange}
       />
     </React.Fragment>)}
-      <label htmlFor="email">Email</label>
+      <label htmlFor="email">Электронная почта</label>
         <input
           required
           type="text"
@@ -74,7 +74,7 @@ const UserForm = props => {
           placeholder="Email"
           onChange={onChange}
         />
-        <label htmlFor="password">Password</label>
+        <label htmlFor="password">Пароль</label>
         <input
           required
           type="password"
@@ -84,7 +84,7 @@ const UserForm = props => {
           onChange={onChange}
         />
         <div className='empty-div-half'></div>
-        {props.formType === 'signUp' ? (<button className="save-note" type="submit">Create Account</button>) :(<button className="save-note-in" type="submit">Log in now</button>)}
+        {props.formType === 'signUp' ? (<button className="save-note" type="submit">Создать аккаунт</button>) :(<button className="save-note-in" type="submit">Войти</button>)}
       </Form>
     </div>
   );

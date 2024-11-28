@@ -34,7 +34,7 @@ if(userdata.me._id !== data.getPost.author._id)
 {return <p>You do not have access to edit this post</p>}
   return <div>
   <div className="top-new-post">
-  <h1>Edit Post - edit post, change category, publish</h1>
+  <h1>Редактировать запись  - исправьте запись, измените категорию, сохраните изменения</h1>
   </div>
   <div>
     
