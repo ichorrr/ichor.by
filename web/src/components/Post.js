@@ -6,6 +6,7 @@ import PostUser from './PostUser';
 import { format } from 'date-fns';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
+import Comments from '../components/Comments';
 import { IS_LOGGED_IN } from '../gql/query';
 
 const H4R = styled.div`
@@ -24,7 +25,7 @@ const Post = ({ post }) => {
   if (error) return <p>Error!</p>;
 
   return (
-
+<>
     <article>
 
     <div className='top-block'>
@@ -77,6 +78,8 @@ const Post = ({ post }) => {
         </div>
       </div>
     </article>
+    <Comments comments=""/>
+    </>
   );
 };
 

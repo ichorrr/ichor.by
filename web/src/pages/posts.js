@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import Post from '../components/Post';
 import { useQuery, gql } from '@apollo/client';
 import { GET_POST } from '../gql/query';
+import Futer from '../components/Futer';
 
 const PostPage = () => {
   let  { id } = useParams();
@@ -24,6 +25,7 @@ const PostPage = () => {
         </svg>
       </Link>
       <Post post={data.getPost} />
+      <Futer />
     </>
   )};
 

@@ -607,6 +607,34 @@ transition: height 0.3s;
   cursor: pointer;
 }
 
+/* start comments block */
+.comment-block {
+  margin:  0 25% 5% 3%;
+}
+
+.comment-block h3 {
+  padding-bottom:  2em
+}
+
+.comment-block textarea {
+  padding:  1em;
+  display: block;
+  font-size: 1.4em;
+  margin: 0 0 2em 0;
+  width: 100%;
+}
+
+/* end comments block */
+
+/* start futer */
+
+.futer-block h3 {
+  margin: 5 em 2em;
+}
+
+/* end futer */
+
+
 /* start cat list news */
 
 .cats_block {
