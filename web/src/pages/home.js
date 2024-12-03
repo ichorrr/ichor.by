@@ -14,10 +14,6 @@ const PostParagraph = styled.div`
 
 const Home = () => {
 
-  useEffect(() => {
-    document.title = 'ICHOR.BY - application development';
-  });
-
   const {data, loading, error} = useQuery(GET_NOTES, 
     { variables: {
       limit: 3
