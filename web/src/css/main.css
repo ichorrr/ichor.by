@@ -608,15 +608,15 @@ transition: height 0.3s;
 }
 
 /* start comments block */
-.comment-block {
+.comments-block {
   margin:  0 25% 5% 3%;
 }
 
-.comment-block h3 {
+.comments-block h3 {
   padding-bottom:  2em
 }
 
-.comment-block textarea {
+.comments-block textarea {
   padding:  1em;
   display: block;
   font-size: 1.4em;
@@ -627,6 +627,10 @@ transition: height 0.3s;
 /* end comments block */
 
 /* start futer */
+
+.futer-block {
+  padding: 5em 3em;
+}
 
 .futer-block h3 {
   margin: 5 em 2em;

@@ -26,7 +26,7 @@ const DeletePost = props => {
   <Link onClick={() => setModal(true)} className="css-delete">Удалить запись</Link>
     <Modal act={modal} setAct={setModal} >
       <div className='tert'>
-        <p>Вы точно уверены, что хотите<Link onClick={deletePost} >удалить</Link> запись?</p>
+        <p>Вы точно уверены, что хотите <Link onClick={deletePost} >удалить</Link> запись?</p>
       </div>
     </Modal>
 </>)
