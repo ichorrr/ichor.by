@@ -39,7 +39,7 @@ const NewPost = props => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = 'New Post - ICHOR.BY';
+    document.title = 'Новая запись - ICHOR.BY';
   });
 
   const [ data, { loading, error } ] = useMutation(NEW_POST, {
@@ -51,14 +51,14 @@ const NewPost = props => {
   });
 
   return (
-    <React.Fragment>
+    <>
       {loading && <p> loading...</p>}
       {error && <p>Error saving the note</p>}
       <div className="top-new-post">
       <h1><span className='bold-class'>Новая запись</span></h1><p className='p-newpost'>Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
       </div>
       <PostForm action={data} />
-    </React.Fragment>
+    </>
   );
 };
 

@@ -161,6 +161,9 @@ const GET_POST = gql`
         name
         email
       }
+        comments {
+        _id
+        text}
     }
   }
 `;

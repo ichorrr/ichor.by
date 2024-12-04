@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments';
-import { IS_LOGGED_IN } from '../gql/query';
 
 const H4R = styled.div`
   display: inline;
@@ -15,14 +14,14 @@ const H4R = styled.div`
   padding: 1.1em;
 `;
 
+const tkn = {
+  isLoggedIn: !!localStorage.getItem('token')
+};
+
 const Post = ({ post }) => {
 
   let idcat = post.category._id;
   let iduser = post.author._id;
-  const { loading, error, data } = useQuery(IS_LOGGED_IN);
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error!</p>;
 
   return (
 <>
@@ -78,7 +77,10 @@ const Post = ({ post }) => {
         </div>
       </div>
     </article>
-    <Comments comments=""/>
+    {tkn.isLoggedIn ? (
+      <Comments comments="djfkldh" post={post._id}/>
+    ):(<></>)}
+    
     </>
   );
 };
