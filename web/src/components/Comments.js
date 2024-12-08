@@ -1,36 +1,45 @@
 import React, { useState } from 'react';
 
-import { useQuery } from '@apollo/client';
-import { GET_POST } from '../gql/query';
-
 const Comments = props =>  {
-    const [comment, setComment] = useState("");
+    const [text, setText] = useState("");
     const [comments, setComments] = useState([]);
-    const id = props.post;
-    const { loading, error, data } = useQuery(GET_POST, { variables: { id },
-
-        refetchQueries: [{query: GET_POST }]} );
-        {console.log(data.getPost.comments.length)}
 
     const onClickHandler = () => {
-        setComments((comments) => [...comments, comment])
+        setComments((comments) => [...comments, text])
     }
     
     const onChangeHandler = (e) => {
-        setComment(e.target.value);
+        setText(e.target.value);
       };
 
+      
+      console.log(text);
+      console.log(props.post);
+      const postcom = props.post;
 
 return (
     <div className='comments-block'>
-        {comments.map((text) => (
-            <div className='comment-block'>{text}</div>    
+        {postcom.comments.map(({text}) => (
+            <div className='comment-block'  >{text}</div>    
         ))}
         <h3>Комментарии к записи</h3>
-        <span>всего {data.getPost.comments.length} комментариев</span>
+        <span>всего  комментариев</span>
 
-        <textarea value={comments.props} onChange={onChangeHandler}>Текст комментария</textarea>
-        <button onClick={onClickHandler}>Опубликовать</button>
+        <form onSubmit={event => {
+          event.preventDefault();
+
+          props.action({
+            variables: {
+              text,
+              post: props.post._id
+            }
+          });
+        }}>
+        <textarea value={text} onChange={onChangeHandler}>Текст комментария</textarea>
+        <button type="submit"  value={comments} onClick={onClickHandler}>Опубликовать</button>
+    
+        </form>
+
     </div>
 )
 };

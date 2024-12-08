@@ -1,12 +1,26 @@
 import React, {useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery, useApolloClient, gql } from '@apollo/client';
+import { useQuery, useMutation, useApolloClient, gql } from '@apollo/client';
 import PostUser from './PostUser';
 import { format } from 'date-fns';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments';
+
+
+const NEW_COMMENT = gql`
+  mutation createComment($text: String!, $post: String!) {
+    createComment(text: $text, post: $post ) {
+      _id
+        text
+        post{
+          _id
+          title
+        }
+      }
+    }`;
+
 
 const H4R = styled.div`
   display: inline;
@@ -22,6 +36,8 @@ const Post = ({ post }) => {
 
   let idcat = post.category._id;
   let iduser = post.author._id;
+
+  const [ data, { loading, error } ] = useMutation( NEW_COMMENT );
 
   return (
 <>
@@ -78,7 +94,7 @@ const Post = ({ post }) => {
       </div>
     </article>
     {tkn.isLoggedIn ? (
-      <Comments comments="djfkldh" post={post._id}/>
+      <Comments action={data} post={post} />
     ):(<></>)}
     
     </>

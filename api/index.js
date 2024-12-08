@@ -73,8 +73,8 @@ const resolvers = {
         return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
       },
   
-      async getComments() {
-        const comments = await models.Comment.find({});
+      async getComments(parent, args, { models, post }) {
+        const comments = await models.Comment.find(post._id);
         return comments;
       },
       async getPost(parent, args, { models }) {
@@ -374,7 +374,7 @@ const resolvers = {
       },
   
       async author(parent) {
-        return await models.User.findById(parent.user);
+        return await models.User.findById(parent.author);
       }
     }
   };

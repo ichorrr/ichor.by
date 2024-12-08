@@ -25,7 +25,7 @@ const Form = styled.form`
 
 const PostForm = props => {
 
-
+  console.log(props)
   // set the default state of the form\
   const inputFileRef = useRef(null);
   const inputFileRef2 = useRef(null);

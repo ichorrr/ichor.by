@@ -35,6 +35,23 @@ const GET_CAT = gql`
   }
 `;
 
+const GET_COMMENTS = gql`
+  query getComments($post: String!) {
+    getComments(post: $post) {
+      _id
+      text
+      post {
+        _id
+        title}
+
+        author{
+          _id
+          name
+        }
+    }
+  }
+`;
+
 const GET_USER = gql`
   query getUser($id: ID!) {
     getUser(_id: $id) {
@@ -163,7 +180,10 @@ const GET_POST = gql`
       }
         comments {
         _id
-        text}
+        text
+        post {
+        title}
+        }
     }
   }
 `;
@@ -212,5 +232,6 @@ export {
   GET_POST,
   GET_MY_POST,
   GET_ME,
+  GET_COMMENTS,
   IS_LOGGED_IN
 };
