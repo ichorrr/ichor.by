@@ -624,6 +624,10 @@ transition: height 0.3s;
   width: 100%;
 }
 
+.length-comments {
+  text-align: right;
+}
+
 /* end comments block */
 
 /* start futer */

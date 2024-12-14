@@ -16,14 +16,17 @@ const Comments = props =>  {
       console.log(text);
       console.log(props.post);
       const postcom = props.post;
-
 return (
     <div className='comments-block'>
         {postcom.comments.map(({text}) => (
-            <div className='comment-block'  >{text}</div>    
+            <div className='comment-block'  >
+              <div><h3>postcom</h3></div>
+              
+              {text}
+              </div>    
         ))}
         <h3>Комментарии к записи</h3>
-        <span>всего  комментариев</span>
+        <span className='length-comments'>всего {postcom.comments.length} комментариев</span>
 
         <form onSubmit={event => {
           event.preventDefault();
