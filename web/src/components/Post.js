@@ -18,10 +18,18 @@ const NEW_COMMENT = gql`
           _id
           title
         }
+<<<<<<< HEAD
          author{
          _id
          name
          } 
+=======
+          createdAt
+          author {
+          _id
+          name
+          }
+>>>>>>> e92ec8683406a2d83f273207fbea01eadc64ef49
       }
     }`;
 

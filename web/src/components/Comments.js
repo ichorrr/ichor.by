@@ -23,6 +23,7 @@ const Comments = props =>  {
         setText(e.target.value);
       };
 
+<<<<<<< HEAD
       const postcom = props.post;
       const arrcom = data.getComments;
       console.log(data.getComments)
@@ -34,6 +35,26 @@ return (
         <h3>Комментарии к записи</h3>
               <span className='length-comments'>всего {postcom.comments.length} комментариев</span>
       </div>
+=======
+      
+      console.log(text);
+      console.log(props.post);
+      const postcom = props.post.comments;
+      console.log(postcom);
+      console.log(postcom[0].author)
+
+return (
+    <div className='comments-block'>
+        {postcom.map(({_id, text, createdAt}) => (
+            
+            <div key={_id} className='comment-block'  >
+              <div><h3>postcom</h3><p>{createdAt}</p></div>
+              {text}
+              </div>    
+        ))}
+        <h3>Комментарии к записи</h3>
+        <span className='length-comments'>всего {postcom.length} комментариев</span>
+>>>>>>> e92ec8683406a2d83f273207fbea01eadc64ef49
 
         <form onSubmit={event => {
           event.preventDefault();

@@ -181,8 +181,12 @@ const GET_POST = gql`
         comments {
         _id
         text
-        post {
-        title}
+
+          createdAt
+          post {
+            _id
+            title
+          }
         }
         author{
         _id
