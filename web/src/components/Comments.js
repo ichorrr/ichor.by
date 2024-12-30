@@ -15,18 +15,21 @@ const Comments = props =>  {
       
       console.log(text);
       console.log(props.post);
-      const postcom = props.post;
+      const postcom = props.post.comments;
+      console.log(postcom);
+      console.log(postcom[0].author)
+
 return (
     <div className='comments-block'>
-        {postcom.comments.map(({text}) => (
-            <div className='comment-block'  >
-              <div><h3>postcom</h3></div>
-              
+        {postcom.map(({_id, text, createdAt}) => (
+            
+            <div key={_id} className='comment-block'  >
+              <div><h3>postcom</h3><p>{createdAt}</p></div>
               {text}
               </div>    
         ))}
         <h3>Комментарии к записи</h3>
-        <span className='length-comments'>всего {postcom.comments.length} комментариев</span>
+        <span className='length-comments'>всего {postcom.length} комментариев</span>
 
         <form onSubmit={event => {
           event.preventDefault();
