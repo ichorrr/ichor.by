@@ -57,12 +57,9 @@ const resolvers = {
         return await models.User.findById(args._id);
       },
 
-
       async me(parent, args, { models, user }) {
-
         return await models.User.findById(user.id);
       },
-
 
       async getCats() {
         const cats = await models.Cat.find({});
@@ -73,8 +70,9 @@ const resolvers = {
         return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
       },
   
-      async getComments(parent, args, { models, post }) {
-        const comments = await models.Comment.find(post._id);
+      async getComments(parent, args, { models }) {
+        const postcom = new mongoose.Types.ObjectId(args.post);
+        const comments = await models.Comment.find({"post": postcom});
         return comments;
       },
       async getPost(parent, args, { models }) {
@@ -364,7 +362,7 @@ const resolvers = {
         return await models.Cat.findById(parent.category);
       },
       async comments(parent) {
-        return await models.Comment.find({ post: parent._id });
+        return await models.Comment.find({ post: parent._id }).sort({createdAt: -1, updatedAt: -1});
       }
     },
   

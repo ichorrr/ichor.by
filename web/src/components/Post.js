@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef } from 'react';
+import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useApolloClient, gql } from '@apollo/client';
@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments';
-
+import { useNavigate } from 'react-router-dom';
 
 const NEW_COMMENT = gql`
   mutation createComment($text: String!, $post: String!) {
@@ -18,6 +18,10 @@ const NEW_COMMENT = gql`
           _id
           title
         }
+         author{
+         _id
+         name
+         } 
       }
     }`;
 
@@ -34,10 +38,16 @@ const tkn = {
 
 const Post = ({ post }) => {
 
+  const navigate = useNavigate();
+
   let idcat = post.category._id;
   let iduser = post.author._id;
 
-  const [ data, { loading, error } ] = useMutation( NEW_COMMENT );
+  const [ data, { loading, error } ] = useMutation( NEW_COMMENT, {
+    onCompleted: data => {
+      navigate(`/posts/${post._id}`);
+    }
+  } );
 
   return (
 <>

@@ -184,6 +184,9 @@ const GET_POST = gql`
         post {
         title}
         }
+        author{
+        _id
+        name}
     }
   }
 `;
