@@ -387,7 +387,7 @@ span.empty-block {
 }
 
 div.absPostPart {
-  padding: 0 4% 2em 4%;
+  padding: 0 4% 2em 2em;
 }
 
 .svg-plank {
@@ -447,6 +447,19 @@ transition: height 0.3s;
 .css-delete {
   background: url(../svg/delete.svg) no-repeat;
   background-position: 8px 12px;
+}
+
+a.delete-comm {
+  display: block;
+  margin-top: 2em;
+  padding: .5em 0;
+  color:#bebebe;
+  font-size: .8em;
+  margin-bottom: -2em;
+}
+
+a.delete-comm:hover {
+  color: #4d4d4d;
 }
 
 .css-edit {
@@ -623,22 +636,20 @@ transition: height 0.3s;
 
 .comments-block {
   display: block;
-  margin:  -2em 25% 5% 4%;
+  margin:  -4em 25% 5% 4%;
+  max-width: 800px;
 }
 
 .comments-block form {
   padding-bottom: 4em;
 }
 
-.comments-block h3 {
-  padding-bottom:  .5em;
-}
 
 .comments-block textarea {
   border-radius: 1em;
   max-width: 800px;
   border:none;
-  padding:  1em;
+  padding:  .5em;
   display: block;
   font-size: 1.4em;
   margin: 0 0 2em 0;
@@ -657,26 +668,40 @@ transition: height 0.3s;
 
 .length-comments {
   float: right;
+  margin-bottom: 2.5em;
+  color: #b9b9b9;
 }
 
 .comment-block {
-  padding: 1.4em 0;
+  padding: 1.6em 0;
+  border-bottom: 1px solid #bebebe;
 }
-.comment-block h3 {
-  font-size: 1em;
+.comments-block h3 {
+  font-size: 1.2em;
   float: left;
+  display: inline;
   padding-right: 1em;
 }
 
 .comment-block span {
   color: #8d8d8d;
-  font-size: .9em;
+  
 }
 
 .comment-block p {
   color: #474747;
   font-size: 1.2em;
-  padding-top: .8em;
+  padding-top: .6em;
+}
+
+.form-comment {
+  margin: 3em;
+}
+
+.author-comment {
+  font-weight: bold;
+  padding-right: 1em;
+  font-size: 1.1em;
 }
 /* end comments block */
 

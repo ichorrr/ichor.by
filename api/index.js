@@ -231,6 +231,37 @@ const resolvers = {
           return false;
         }
       },
+
+      deleteComment: async (parent, { _id }, { models, user }) => {
+        
+        // if not a user, throw an Authentication Error
+        if (!user) {
+          throw new AuthenticationError('You must be signed in to delete a note');
+        }
+  
+        // find the note
+        const comm = await models.Comment.findById(_id);
+        
+        // if the note owner and current user don't match, throw a forbidden error
+        if (comm && String(comm.author) !== user.id) {
+
+          throw new GraphQLError("You don't have permissions to delete the note", {
+            extensions: {
+              code: 'FORBIDDEN',
+              myExtension: "foo",
+            },
+          });
+        }
+  
+        try {
+          // if everything checks out, remove the note
+          await comm.deleteOne();
+          return true;
+        } catch (err) {
+          // if there's an error along the way, return false
+          return false;
+        }
+      },
   
       updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
         // if not a user, throw an Authentication Error

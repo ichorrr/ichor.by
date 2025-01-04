@@ -1,13 +1,14 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useApolloClient, gql } from '@apollo/client';
+import { useMutation, useQuery, gql } from '@apollo/client';
 import PostUser from './PostUser';
 import { format } from 'date-fns';
 import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
-import Comments from '../components/Comments';
+import Comments from '../components/Comments.js';
 import { useNavigate } from 'react-router-dom';
+import {GET_ME} from '../gql/query';
 
 const NEW_COMMENT = gql`
   mutation createComment($text: String!, $post: String!) {
@@ -33,10 +34,6 @@ const H4R = styled.div`
   padding: 1.1em;
 `;
 
-const tkn = {
-  isLoggedIn: !!localStorage.getItem('token')
-};
-
 const Post = ({ post }) => {
 
   const navigate = useNavigate();
@@ -44,8 +41,14 @@ const Post = ({ post }) => {
   let idcat = post.category._id;
   let iduser = post.author._id;
 
+  
+    const { data: datacom } = useQuery( GET_ME);
+    
+
   const [ data, { loading, error } ] = useMutation( NEW_COMMENT, {
+    
     onCompleted: data => {
+      window.location.reload(),
       navigate(`/posts/${post._id}`);
     }
   } );
@@ -69,7 +72,7 @@ const Post = ({ post }) => {
             {`Автор ${post.author.name}`}
           </Link>
           <H4R>{`Просмотров ${post.viewsCount}`}</H4R>
-            <PostUser post={post} />
+            <PostUser post={post} me={datacom} />
         </div>
       </div>
     </div>
@@ -104,10 +107,7 @@ const Post = ({ post }) => {
         </div>
       </div>
     </article>
-    {tkn.isLoggedIn ? (
-      <Comments action={data} post={post} />
-    ):(<></>)}
-    
+<Comments action={data} post={post} me={datacom}/>
     </>
   );
 };

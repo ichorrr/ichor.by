@@ -1,5 +1,5 @@
 import React, {useEffect, useState, useRef } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import {GET_ME} from '../gql/query';
 import DeletePost from './DeletePost.js';
@@ -16,14 +16,10 @@ const PostUser = props => {
       {setAlert(false)}}
       document.addEventListener('click', onClick);
       }, [alert, setAlert]);
-
-  const { loading, error, data } = useQuery(GET_ME);
-    if (loading) return <p>Loading...</p>;
-    if (error) return null;
-
+      
   return (
 <>
-{ data.me._id === props.post.author._id && (
+{ props.me && props.me.me._id === props.post.author._id && (
 
   <div className="svg-plank" ref={rootEl} onClick={() => setAlert(!alert)}>
       <svg xmlns="http://www.w3.org/2000/svg" width="28" height="26" viewBox="0 0 28 26">

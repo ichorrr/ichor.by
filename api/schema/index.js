@@ -62,6 +62,7 @@ type Mutation {
   deletePost(_id: String!): Boolean!
   updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
   createComment(text: String!, post: String!): Comment!
+  deleteComment(_id: String!): Boolean!
 }
 
 type Query {

@@ -43,7 +43,7 @@ const GET_COMMENTS = gql`
       post {
         _id
         title}
-
+        createdAt
         author{
           _id
           name
@@ -187,10 +187,10 @@ const GET_POST = gql`
             _id
             title
           }
-        }
-        author{
+          author{
         _id
         name}
+        }
     }
   }
 `;

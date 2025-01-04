@@ -55,7 +55,15 @@ const EDIT_POST = gql`
         deletePost(_id: $id)
       }
     `;
+
+    const DELETE_COMM = gql`
+    mutation deleteComment($id: String!) {
+      deleteComment(_id: $id)
+    }
+  `;
+
     export {
       EDIT_POST,
-      DELETE_POST
+      DELETE_POST,
+      DELETE_COMM
     };
