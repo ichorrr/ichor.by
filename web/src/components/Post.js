@@ -55,7 +55,7 @@ const Post = ({ post }) => {
 
   return (
 <>
-    <article>
+    <article className='css-post'>
 
     <div className='top-block'>
       <div id={post._id} ></div>

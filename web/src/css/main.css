@@ -24,10 +24,7 @@ body {
 code {
   display: block;
   background: #efefef;
-  padding: 0 2em;
-  width: 60vw;
   min-width: 300px;
-  margin: 4em 0;
   font-size: .7em;
   overflow-x: auto;
   overflow-y: auto;
@@ -145,7 +142,7 @@ code {
 
 .style-title input[type="text"] {
   margin: 0 0 1em 0;
-  
+  border-radius: .4em;
   width: 100%;
   text-indent: .5em;
 }
@@ -306,6 +303,11 @@ span.css-author {
   color: #fff;
 }
 
+.css-post {
+  margin: 0 10vw;
+  width: 80vw;
+}
+
 div.css-checkbox {
   display: block;
   background: #eaeaea;
@@ -347,6 +349,7 @@ label.style-select {
 }
 .style-select select {
   padding: .5em 0 .5em 0;
+  border-radius: .4em;
   font-size: 1.1em;
   width: 100%;
   text-indent: .5em;
@@ -373,6 +376,7 @@ span.empty-block {
 }
 
 .css-txt p {
+  float: left;
   padding: .5em 0;
   color: #595959;
 }
@@ -387,7 +391,7 @@ span.empty-block {
 }
 
 div.absPostPart {
-  padding: 0 4% 2em 2em;
+  padding: 0 0 2em 0;
 }
 
 .svg-plank {
@@ -636,8 +640,9 @@ a.delete-comm:hover {
 
 .comments-block {
   display: block;
-  margin:  -4em 25% 5% 4%;
-  max-width: 800px;
+  margin:  -4em 10% 5% 10%;
+  width: 80%;
+  display: inline-block;
 }
 
 .comments-block form {
@@ -647,9 +652,9 @@ a.delete-comm:hover {
 
 .comments-block textarea {
   border-radius: 1em;
+  height: 100px;
   max-width: 800px;
   border:none;
-  padding:  .5em;
   display: block;
   font-size: 1.4em;
   margin: 0 0 2em 0;
@@ -668,7 +673,7 @@ a.delete-comm:hover {
 
 .length-comments {
   float: right;
-  margin-bottom: 2.5em;
+  margin-bottom: 1.5em;
   color: #b9b9b9;
 }
 
@@ -695,7 +700,8 @@ a.delete-comm:hover {
 }
 
 .form-comment {
-  margin: 3em;
+  margin-top: 5em;
+  max-width: 800px;
 }
 
 .author-comment {
@@ -798,7 +804,7 @@ a.delete-comm:hover {
 }
 
 .top-block {
-  padding: 4em 4% 0 4%;
+  padding: 3em 4% 0 0;
 }
 
 .top-block h2 {
@@ -935,6 +941,7 @@ div.xclose:hover {
   height: 100%;
   width: 100%;
   margin-bottom: 4em;
+  border-radius: 1em;
 }
 
 .post-canvas {
@@ -947,7 +954,6 @@ div.xclose:hover {
 .post-canvas canvas {
   position: relative;
   height: 60vh;
-  margin-top: 2em;
 }
 /* POST style   */
 
@@ -960,12 +966,14 @@ div.xclose:hover {
   width: 100%;
   padding: 0;
   overflow: hidden;
+  border-radius: 1em;
 }
 
 .imgStyle img {
   object-fit: cover;
   width: 100%;
   height: 100%;
+  border-radius: 1em;
 }
 
 input.script-url {
@@ -981,7 +989,16 @@ input.script-url {
 }
 
 @media screen and (min-width: 376px) and (max-width: 576px)  {
+  code {
+    margin: 2.5em 0;
+    width: calc(100% -2em);
+    padding: 1em;
+    float: left;
+  }
 
+  .comments-block {
+    margin-top: 0;
+  }
 /* FIRST PAGE */
   .txtfPOst h1 {
     margin-top: 50vw;
@@ -1028,7 +1045,7 @@ input.script-url {
 }
 
 .top-block h2 {
-  padding: 1em 0 0 0;
+  padding: 1.5em 0 0 0;
   font-size: 3em;
   line-height: 1.1em;
   font-weight: bold;
@@ -1036,8 +1053,8 @@ input.script-url {
 
 .css-txt {
   display:block;
-  padding: 4em 1em 2em 0;
-  font-size: 1.5em;
+  padding: 4em 0 2em 0;
+  font-size: 1.2em;
   line-height: 1.3em;
 }
 
@@ -1137,6 +1154,17 @@ input[type="text"], #password {
 
 @media  screen and (min-width: 576px) and (max-width: 960px) {
 
+  code {
+    margin: 2em 0;
+    width: calc(100% - 2em);
+    padding: 1em;
+    float: left;
+  }
+
+.comments-block {
+  margin-top: .2em;
+} 
+
   /* FIRST PAGE */
   .txtfPOst h1 {
     font-size: 4em;
@@ -1200,16 +1228,16 @@ input[type="text"], #password {
 
 .top-block h2 {
   padding: 1em 0 0 0;
-  font-size: 4em;
-  line-height: 1.1em;
+  font-size: 6em;
+  line-height: 1em;
   font-weight: bold;
 }
 
 .css-txt {
   display:block;
-  padding: 3em 1em 2em 0;
-  font-size: 1.8em;
-  line-height: 1.3em;
+  padding: 3em 0 2em 0;
+  font-size: 1.6em;
+  line-height: 1.6em;
 }
 
 .img-post {
@@ -1290,6 +1318,23 @@ input[type="text"], #password {
 }
 
 @media  screen and (max-width: 376px) {
+
+  code {
+    margin: 1em 0;
+    padding: 1em;
+    font-size: .6em;
+    float: left;
+  }
+
+  .comments-block {
+    margin-top: 0;
+    display:inline-block;
+  }
+
+.length-comments {
+  float: left;
+  padding-top: 1em;
+}
 
   /* FIRST PAGE */
   .txtfPOst h1 {
@@ -1490,6 +1535,17 @@ input[type="text"], #password {
 }
 @media  screen and (min-width: 960px) and (max-width: 1200px) {
 
+  code {
+    width: calc(100% - 2em);
+    padding: 2em;
+    float: left;
+    margin: 3em 0;
+    font-size: .9em;
+  }
+
+  .comments-block {
+    margin-top: 0;
+  }
   /* FIRST PAGE */
   .txtfPOst h1 {
     font-size: 5em;
@@ -1546,10 +1602,9 @@ input[type="text"], #password {
 
 .css-txt {
   display:block;
-  padding: 2em 1em 2em 0;
   margin-top: 2em;
-  font-size: 2em;
-  line-height: 1.3em;
+  font-size: 1.4em;
+  line-height: 1.6em;
 }
 
 .img-post {
@@ -1637,6 +1692,17 @@ input[type="text"], #password {
 
 @media  screen and (min-width: 1200px) and (max-width: 1366px) {
 
+  code {
+    width: calc(100% - 4em);
+    margin: 2.5em 0;
+    padding: 2em;
+    float: left;
+  }
+
+.comments-block {
+  margin-top: 0;
+}
+
     /* FIRST PAGE */
   .txtfPOst h1 {
     font-size: 6em;
@@ -1690,13 +1756,14 @@ input[type="text"], #password {
   .top-block h2 {
     padding: .8em 0 0 0;
     font-size: 7em;
+    line-height: .9em;
   }
 
   .css-txt {
     display:block;
-    padding: 2em 1em 2em 0;
+    padding: 2em 0 2em 0;
     margin-top: 2em;
-    font-size: 2em;
+    font-size: 1.8em;
     line-height: 1.3em;
   }
 
@@ -1785,11 +1852,23 @@ input[type="text"], #password {
 
 
 @media screen and (min-width: 1336px) {
+  code {
+    width: calc(100% - 2em);
+    padding: 2em;
+    float: left;
+    margin: 3em 0;
+  }
+
+.comments-block {
+  margin-top: 1em;
+}
+
   .txtColumn {
     column-count: 2;
     column-width: 40%;
     column-gap: 7%;
   }
+
   
 }
 
@@ -1801,6 +1880,15 @@ input[type="text"], #password {
 }
 
 @media  screen and (min-width: 1366px) and (max-width: 1920px)  {
+
+  code {
+    margin: 3em 0;
+    padding: 2em;
+    width: calc(100% -4em);
+    display: inline-block;
+  }
+
+
 
   /* FIRST PAGE */
   .txtfPOst h1 {
@@ -1855,12 +1943,12 @@ input[type="text"], #password {
 .top-block h2 {
   padding: .8em 0 0 0;
   font-size: 7em;
-  line-height: 1.2em;
+  line-height: 1em;
 }
 
 .css-txt {
   display:block;
-  padding: 2em 1em 2em 0;
+  padding: 2em 0 2em 0;
   margin-top: 2em;
   font-size: 2em;
   line-height: 1.3em;
@@ -1950,6 +2038,10 @@ bottom: -4em;
 
 @media screen and (min-width: 1920px) {
 
+  code {
+    width: 90%;
+    display: inline-block;
+  }
   /* FIRST PAGE */
   .txtfPOst h1 {
     font-size: 7em;
@@ -2009,7 +2101,7 @@ bottom: -4em;
 
   .css-txt {
     display:block;
-    padding: 2em 1em 2em 0;
+    padding: 2em 0 2em 0;
     margin-top: 2em;
     font-size: 2em;
     line-height: 1.3em;
