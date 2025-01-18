@@ -32,8 +32,6 @@ const UserForm = props => {
       ...values,
       [event.target.name]: event.target.value
     });
-
-    console.log(values);
   };
 
   return (
@@ -42,7 +40,7 @@ const UserForm = props => {
       {/* Display the appropriate form header */}
       {props.formType === 'signUp' ? <h2>Регистрация</h2> : <h2>Авторизация</h2>}
       {/* perform the mutation when a user submits the form */}
-      <Form
+      <Form 
         onSubmit={event => {
 
           event.preventDefault();
@@ -61,7 +59,7 @@ const UserForm = props => {
         type="text"
         id="name"
         name="name"
-        placeholder="name"
+        placeholder="Name"
         onChange={onChange}
       />
     </React.Fragment>)}
@@ -71,7 +69,8 @@ const UserForm = props => {
           type="text"
           id="email"
           name="email"
-          placeholder="Email"
+          
+          placeholder="E-mail"
           onChange={onChange}
         />
         <label htmlFor="password">Пароль</label>
@@ -81,6 +80,7 @@ const UserForm = props => {
           id="password"
           name="password"
           placeholder="Password"
+          autocomplete="new-password"
           onChange={onChange}
         />
         <div className='empty-div-half'></div>

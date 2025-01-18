@@ -13,7 +13,7 @@ import CatPage from './cat';
 import SignUp from './signup';
 import SignIn from './signin';
 import GetUser from './user';
-import MyPosts from './myposts';
+import MyProf from './myprofile';
 import NewPost from './new';
 import EditPost from './edit';
 import ArtPost from './arts';
@@ -31,7 +31,7 @@ let dnss = data.getPosts[1]._id;
       <Layout>
       <Routes>
         <Route exact path="/" element={<Home />} />
-        <Route path="/myposts" element={< MyPosts />} />
+        <Route path="/myposts" element={< MyProf />} />
         <Route exact path="/users/:id" element={< GetUser type="user" />} />
         <Route path="/arts" element={< ArtPost type="arts" />} />
         <Route exact path="/cats/:id" element={ < CatPage type="cat" />} />
