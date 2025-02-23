@@ -62,13 +62,20 @@ const Fpost = ({post}) => {
             <h1>{data.postFirst.title}</h1>
           </Link>
           <p><br></br><br></br></p>
-          <div className="css-plank">
-            <Link  to={`/cats/${idcat}`}>
-              {data.postFirst.category.catname}
-            </Link>
-            <Link  to={`/users/${iduser}`}>
-              {`Автор ${data.postFirst.author.name}`}
-            </Link>
+          <div className="css-plank wdth" >
+
+            <ul>
+              <li>
+                <Link  to={`/cats/${idcat}`}>
+                  {data.postFirst.category.catname}
+                </Link>
+              </li>
+              <li>
+                <Link  to={`/users/${iduser}`}>
+                  {`Автор ${data.postFirst.author.name}`}
+                </Link>
+              </li>
+            </ul>
           </div>
         </div>
           <UniBlock post={data.postFirst._id}/>

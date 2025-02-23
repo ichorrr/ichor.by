@@ -27,13 +27,6 @@ const NEW_COMMENT = gql`
       }
     }`;
 
-
-const H4R = styled.div`
-  display: inline;
-  font: normal 1em Arial, sans-serif;
-  padding: 1.1em;
-`;
-
 const Post = ({ post }) => {
 
   const navigate = useNavigate();
@@ -63,17 +56,28 @@ const Post = ({ post }) => {
     
       <div className="all-post-block">
         <div className="css-plank">
+        <ul>
+          <li>  
           <Link  to={`/cats/${idcat}`}>
             {post.category.catname}
           </Link>
-     
-          <H4R>{format(new Date(post.createdAt), 'dd LLL yyyy  HH:mm')}</H4R>
-          <Link  to={`/users/${iduser}`}>
-            {`Автор ${post.author.name}`}
-          </Link>
-          <H4R>{`Просмотров ${post.viewsCount}`}</H4R>
-            <PostUser post={post} me={datacom} />
+          </li>
+          <li className='plank-span'>
+            <span>{format(new Date(post.createdAt), 'dd LLL yyyy  HH:mm')}</span>
+          </li>
+          <li>
+            <Link  to={`/users/${iduser}`}>
+              {`Автор ${post.author.name}`}
+            </Link>
+          </li>
+          <li  className='plank-span'>
+            <span>{`Просмотров ${post.viewsCount}`}</span>
+          </li>
+          </ul>
+        <PostUser post={post} me={datacom} />
         </div>
+              
+           
       </div>
     </div>
 

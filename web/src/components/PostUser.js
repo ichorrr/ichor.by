@@ -1,7 +1,5 @@
 import React, {useEffect, useState, useRef } from 'react';
-import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import {GET_ME} from '../gql/query';
 import DeletePost from './DeletePost.js';
 
 const PostUser = props => {
@@ -32,10 +30,14 @@ const PostUser = props => {
   <div className={"svg-menu-plank" +" " +`${(alert) ? "dxnv" : "dddd"}`} >
   <h4>Панель управления</h4>
   <React.Fragment>
-  <span>
-    <Link to={`/edit/${props.post._id}`} className="css-edit">Редактировать</Link>
-    <DeletePost postId={props.post._id} />
-  </span>
+  <ul>
+    <li>
+      <Link to={`/edit/${props.post._id}`} className="css-edit">Редактировать</Link>
+    </li>
+    <li>
+      <DeletePost postId={props.post._id} />
+    </li>
+  </ul>
   </React.Fragment>
   </div>
 </>
