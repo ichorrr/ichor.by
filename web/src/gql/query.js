@@ -15,6 +15,25 @@ const GET_CATS = gql`
   }
 `;
 
+const GET_MY_USERS = gql`
+  query getMyUsers {
+    getMyUsers {
+      _id
+      messages {
+        _id
+        user {
+          _id
+          name
+        }
+        addressee {
+        _id
+        name
+        }
+      }
+    }
+  }
+`;
+
 const GET_CAT = gql`
   query getCat($id: ID!) {
     getCat(_id: $id) {
@@ -48,6 +67,20 @@ const GET_COMMENTS = gql`
           _id
           name
         }
+    }
+  }
+`;
+
+const GET_USER_MESSAGES = gql`
+  query getUserMessages($addressee: [String!], $users: [ID!]) {
+    getUserMessages(addressee: $addressee, users: $users) {
+      _id
+      text
+      createdAt
+      author {
+        _id
+        name
+      }
     }
   }
 `;
@@ -149,6 +182,52 @@ const GET_ME = gql`
     me {
       _id
       name
+      family {
+        _id
+        name
+      }
+      messages {
+        _id
+        text
+        createdAt
+        
+        author {
+          _id
+          name
+        }
+      }
+      posts {
+        _id
+        title
+        iconPost
+        imageUrl
+        imageUrl2
+        imageUrl3
+        scriptUrl
+        createdAt
+        updatedAt
+        viewsCount
+        category {
+          _id
+          catname
+        }
+        body
+        body2
+        body3
+      }
+      comments {
+        _id
+        text
+        createdAt
+        post {
+          _id
+          title
+        }
+        author {
+          _id
+          name
+        }
+      }
     }
   }
 `;
@@ -239,6 +318,8 @@ export {
   GET_POST,
   GET_MY_POST,
   GET_ME,
+  GET_MY_USERS,
   GET_COMMENTS,
-  IS_LOGGED_IN
+  IS_LOGGED_IN,
+  GET_USER_MESSAGES,
 };

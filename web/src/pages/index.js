@@ -18,6 +18,7 @@ import NewPost from './new';
 import EditPost from './edit';
 import ArtPost from './arts';
 import About from './about';
+import ChatPage from './chat';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
@@ -32,6 +33,7 @@ let dnss = data.getPosts[1]._id;
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route path="/myposts" element={< MyProf />} />
+        <Route path="/chat/:id" element={<ChatPage type="chat" />} />
         <Route exact path="/users/:id" element={< GetUser type="user" />} />
         <Route path="/arts" element={< ArtPost type="arts" />} />
         <Route exact path="/cats/:id" element={ < CatPage type="cat" />} />

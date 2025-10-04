@@ -41,7 +41,7 @@ const UserPosts = ({posts}) => {
             {`${post.category.catname}`}
           </Link>
             <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-            <span>{`views ${post.viewsCount}`}</span>
+            <span>{`Просмотров ${post.viewsCount}`}</span>
           </div>
           </li>
       ))}

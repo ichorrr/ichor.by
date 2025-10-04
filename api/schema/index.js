@@ -7,6 +7,9 @@ type User {
   name: String!
   email: String!
   avatar: String
+  telephone: String
+  family: [User]
+  messages: [Message]
   posts: [Post!]!
   comments: [Comment!]!
   cursor: String!
@@ -48,6 +51,17 @@ type Comment {
   author: User!
 }
 
+type Message {
+  _id: ID!
+  text: String!
+  createdAt: Date!
+  updatedAt: Date!
+  file: String
+  likesCount: Int!
+  author: User!
+  addressee: String!
+  }
+
 type postFeed {
   posts: [Post!]
   cursor: String!
@@ -63,6 +77,9 @@ type Mutation {
   updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
   createComment(text: String!, post: String!): Comment!
   deleteComment(_id: String!): Boolean!
+  createMessage(text: String!, file: String, addressee: String!): Message!
+  deleteMessage(_id: String!): Boolean!
+  updateMessage(_id: String!, text: String!, file: String, addressee: String): Message!
 }
 
 type Query {
@@ -77,5 +94,14 @@ type Query {
   getCat(_id: ID!): Cat!
   postFeed(cursor: String, limit: Int, qualifier: String): postFeed
   postFirst: Post!
+  getMessages: [Message!]!
+  getMessage(_id: ID!): Message
+  getUsersMessages(users: [ID!]!): [Message!]!
+  getUserMessages(addressee: [String!], users: [ID!]): [Message!]!
+  mesFeed(cursor: String, limit: Int): [Message!]!
+  getUserByEmail(email: String!): User
+  getUserByName(name: String!): User
+  getUserById(id: ID!): User
+  getUserByTelephone(telephone: String!): User
 }
 `;

@@ -20,6 +20,29 @@ const User = model(
         type: String,
         required: true
       },
+      telephone: {
+        type: String
+      },
+      family: [
+        {
+          type: Types.ObjectId,
+          ref: 'User'
+        }
+      ],
+      messages: [
+        {
+          type: Types.ObjectId,
+          ref: 'Message'
+        }
+      ],
+      cursor: {
+        type: String,
+        default: ''
+      },
+      hasNextPage: {
+        type: Boolean,
+        default: false
+      },
       avatar: {
         type: String
       },

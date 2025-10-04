@@ -1,6 +1,9 @@
 import React, {useEffect} from 'react';
+import { useQuery, gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import Message from '../components/Messages.js';
+import { GET_ME } from '../gql/query';   
 
 const H1R = styled.h1`
   color: #363636;
@@ -18,11 +21,25 @@ const H2 = styled.h2`
 
 const About = () => {
 
-    const navigate = useNavigate();
+  useEffect(() => {
+    document.title = 'О себе > ichor.by';
+  });
   
-    useEffect(() => {
-      document.title = 'About > ICHOR.BY';
+    const navigate = useNavigate();
+    
+    const { loading, error, data } = useQuery(GET_ME, {
+      onError: (error) => {
+        console.error("Error fetching user data:", error);
+        navigate('/login');
+      }
     });
+
+    if (loading) return <p>Loading...</p>;
+    if (error) {
+      console.error("Error fetching user data:", error);
+      return <p>Error: {error.message}</p>;
+    }
+console.log(data.me);
 
     let vurl = new URL( "../video/logo_output.mp4", import.meta.url );
     let vstr = "" + vurl;
@@ -31,7 +48,18 @@ const About = () => {
       <React.Fragment>
         <div className="top-new-post">
         <H1R>Что на счет меня?</H1R>
+        <p>
+          
+          {data.me.family.map((family) => (
+  <div key={family._id} className='family'>
+    <a href={`/chat/${family._id}`}>
+      <span className='family-name'>{family.name}</span>
+    </a>
+  </div>
+))}
+        </p>
 
+     <Message />
         </div>
         <div className='block_about'>
             <div className='video_about'>

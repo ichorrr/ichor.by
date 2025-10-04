@@ -19,6 +19,7 @@ import multer from 'multer';
 import fs from 'fs';
 
 import mongoose from 'mongoose';
+import { update } from 'tar';
 
 const dateScalar = new GraphQLScalarType({
     name: 'Date',
@@ -69,7 +70,42 @@ const resolvers = {
       async getPosts() {
         return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
       },
-  
+      async getMessages(parent, args, { models }) {
+        const messages = await models.Message.find({}).sort({createdAt: -1, updatedAt: -1});
+        return messages;
+      },
+      async getUsersMessages(parent, args, { models }) {
+          const users = await models.Message.fiind({ addressee})
+      },
+      async getUserMessages(parent, args, { models }) {
+    if (!args.addressee || !Array.isArray(args.addressee) || args.addressee.length < 2) {
+        throw new GraphQLError('Addressee must be an array of two user IDs', {
+            extensions: { code: 'BAD_USER_INPUT' },
+        });
+    }
+    const [userA, userB] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
+    const messages = await models.Message.find({
+        $or: [
+            { addressee: userA, user: userB },
+            { addressee: userB, user: userA }
+        ]
+    })
+    .populate('user', 'name') // if you want to populate author info
+    .sort({ createdAt: 1, updatedAt: 1 });
+    return messages;
+},
+      async getMessage(parent, args, { models }) {
+        const message = await models.Message.findById(args._id);
+        if (!message) {
+          throw new GraphQLError('Message not found', {
+            extensions: {
+              code: 'NOT_FOUND',
+            },
+          });
+        } else {
+          return message; 
+        }
+      },
       async getComments(parent, args, { models }) {
         const postcom = new mongoose.Types.ObjectId(args.post);
         const comments = await models.Comment.find({"post": postcom});
@@ -262,6 +298,36 @@ const resolvers = {
           return false;
         }
       },
+      deleteMessage: async (parent, { _id }, { models, user }) => {
+        // if not a user, throw an Authentication Error
+        if (!user) {  
+          throw new AuthenticationError('You must be signed in to delete a message');
+        }
+        // find the message
+        const message = await models.Message.findById(_id);
+        // if the message owner and current user don't match, throw a forbidden error
+        if (message && String(message.user) !== user.id) {
+          throw new GraphQLError("You don't have permissions to delete the message", { 
+            extensions: {
+              code: 'FORBIDDEN',
+              myExtension: "foo",
+            }, 
+          });
+        }
+        try {
+          // if everything checks out, remove the message
+          if (message.file) {
+            var name = message.file.split("/").pop();
+            var pth = "./uploads/" + name;
+            fs.unlinkSync(pth, 'Content_For_Writing');
+          }
+          await message.deleteOne();
+          return true;
+        } catch (err) {
+          // if there's an error along the way, return false
+          return false;
+        }
+      },
   
       updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
         // if not a user, throw an Authentication Error
@@ -366,7 +432,62 @@ const resolvers = {
         await post.save();
   
         return createComment;
+      },
+
+    createMessage: async (_, args, { models, user }) => {
+      if (!user) {
+        throw new AuthenticationError(
+          'You must be signed in to create a message'
+        );
       }
+      const newMessage = new models.Message({
+        text: args.text,
+        file: args.file,
+        addressee: args.addressee,
+        likesCount: 0,
+        user: new mongoose.Types.ObjectId(user.id)
+      });
+      const createMessage = await newMessage.save();
+
+      const author = await models.User.findById(
+        new mongoose.Types.ObjectId(user.id)
+      );
+      author.messages.push(newMessage.id);
+      await author.save();
+      return createMessage;
+    },
+    updateMessage: async (_, { _id, text, file }, { models, user }) => {
+      // if not a user, throw an Authentication Error
+      if (!user) {
+        throw new AuthenticationError('You must be signed in to update a message');
+      }
+      // find the message
+      const message = await models.Message.findById(_id);
+      // if the message owner and current user don't match, throw a forbidden error
+      if (message && String(message.user) !== user.id) {
+        throw new GraphQLError("You don't have permissions to update the message", {
+          extensions: {
+            code: 'FORBIDDEN',
+            myExtension: "foo",
+          },
+        });
+      }
+      // Update the message in the db and return the updated message
+      return await models.Message.findOneAndUpdate(
+        {
+          _id: _id
+        },
+        {
+          $set: {
+            text,
+            file
+          }
+        },
+        {
+          new: true
+        }
+      );
+    }
     },
   
     User: {
@@ -376,6 +497,14 @@ const resolvers = {
   
       async comments(parent) {
         return await models.Comment.find({ user: parent._id });
+      },
+      async messages(parent, args, { models }) {
+        return await models.Message.find({ user: parent._id }).sort({createdAt: -1, updatedAt: -1});
+      },
+      family: async (parent, args, { models }) => {
+        // parent.family is an array of user IDs
+        if (!parent.family || parent.family.length === 0) return [];
+        return await models.User.find({ _id: { $in: parent.family } });
       }
     },
   
@@ -405,13 +534,19 @@ const resolvers = {
       async author(parent) {
         return await models.User.findById(parent.author);
       }
-    }
+    },
+    Message: {
+      author: async (parent, args, { models }) => {
+        // parent.user is the ObjectId reference to the user
+        return await models.User.findById(parent.user);
+      }
+    },
   };
 const DB_HOST = process.env.DB_HOST;
 
-
-const app = express();
 mongoose.connect(DB_HOST);
+const app = express();
+
 const httpServer = http.createServer(app);
 // Security middleware
 app.use(helmet({
@@ -556,4 +691,4 @@ app.use(express.static("/"));
   );
 
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at https://api.ichor.by/graphql`);
+  console.log(`🚀 Server ready at http://localhost:4000/graphql`);

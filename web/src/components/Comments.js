@@ -29,7 +29,7 @@ return (
       {props.me && (
         <div className='form-comment'>
           
-          <h3>Оставить комментарий</h3>
+          
           <span className='length-comments'>всего {postcom.length} комментариев</span>
           <form onSubmit={event => {
             event.preventDefault();
@@ -40,14 +40,16 @@ return (
               }
             });
           }}>
-          <textarea value={text} onChange={onChangeHandler}>Текст комментария</textarea>
+          <textarea value={text} onChange={onChangeHandler}  placeholder="Добавить комментарий...">Текст комментария</textarea>
           <button type="submit"  value={comments} onClick={onClickHandler}>Опубликовать</button>
           </form>
         </div>
         )}
+        
 
         {postcom.map(({_id, text, createdAt, author}) => (
-
+              <>
+              <h3 className='comment-name'>Комментарии</h3>
               <div key={_id} className='comment-block'  >
               <div><span className='author-comment'>{author.name}</span><span>{format(new Date(createdAt), 'dd LLL yyyy  HH:mm')}</span></div>
               <p>{text}</p>
@@ -57,7 +59,7 @@ return (
     )}
             
               </div>
-  
+              </>
         ))}
     </div>
 )};
