@@ -25,6 +25,10 @@ const Message = model(
       addressee: {
         type: String,
         required: true
+      },
+      chat: {
+        type: Types.ObjectId,
+        ref: 'Chat'
       }
     },
     {

@@ -74,10 +74,79 @@ const resolvers = {
         const messages = await models.Message.find({}).sort({createdAt: -1, updatedAt: -1});
         return messages;
       },
-      async getUsersMessages(parent, args, { models }) {
-          const users = await models.Message.fiind({ addressee})
+      async getMyListUsersChats(parent, args, { models, user }) {
+        try {
+          if (!user) {
+            throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+          }
+
+          // load current user
+          const currentUser = await models.User.findById(user.id);
+          if (!currentUser) {
+            throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+          }
+
+          // If API client passed addressee pair explicitly (legacy behavior) handle safely
+          if (args?.addressee && Array.isArray(args.addressee) && args.addressee.length === 2) {
+            const [a, b] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
+            const messages = await models.Message.find({
+              $or: [
+                { addressee: a, user: b },
+                { addressee: b, user: a }
+              ]
+            })
+            .populate('user', 'name')
+            .sort({ createdAt: 1, updatedAt: 1 });
+
+            return messages; // if you expect messages here, otherwise remove this branch
+          }
+
+          // Default: return family members with last message in chat with current user
+          const familyIds = Array.isArray(currentUser.family) ? currentUser.family : [];
+          if (familyIds.length === 0) return [];
+
+          const familyUsers = await models.User.find({ _id: { $in: familyIds } }).select('_id name avatar');
+
+          const chats = await Promise.all(familyUsers.map(async (fam) => {
+            const lastMessage = await models.Message.findOne({
+              $or: [
+                { addressee: fam._id, user: currentUser._id },
+                { addressee: currentUser._id, user: fam._id }
+              ]
+            })
+            .sort({ createdAt: -1 })
+            .populate('user', '_id name');
+
+            return {
+              _id: fam._id,
+              name: fam.name,
+              avatar: fam.avatar || null,
+              lastMessage: lastMessage ? {
+                _id: lastMessage._id,
+                text: lastMessage.text,
+                createdAt: lastMessage.createdAt,
+                author: lastMessage.user ? { _id: lastMessage.user._id, name: lastMessage.user.name } : null
+              } : null
+            };
+          }));
+
+          // sort by most recent lastMessage (newest first)
+          chats.sort((a, b) => {
+            const ta = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+            const tb = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+            return tb - ta;
+          });
+
+          return chats;
+        } catch (err) {
+          console.error('getMyListUsersChats error:', err);
+          throw new GraphQLError('Error fetching chat users', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+        }
       },
-      async getUserMessages(parent, args, { models }) {
+
+
+
+        async getUserMessages(parent, args, { models }) {
     if (!args.addressee || !Array.isArray(args.addressee) || args.addressee.length < 2) {
         throw new GraphQLError('Addressee must be an array of two user IDs', {
             extensions: { code: 'BAD_USER_INPUT' },
@@ -452,7 +521,23 @@ const resolvers = {
       const author = await models.User.findById(
         new mongoose.Types.ObjectId(user.id)
       );
+
+      const recipient = await models.User.findById(args.addressee);
+      
+       if (!recipient) {
+        throw new GraphQLError('Recipient not found', {
+            extensions: { code: 'NOT_FOUND' },
+        });
+    };
+    if (!recipient.family.includes(user.id)) {
+        recipient.family.push(user.id); // Add sender's ID to recipient's family
+        await recipient.save(); // Save the updated recipient
+    };
+
       author.messages.push(newMessage.id);
+      if(!author.family.includes(args.addressee)) {
+        author.family.addToSet(args.addressee);
+      }
       await author.save();
       return createMessage;
     },
@@ -496,7 +581,7 @@ const resolvers = {
       },
   
       async comments(parent) {
-        return await models.Comment.find({ user: parent._id });
+        return await models.Comment.find({ author: parent._id }).sort({createdAt: -1, updatedAt: -1});
       },
       async messages(parent, args, { models }) {
         return await models.Message.find({ user: parent._id }).sort({createdAt: -1, updatedAt: -1});
@@ -505,7 +590,11 @@ const resolvers = {
         // parent.family is an array of user IDs
         if (!parent.family || parent.family.length === 0) return [];
         return await models.User.find({ _id: { $in: parent.family } });
-      }
+      },
+      lastMessage: async (parent, args, { models }) => {
+        if (!parent.lastMessage) return null;
+        return await models.Message.findById(parent.lastMessage);
+      },
     },
   
     Cat: {
@@ -562,7 +651,10 @@ app.use(helmet({
 }));
 // CORS middleware
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://ichor.by', 'http://localhost:1234'], // Allow both production and local development origins
+  credentials: true, // Allow credentials (if needed)
+}));
 
 app.use(express.json());
 

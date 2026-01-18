@@ -14,7 +14,24 @@ const GET_CATS = gql`
     }
   }
 `;
-
+const GET_MY_LIST_USERS_CHATS = gql`
+  query getMyListUsersChats {
+    getMyListUsersChats {
+      _id
+      name
+      avatar
+      lastMessage {
+        _id
+        text
+        createdAt
+        author {
+          _id
+          name
+        }
+      }
+    }
+  }
+`;
 const GET_MY_USERS = gql`
   query getMyUsers {
     getMyUsers {
@@ -90,6 +107,19 @@ const GET_USER = gql`
     getUser(_id: $id) {
       _id
       name
+      messages {
+        _id
+        text
+        user {
+        _id
+        name
+      }
+        createdAt
+      }
+        family { 
+        _id
+        name
+      }
       posts {
         _id
         title
@@ -182,15 +212,17 @@ const GET_ME = gql`
     me {
       _id
       name
+      email
       family {
         _id
         name
       }
+      avatar
+      isAdmin
       messages {
         _id
         text
         createdAt
-        
         author {
           _id
           name
@@ -303,6 +335,18 @@ const GET_POSTS = gql`
   }
 `;
 
+const GET_USERS = gql`
+  query getUsers {
+    getUsers {
+      _id
+      name
+      email
+      telephone
+      avatar
+    }
+  }
+`;
+
 const IS_LOGGED_IN = gql`
   query isLoggedIn {
     isLoggedIn @client
@@ -322,4 +366,6 @@ export {
   GET_COMMENTS,
   IS_LOGGED_IN,
   GET_USER_MESSAGES,
+  GET_MY_LIST_USERS_CHATS,
+  GET_USERS
 };

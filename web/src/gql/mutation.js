@@ -50,6 +50,24 @@ const EDIT_POST = gql`
       }
     }`;
 
+const CREATE_MESSAGE = gql`
+  mutation createMessage($text: String!, $author: ID!, $addressee: ID!) {
+    createMessage(text: $text, author: $author, addressee: $addressee) {
+      _id
+      text
+      createdAt
+      author {
+        _id
+        name
+      }
+      addressee {
+        _id
+        name
+      }
+    }
+  }
+`;
+
     const DELETE_POST = gql`
       mutation deletePost($id: String!) {
         deletePost(_id: $id)
@@ -62,8 +80,16 @@ const EDIT_POST = gql`
     }
   `;
 
+  const DELETE_MESSAGE = gql`
+    mutation deleteMessage($id: String!) {
+      deleteMessage(_id: $id)
+    }
+  `;
+
     export {
       EDIT_POST,
       DELETE_POST,
-      DELETE_COMM
+      DELETE_COMM,
+      CREATE_MESSAGE,
+      DELETE_MESSAGE
     };

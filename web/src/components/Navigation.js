@@ -11,28 +11,30 @@ import CatsPage from '../pages/cats';
 
 const Navigation = () => {
 const navigate = useNavigate();
-const [isAct, setAct] = useState("");
+const [isAct, setAct] = useState(false);
+const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 function li_uprises() {
-  var uprs = document.getElementById("nav").querySelectorAll('li:not(.sub-mobile-menu li)');
-    let y = 4;
-     for(y = 0; y < uprs.length; y++) {
-     var upr = uprs[y];
-     (upr.classList.contains("uppr" + [y]) === true) ?
-       upr.classList.remove("uppr" + [y]) :
-       upr.classList.add("uppr" + [y]);
-   }
+  const nav = document.getElementById("nav");
+  if (!nav) return;
+  const uprs = nav.querySelectorAll(':scope > li');
+  uprs.forEach((upr, idx) => {
+    upr.classList.toggle('uppr' + idx);
+  });
 }
 
 const handleToggle = () => {
     li_uprises();
     setAct(!isAct);
   };
-
+const logout = () => {
+  localStorage.removeItem('token');
+  window.location.replace('/');
+};
 const { data, loading, error } = useQuery(GET_ME);
 if (loading) return <p>Загрузка...</p>;
 
-  return (
+return (
     <div id="ahead">
     <div className="top_head">
       <nav>
@@ -70,7 +72,7 @@ if (loading) return <p>Загрузка...</p>;
             </>
           )}
           <li className="hvsubmenu">
-            <Link className="actv" to="#" >Разделы ></Link>
+            <Link className="actv" to="#" >Разделы</Link>
             <span>
               <ul className="submenu">
                   <CatsPage />
@@ -78,17 +80,33 @@ if (loading) return <p>Загрузка...</p>;
               </span>
           </li>
           {tkn.isLoggedIn ? (
-          <li className="log-out"
-          onClick={event => {
-            event.preventDefault();
-                // remove the token
-                localStorage.removeItem('token');
-                // clear the application's cache
-                window.location.replace('/');
-              }}
-            >
-          Выйти ({data.me.name})
-          </li>
+          <>
+                        <li className="log-out" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                           <div className="user-info">
+                            
+                            <img className="avatar" src={data.me.avatar}  />
+                            <div className='me-name'>{data.me.name}</div>
+                            
+                            </div>
+                            {isMenuOpen && (
+                              <div className="popup-menu">
+                                <ul className="popup-list">
+                                  <li>
+                                    <NavLink to="/myprofile" onClick={() => setIsMenuOpen(false)} className="popup-link">
+                                      Профиль
+                                    </NavLink>
+                                  </li>
+                                  <li>
+                                    <Link to="#" onClick={() => { logout(); setIsMenuOpen(false); }} className="popup-link">
+                                      Выйти
+                                    </Link>
+                                  </li>
+                                </ul>
+                              </div>
+                            )}
+                        </li>
+                        
+                        </>
           ) : (
             <>
           <li>
@@ -124,7 +142,7 @@ if (loading) return <p>Загрузка...</p>;
                         <li onClick={handleToggle}><NavLink to="/new" title="Создать"
                         style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Создать +</NavLink></li>
                         </>)}
-                        <li id="cats"><NavLink to="#" title="categories" >Разделы ></NavLink>
+                        <li id="cats"><NavLink to="#" title="categories" >Разделы</NavLink>
                           <ul className="sub-mobile-menu" onClick={handleToggle}>
                               <CatsPage />
                           </ul>

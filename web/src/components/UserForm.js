@@ -80,7 +80,7 @@ const UserForm = props => {
           id="password"
           name="password"
           placeholder="Password"
-          autocomplete="new-password"
+          autoComplete="new-password"
           onChange={onChange}
         />
         <div className='empty-div-half'></div>

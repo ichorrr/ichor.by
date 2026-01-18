@@ -22,6 +22,7 @@ const MyPosts = ({posts}) => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error!</p>;
 
+
   return (
     <div className="cats_block">
     <div className="all-post-block">

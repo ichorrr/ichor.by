@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Messages from '../components/Messages';
 import { useQuery} from '@apollo/client';
-
+import ListMyUserChats from '../components/ListMyUserChats';
 import { GET_ME } from '../gql/query';
 
 
@@ -23,10 +23,18 @@ const ChatPage = () => {
       return <p>Error: {error.message}</p>;
     }
 
+const nameChatId = data.me.family.find(fam => fam._id === id)?.name || 'Unknown';
+document.title = `Чат с ${nameChatId} > ichor.by`;
+
   return (
-    <>
-      <Messages mem={id} myId={data.me._id} />
-    </>
+    <div className="chat-container">
+      <div className="user-chats">
+        <ListMyUserChats />
+      </div>
+      <div className="messages">
+        <Messages nameChatId={nameChatId} mem={id} myId={data.me._id} />
+      </div>
+    </div>
   )};
 
 export default ChatPage;

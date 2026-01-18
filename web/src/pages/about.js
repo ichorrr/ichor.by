@@ -2,8 +2,9 @@ import React, {useEffect} from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import Message from '../components/Messages.js';
 import { GET_ME } from '../gql/query';   
+
+import ListMyUserChats from '../components/ListMyUserChats';
 
 const H1R = styled.h1`
   color: #363636;
@@ -30,14 +31,14 @@ const About = () => {
     const { loading, error, data } = useQuery(GET_ME, {
       onError: (error) => {
         console.error("Error fetching user data:", error);
-        navigate('/login');
+        navigate('/signin');
       }
     });
 
     if (loading) return <p>Loading...</p>;
     if (error) {
       console.error("Error fetching user data:", error);
-      return <p>Error: {error.message}</p>;
+      return <div>Error: {error.message}</div>;
     }
 console.log(data.me);
 
@@ -48,18 +49,8 @@ console.log(data.me);
       <React.Fragment>
         <div className="top-new-post">
         <H1R>Что на счет меня?</H1R>
-        <p>
-          
-          {data.me.family.map((family) => (
-  <div key={family._id} className='family'>
-    <a href={`/chat/${family._id}`}>
-      <span className='family-name'>{family.name}</span>
-    </a>
-  </div>
-))}
-        </p>
 
-     <Message />
+      <ListMyUserChats />
         </div>
         <div className='block_about'>
             <div className='video_about'>

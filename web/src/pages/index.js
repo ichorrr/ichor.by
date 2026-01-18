@@ -44,6 +44,7 @@ let dnss = data.getPosts[1]._id;
         <Route path="/signup" element={< SignUp />} />
         <Route path="/signin" element={< SignIn type="signin"/>} />
         <Route path="/new" element={<NewPost />} />
+        <Route path="/myprofile" element={<MyProf />} />
         <Route path="/about" element={<About />} />
         <Route path="/edit/:id" element={ < EditPost /> } />
       </Routes>

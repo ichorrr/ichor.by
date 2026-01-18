@@ -9,12 +9,20 @@ type User {
   avatar: String
   telephone: String
   family: [User]
+  chatUsers: [User!]!
   messages: [Message]
   posts: [Post!]!
   comments: [Comment!]!
   cursor: String!
   hasNextPage: Boolean!
+  lastMessage: Message
   isAdmin: Boolean
+}
+
+type Chat {
+  _id: ID!
+  participants: [User!]!
+  messages: [Message!]!
 }
 
 type Post {
@@ -60,6 +68,7 @@ type Message {
   likesCount: Int!
   author: User!
   addressee: String!
+  chat: Chat
   }
 
 type postFeed {
@@ -80,6 +89,7 @@ type Mutation {
   createMessage(text: String!, file: String, addressee: String!): Message!
   deleteMessage(_id: String!): Boolean!
   updateMessage(_id: String!, text: String!, file: String, addressee: String): Message!
+  deleteUserfromMyListUsersChats(userId: ID!): User!
 }
 
 type Query {
@@ -96,7 +106,7 @@ type Query {
   postFirst: Post!
   getMessages: [Message!]!
   getMessage(_id: ID!): Message
-  getUsersMessages(users: [ID!]!): [Message!]!
+  getMyListUsersChats: [User!]!
   getUserMessages(addressee: [String!], users: [ID!]): [Message!]!
   mesFeed(cursor: String, limit: Int): [Message!]!
   getUserByEmail(email: String!): User

@@ -29,6 +29,10 @@ const User = model(
           ref: 'User'
         }
       ],
+      lastMessage: {
+        type: Types.ObjectId,
+        ref: 'Message'
+      },
       messages: [
         {
           type: Types.ObjectId,
@@ -56,7 +60,6 @@ const User = model(
           ref: 'Post'
         }
       ],
-
       comments: [
         {
           type: Types.ObjectId,

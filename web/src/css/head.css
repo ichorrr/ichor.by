@@ -146,18 +146,13 @@ A {
 }
 
 .log-out {
-	padding: 1em 1.5em .9em 1.5em;
-	background: #159dc3;
+	padding: 1.2em 1.5em 1.3em 1.5em;
 	position: absolute;
 	float: right;
 	color: #fff;
-	right: 2%;
+	right: 0;
 	cursor: pointer;
-	overflow: hidden;
-	border-left: #252525 solid 1px;
 	margin-left: 2em;
-	margin-top: 12px;
-	border-radius: 10px;
 	letter-spacing: .02em;
 }
 
@@ -270,7 +265,6 @@ A {
 	position: fixed;
 	text-align: center;
 	height: 72px;
-	overflow: hidden;
 	display: block;
 	color: #159dc3;
 	font-weight: bold;
@@ -320,7 +314,7 @@ A {
 .top_head a {
 	display: inline-block;
 	padding: 0 25px;
-	height: 80px;
+
 	color: #fff;
 	transition: all 0.4s ease-out;
 }
@@ -540,6 +534,84 @@ fill-rule: evenodd;  }
 .als-2 {
 fill: #fff;  }
 
+.popup-menu {
+	background-color: #159dc3;
+	float: right;
+	position: absolute;
+	display: block;
+	z-index: -1;
+	padding: 70px 0 0 0;
+	top: 0;
+	width: 100%;
+	right: 0;
+}
+
+
+#ahead .popup-link {
+	display: block;
+	padding: 0;
+	font-weight: normal;
+	line-height: 3em;
+	color: #fff;
+	text-decoration: none;
+}
+.top_head .log-out li {
+    padding: 0;
+    margin: 0;
+    height: auto;
+}
+
+.popup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.popup-list li {
+	width: 100%;
+  display: block;
+}
+
+.popup-link {
+  color: white;
+  text-decoration: none;
+}
+
+/* popup menu hover */
+.popup-link:hover {
+	background-color: #0c4553;
+	color: #fff;
+}
+
+.avatar {
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	margin-right: 8px;
+}
+
+.user-info img {
+	margin-right: 8px;
+}
+
+.me-name {
+	line-height: 32px;
+	color: #fff;
+	font-weight: bold;
+}
+
+.user-info div {
+	display: inline;
+	float: left;
+}
+
+.user-info img {
+	display: inline;
+	float: left;
+	vertical-align: middle;
+}
 
 @media only screen and (min-width: 620px) and (max-width: 975px) {
 	.nav-wrap{
@@ -560,7 +632,7 @@ fill: #fff;  }
 	}
 
 	#ahead .top_head li.logotype {
-			padding-left: 5%;
+			padding-left: 1.5%;
 	z-index: 99999999999999999;
 	}
 
@@ -571,7 +643,7 @@ fill: #fff;  }
 
 @media only screen and (max-width: 960px) {
 	#ahead .top_head li.logotype {
-	padding-left: 5%;
+	padding-left: 1.5%;
 	position: absolute;
 	}
 
