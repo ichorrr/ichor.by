@@ -1260,28 +1260,28 @@ app.post('/uploadmessage', uploadMessage.single('file'), (req, res) => {
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   res.json({
-    url: `https://localhost:4000/uploads/${req.file.originalname}`,
+    url: `https://api.ichor.by/uploads/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   res.json({
-    url: `https://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   res.json({
-    url: `https://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
 
 app.post('/upload4', upload3.single('iconPost'), (req, res) => {
   res.json({
-    url: `https://localhost:4000/imgposts/${req.file.originalname}`,
+    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
   })
   console.log(req.file)
 })
@@ -1331,4 +1331,4 @@ app.use(express.static("/"));
   );
 
   await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+  console.log(`🚀 Server ready at http://api.ichor.by/graphql`);
