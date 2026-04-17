@@ -9,6 +9,7 @@ import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments.js';
 import { useNavigate } from 'react-router-dom';
 import {GET_ME} from '../gql/query';
+import LikeDislike from './LikeDislike';
 
 const NEW_COMMENT = gql`
   mutation createComment($text: String!, $post: String!) {
@@ -72,6 +73,15 @@ const Post = ({ post }) => {
           </li>
           <li  className='plank-span'>
             <span>{`Просмотров ${post.viewsCount}`}</span>
+          </li>
+          <li style={{ marginLeft: 'auto' }}>
+            <LikeDislike
+              targetId={post._id}
+              type="post"
+              initialLikes={post.likesCount || 0}
+              initialDislikes={post.dislikesCount || 0}
+              isAuthenticated={!!localStorage.getItem('token')}
+            />
           </li>
           </ul>
         <PostUser post={post} me={datacom} />

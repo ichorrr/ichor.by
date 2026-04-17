@@ -53,7 +53,27 @@ const Post = model(
           type: Types.ObjectId,
           ref: 'Comment'
         }
-      ]
+      ],
+      likesCount: {
+        type: Number,
+        default: 0
+      },
+      dislikesCount: {
+        type: Number,
+        default: 0
+      },
+      likes: [{
+        user: {
+          type: Types.ObjectId,
+          ref: 'User'
+        }
+      }],
+      dislikes: [{
+        user: {
+          type: Types.ObjectId,
+          ref: 'User'
+        }
+      }]
     },
     {
       timestamps: true

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { GET_NOTES } from '../gql/query';
 import Error from './Error';
+import LikeDislike from './LikeDislike';
 
 const CatPosts = ({posts}) => {
 
@@ -13,6 +14,7 @@ const CatPosts = ({posts}) => {
   });
 
   let uname = posts.id;
+  const isAuthenticated = !!localStorage.getItem('token');
 
   const {data, loading, error, fetchMore } = useQuery(GET_NOTES, 
     { variables: {
@@ -49,6 +51,15 @@ const CatPosts = ({posts}) => {
                 </Link>
                 <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                 <span>{`Просмотров ${post.viewsCount}`}</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+                  <LikeDislike
+                    targetId={post._id}
+                    type="post"
+                    initialLikes={post.likesCount || 0}
+                    initialDislikes={post.dislikesCount || 0}
+                    isAuthenticated={isAuthenticated}
+                  />
+                </div>
               </div>
             </div>
           </li>

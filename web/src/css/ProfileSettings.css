@@ -1,0 +1,186 @@
+.profile-settings {
+  max-width: 720px;
+  margin: 90px auto;
+  background: #fff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  color: #222;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-settings h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+}
+
+.profile-settings form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.profile-settings input[type="text"],
+.profile-settings input[type="email"],
+.profile-settings input[type="tel"],
+.profile-settings textarea,
+.profile-settings select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font-size: 14px;
+  color: #111;
+}
+
+.profile-settings textarea {
+  min-height: 100px;
+  resize: vertical;
+  grid-column: 1 / -1;
+}
+
+.profile-settings label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.profile-settings select {
+  padding-right: 28px;
+}
+
+.profile-settings button[type="submit"] {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  background: #159dc3;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.profile-settings .avatar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+.profile-settings .avatar-preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.profile-settings .avatar-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #159dc3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.profile-settings .avatar-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  border: 2px dashed #ddd;
+  background: #f9f9f9;
+  color: #999;
+  font-size: 12px;
+}
+
+.profile-settings .avatar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.profile-settings .avatar-upload-btn,
+.profile-settings .avatar-reload-btn,
+.profile-settings .avatar-delete-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.profile-settings .avatar-upload-btn {
+  background: #159dc3;
+  color: #fff;
+  display: inline-block;
+}
+
+.profile-settings .avatar-upload-btn:hover:not(:disabled) {
+  background: #1289a9;
+}
+
+.profile-settings .avatar-reload-btn {
+  background: #4a90e2;
+  color: #fff;
+}
+
+.profile-settings .avatar-reload-btn:hover:not(:disabled) {
+  background: #3a7bc8;
+}
+
+.profile-settings .avatar-delete-btn {
+  background: #e85d5d;
+  color: #fff;
+}
+
+.profile-settings .avatar-delete-btn:hover:not(:disabled) {
+  background: #d64444;
+}
+
+.profile-settings .avatar-upload-btn:disabled,
+.profile-settings .avatar-reload-btn:disabled,
+.profile-settings .avatar-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.profile-settings .error {
+  grid-column: 1 / -1;
+  color: #d64444;
+  background: #fde8e8;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.profile-settings button[type="submit"]:hover {
+  filter: brightness(0.98);
+}
+
+.profile-settings .success {
+  margin-top: 12px;
+  color: #167a3a;
+  background: #e6f6ec;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .profile-settings form {
+    grid-template-columns: 1fr;
+  }
+}

@@ -14,6 +14,7 @@ import SignUp from './signup';
 import SignIn from './signin';
 import GetUser from './user';
 import MyProf from './myprofile';
+import Settings from './settings';
 import NewPost from './new';
 import EditPost from './edit';
 import ArtPost from './arts';
@@ -22,7 +23,7 @@ import ChatPage from './chat';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
-  if (loading) return <div><Loader /></div>;
+  if (loading) return <div><Loader  /></div>;
   if (error) return <p>error...</p>;
 
 let dnss = data.getPosts[1]._id;
@@ -45,6 +46,7 @@ let dnss = data.getPosts[1]._id;
         <Route path="/signin" element={< SignIn type="signin"/>} />
         <Route path="/new" element={<NewPost />} />
         <Route path="/myprofile" element={<MyProf />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/about" element={<About />} />
         <Route path="/edit/:id" element={ < EditPost /> } />
       </Routes>

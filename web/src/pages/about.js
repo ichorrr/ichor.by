@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { GET_ME } from '../gql/query';   
 
-import ListMyUserChats from '../components/ListMyUserChats';
-
 const H1R = styled.h1`
   color: #363636;
   font-size: 3em;
@@ -49,8 +47,6 @@ console.log(data.me);
       <React.Fragment>
         <div className="top-new-post">
         <H1R>Что на счет меня?</H1R>
-
-      <ListMyUserChats />
         </div>
         <div className='block_about'>
             <div className='video_about'>

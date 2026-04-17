@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
+import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
+import UnreadBadge from './UnreadBadge';
 
 const styles = {
     container: {
@@ -118,7 +120,30 @@ const styles = {
         padding: '20px',
         textAlign: 'center',
         color: '#777'
-    }
+    },
+    contextMenu: {
+        position: 'fixed',
+        background: '#fff',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        zIndex: 1000,
+        minWidth: '180px',
+    },
+    contextMenuItem: {
+        padding: '8px 16px',
+        cursor: 'pointer',
+        transition: 'background 0.15s',
+        fontSize: '14px',
+        color: '#222',
+        border: 'none',
+        width: '100%',
+        textAlign: 'left',
+        background: 'transparent',
+    },
+    contextMenuItemDelete: {
+        color: '#ff4d4f',
+    },
 };
 
 const truncate = (text, n = 15) => (text && text.length > n ? text.slice(0, n) + '...' : text || '');
@@ -126,9 +151,60 @@ const truncate = (text, n = 15) => (text && text.length > n ? text.slice(0, n) +
 const ListMyUserChats = () => {
     // hooks
     const [query, setQuery] = useState('');
-    const { loading: loadingMessages, error: errorMessages, data: dataMessages } = useQuery(GET_MY_LIST_USERS_CHATS, {
+    const [contextMenu, setContextMenu] = useState(null);
+    const [contextMenuUserId, setContextMenuUserId] = useState(null);
+
+    const { loading: loadingMessages, error: errorMessages, data: dataMessages, refetch } = useQuery(GET_MY_LIST_USERS_CHATS, {
         fetchPolicy: 'network-only',
     });
+
+    const [deleteUserFromChats] = useMutation(DELETE_USER_FROM_CHATS, {
+        onCompleted: () => {
+            refetch();
+            setContextMenu(null);
+        },
+        onError: (error) => {
+            console.error('Delete user error:', error);
+            alert('Failed to delete user from chats');
+        }
+    });
+
+    // listen for global reload requests (sent after sending a message)
+    React.useEffect(() => {
+        const onReload = () => {
+            if (typeof refetch === 'function') refetch();
+        };
+        window.addEventListener('reloadChats', onReload);
+        return () => window.removeEventListener('reloadChats', onReload);
+    }, [refetch]);
+
+    // Close context menu when clicking elsewhere
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (contextMenu) {
+                setContextMenu(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [contextMenu]);
+
+    const handleContextMenu = (e, userId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenuUserId(userId);
+        setContextMenu({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleDeleteUser = async () => {
+        if (!contextMenuUserId) return;
+        if (!window.confirm('Are you sure you want to delete this user from your chats? This will also delete all messages with this user.')) {
+            return;
+        }
+        await deleteUserFromChats({
+            variables: { userId: contextMenuUserId }
+        });
+    };
 
 const shouldSearchAll = (query || '').trim().length >= 2;
     const { loading: loadingAllUsers, error: errorAllUsers, data: dataAllUsers } = useQuery(GET_USERS, {
@@ -218,8 +294,15 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                 </>
             ) : (
                 // chats list (filtered by query if any)
-                filteredChats.map(({ _id, name, lastMessage }) => {
-                    const preview = lastMessage?.text ? truncate(lastMessage.text, 15) : 'No messages yet';
+                filteredChats.map(({ _id, name, avatar, lastMessage }) => {
+                    let preview;
+                    if (lastMessage?.text) {
+                        preview = truncate(lastMessage.text, 15);
+                    } else if (lastMessage?.file) {
+                        preview = '📷 Image';
+                    } else {
+                        preview = 'No messages yet';
+                    }
                     const timeStr = lastMessage?.createdAt ? `${new Date(lastMessage.createdAt).toLocaleDateString()} ${new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
                     const unreadCount = lastMessage?.unreadCount || 0;
 
@@ -228,9 +311,10 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                             key={_id}
                             href={`/chat/${_id}`}
                             style={styles.chatItem}
+                            onContextMenu={(e) => handleContextMenu(e, _id)}
                         >
                             <img
-                                src={lastMessage?.author?.avatar || '/default-avatar.png'}
+                                src={avatar || '/default-avatar.png'}
                                 alt={name}
                                 style={styles.avatar}
                             />
@@ -240,13 +324,24 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                                     <div style={styles.lastMessagePreview}>{preview}</div>
                                     <div style={styles.right}>
                                         <div style={styles.time}>{timeStr}</div>
-                                        {unreadCount > 0 && <div style={styles.unreadBadge}>{unreadCount}</div>}
+                                        <UnreadBadge count={unreadCount} />
                                     </div>
                                 </div>
                             </div>
                         </a>
                 );
                 })
+            )}
+
+            {contextMenu && (
+                <div style={{ ...styles.contextMenu, top: contextMenu.y, left: contextMenu.x }}>
+                    <button
+                        style={{ ...styles.contextMenuItem, ...styles.contextMenuItemDelete }}
+                        onClick={handleDeleteUser}
+                    >
+                        Delete from chats
+                    </button>
+                </div>
             )}
         </div>
     );

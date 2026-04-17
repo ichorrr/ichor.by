@@ -47,6 +47,10 @@ const User = model(
         type: Boolean,
         default: false
       },
+      lastVisit: {
+        type: Date,
+        default: () => new Date()
+      },
       avatar: {
         type: String
       },

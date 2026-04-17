@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, gql } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
-import { GET_USER_MESSAGES } from '../gql/query';
+import { useNavigate, Link } from 'react-router-dom';
+import { GET_MY_LIST_USERS_CHATS, GET_USER_MESSAGES } from '../gql/query';
 import FormMessage from './FormMessage';
+import InfoUserChat from './InfoUserChat';
+import ImageViewer from './ImageViewer';
+import LikeDislike from './LikeDislike';
+import { addListener } from 'process';
 
 const styles = {
   deleteButton: {
@@ -28,6 +32,12 @@ const styles = {
     padding: '4px 8px',
     color: '#666'
   },
+
+  menuButtonHover: {
+    background: 'rgba(0,0,0,0.04)',
+    color: '#d41313'
+  },
+
   menuContainer: {
     position: 'absolute',
     background: '#fff',
@@ -81,14 +91,17 @@ const styles = {
 };
 
 const CREATE_MESSAGE = gql`
-mutation createMessage($text: String!, $file: String, $addressee: String!) {
+mutation createMessage($text: String, $file: String, $addressee: String!) {
     createMessage(text: $text, file: $file, addressee: $addressee) {
         _id
         text
+        file
+        read
         createdAt
         author {
             _id
             name
+            avatar
         }
         addressee 
     }
@@ -102,14 +115,31 @@ const DELETE_MESSAGE = gql`
 `;
 
 const UPDATE_MESSAGE = gql`
-  mutation updateMessage($_id: String!, $text: String!) {
-    updateMessage(_id: $_id, text: $text) {
+  mutation updateMessage($_id: String!, $text: String!, $file: String) {
+    updateMessage(_id: $_id, text: $text, file: $file) {
       _id
       text
+      file
       createdAt
     }
   }
 `;
+
+const DELETE_IMAGES_IN_MESSAGE = gql`
+  mutation deleteImagesInMessage($_id: String!, $imageIndex: Int) {
+    deleteImagesInMessage(_id: $_id, imageIndex: $imageIndex) {
+      _id
+      file
+    }
+  }
+`;
+
+const CLEAR_CHAT = gql`
+  mutation clearChat($addressee: String!) {
+    clearChat(addressee: $addressee)
+  }
+`;
+
 
 const Messages = props => {
   const navigate = useNavigate();
@@ -122,9 +152,27 @@ const Messages = props => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [menuPos, setMenuPos] = useState({ left: 0, top: 0 });
   const menuRef = useRef(null);
+  
+  // Context menu state (for right-click)
+  const [contextMenuId, setContextMenuId] = useState(null);
+  const [contextMenuPos, setContextMenuPos] = useState({ left: 0, top: 0 });
+  const contextMenuRef = useRef(null);
 
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState('');
+
+  // Image context menu state
+  const [imageMenuId, setImageMenuId] = useState(null);
+  const [imageMenuPos, setImageMenuPos] = useState({ left: 0, top: 0 });
+  const imageMenuRef = useRef(null);
+
+  // Info panel state
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [chatMenuId, setChatMenuId] = useState(null);
+  const chatMenuRef = useRef(null);
+
+  // Image viewer state
+  const [viewImageUrl, setViewImageUrl] = useState(null);
 
     const [deleteMessage] = useMutation(DELETE_MESSAGE, {
     // automatically refetch messages after delete
@@ -135,6 +183,15 @@ const Messages = props => {
     awaitRefetchQueries: true,
   });
 
+  const [deleteImagesInMessage] = useMutation(DELETE_IMAGES_IN_MESSAGE, {
+    refetchQueries: [{
+      query: GET_USER_MESSAGES,
+      variables: { addressee: [`${props.mem}`, `${props.myId}`] }
+    }],
+    awaitRefetchQueries: true,
+    onError: (err) => console.error('deleteImagesInMessage error', err)
+  });
+
   const [updateMessage] = useMutation(UPDATE_MESSAGE, {
     refetchQueries: [{
       query: GET_USER_MESSAGES,
@@ -143,6 +200,28 @@ const Messages = props => {
     awaitRefetchQueries: true,
     onError: (err) => console.error('updateMessage error', err)
   });
+
+  const [clearChat] = useMutation(CLEAR_CHAT, {
+    refetchQueries: [{
+      query: GET_USER_MESSAGES,
+      variables: { addressee: [`${props.mem}`, `${props.myId}`] }
+    }],
+    awaitRefetchQueries: true,
+    onError: (err) => console.error('clearChat error', err)
+  });
+
+  // Get user data from chat list
+  const { data: chatsData } = useQuery(GET_MY_LIST_USERS_CHATS);
+  const [chatUserData, setChatUserData] = useState(null);
+
+  useEffect(() => {
+    if (chatsData?.getMyListUsersChats) {
+      const user = chatsData.getMyListUsersChats.find(chat => chat._id === props.mem);
+      if (user) {
+        setChatUserData(user);
+      }
+    }
+  }, [chatsData, props.mem]);
   
   // sync local state with query result
   useEffect(() => {
@@ -162,7 +241,8 @@ useEffect(() => {
 }, [lastMessage]);
 
   const [createMessage] = useMutation(CREATE_MESSAGE, {
-    refetchQueries: [{ query: GET_USER_MESSAGES, variables: { addressee: [`${props.mem}`, `${props.myId}`] } }],
+    refetchQueries: [{ query: GET_USER_MESSAGES, variables: { addressee: [`${props.mem}`, `${props.myId}`] } },
+  { query: GET_MY_LIST_USERS_CHATS }], 
     // update local list when mutation returns
     onCompleted: (res) => {
       if (res?.createMessage) {
@@ -177,16 +257,30 @@ useEffect(() => {
 
   useEffect(() => {
     const onDocClick = (e) => {
-      if (!menuRef.current) {
+      // Close message menu
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
         setOpenMenuId(null);
-        return;
       }
-      if (!menuRef.current.contains(e.target)) {
-        setOpenMenuId(null);
+      // Close context menu
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+        setContextMenuId(null);
+      }
+      // Close image menu
+      if (imageMenuRef.current && !imageMenuRef.current.contains(e.target)) {
+        setImageMenuId(null);
+      }
+      // Close chat menu
+      if (chatMenuRef.current && !chatMenuRef.current.contains(e.target)) {
+        setChatMenuId(null);
       }
     };
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpenMenuId(null);
+      if (e.key === 'Escape') {
+        setOpenMenuId(null);
+        setContextMenuId(null);
+        setImageMenuId(null);
+        setChatMenuId(null);
+      }
     };
     document.addEventListener('click', onDocClick);
     document.addEventListener('keydown', onKey);
@@ -199,15 +293,42 @@ useEffect(() => {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  const handleSendMessage = (text) => {
-    if (!text || !props.mem) return;
+  const formatLastVisit = (date) => {
+    if (!date) return 'No messages yet';
+    
+    const messageDate = new Date(date);
+    const now = new Date();
+    const diffMs = now - messageDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Только что';
+    if (diffMins < 60) return `${diffMins} миин назад`;
+    if (diffHours < 24) return `${diffHours} часов${diffHours > 1 ? 's' : ''} назад`;
+    if (diffDays < 7) return `${diffDays} дней${diffDays > 1 ? 's' : ''} назад`;
+    
+    return messageDate.toLocaleDateString('ru-RU', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const handleSendMessage = (text, fileUrl) => {
+    console.log('handleSendMessage called', { text, fileUrl, mem: props.mem });
+    if ((!text && !fileUrl) || !props.mem) return;
     createMessage({
       variables: {
-        text,
-        file: null,
+        text: text || '',
+        file: fileUrl || null,
         addressee: props.mem
       }
     });
+    // notify other components (eg. ListMyUserChats) to reload
+    try { window.dispatchEvent(new Event('reloadChats')); } catch(e){}
   };
 
   const onDelete = async (id) => {
@@ -272,28 +393,137 @@ useEffect(() => {
       alert('Failed to update message');
     }
   };
+
+  const onDeleteImage = async (messageId, imageIndex) => {
+    if (!window.confirm('Delete this image?')) return;
+    try {
+      await deleteImagesInMessage({ variables: { _id: messageId, imageIndex } });
+      setImageMenuId(null);
+    } catch (err) {
+      console.error('Delete image error', err);
+      alert('Failed to delete image: ' + (err.message || 'unknown'));
+    }
+  };
+
+  const onImageContextMenu = (e, messageId, imageIndex, imageUrl) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const left = e.clientX;
+    const top = e.clientY;
+    setImageMenuPos({ left, top });
+    setImageMenuId(`${messageId}-${imageIndex}`);
+  };
+
+  const copyMessage = (text) => {
+    if (!text) {
+      alert('Nothing to copy');
+      return;
+    }
+    navigator.clipboard.writeText(text).then(() => {
+      setContextMenuId(null);
+    }).catch(() => {
+      alert('Failed to copy message');
+    });
+  };
+
+  const openChatMenu = (e) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const left = rect.right - 8;
+    const top = rect.bottom + 6;
+    setChatMenuId(chatMenuId ? null : 'chat-menu');
+  };
+
+  const onClearChat = async () => {
+    if (!window.confirm('Clear all messages in this chat? This cannot be undone.')) return;
+    try {
+      await clearChat({ variables: { addressee: props.mem } });
+      setChatMenuId(null);
+    } catch (err) {
+      console.error('Clear chat error', err);
+      alert('Failed to clear chat: ' + (err.message || 'unknown'));
+    }
+  };
   return (
     <>
+      <div className='head-chat-name'> 
+            <ul style={{alignItems: 'center', display: 'inline', float: 'left', width: '100%'}}>
+              <li>
+                <Link to='/myposts'  className="css-back-chat">
+                <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
+                  <path className="xcls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
+                </svg>
+              </Link>
+              </li>
+              <li>
+                <h2>{props.nameChatId}</h2>
+                <p className='last-visit'>
+                Последнее посещение: {chatUserData?.lastVisit ? formatLastVisit(chatUserData.lastVisit) : 'No info'}
+                </p>
+              </li>
+              
+              <li className='rButMenu'>
+                <button
+                  title="Chat menu"
+                  style={styles.menuButton}
+                  onClick={openChatMenu}
+                >
+                  ⋯
+                </button>
+
+                {chatMenuId && (
+                  <div
+                    ref={chatMenuRef}
+                    style={{ ...styles.menuContainer, position: 'absolute', right: 0, top: '100%', marginTop: 6, zIndex: 100 }}
+                    role="menu"
+                    aria-label="chat menu"
+                  >
+                    <div style={styles.menuItem} onClick={() => { setShowInfoPanel(true); setChatMenuId(null); }} role="menuitem">
+                      Информация о собеседнике
+                    </div>
+                    <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={onClearChat} role="menuitem">
+                      Очистить чат
+                    </div>
+                  </div>
+                )}
+              </li>
+              </ul>
+          </div>
       <div className='messages-block'>
-        <h2>{props.nameChatId}</h2>
-        {messages.map(({ _id, text, createdAt, author }) => (
-          <div
-            key={_id}
-            id={_id}
-            className='message-block'
-            style={{ position: 'relative', padding: 10 }}
-            onContextMenu={(e) => { if (author?._id === props.myId) openMenuAt(e, _id); }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        
+          <div className='all-messages-block'>
+            {messages.map(({ _id, text, file, read, createdAt, author, likesCount = 0, dislikesCount = 0, userLike = null }) => {
+              const mine = author?._id === props.myId;
+              return (
+              <div
+                key={_id}
+                id={_id}
+                className={`message-block ${mine ? 'mine' : 'their'}`}
+                style={{ position: 'relative' }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const left = e.clientX;
+                  const top = e.clientY;
+                  setContextMenuPos({ left, top });
+                  setContextMenuId(_id);
+                }}
+              >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className='author-message'>{author?.name ?? 'Unknown'}</span>
               <span style={{ color: '#888', fontSize: 12 }}>{createdAt ? new Date(createdAt).toLocaleString() : ''}</span>
+              {mine && typeof read === 'boolean' && (
+                <span style={{ marginLeft: 6, color: read ? '#4caf50' : '#999', fontSize: 12 }} title={read ? 'Read' : 'Unread'}>
+                  {read ? '✓' : '⌛'}
+                </span>
+              )}
 
               {author?._id === props.myId && (
-                <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                  <button
+                <div style={{ marginLeft: 'auto', marginTop: '-.5em' }}>
+                  <button 
                     title="Message menu"
                     style={styles.menuButton}
-                    onClick={(e) => { e.stopPropagation(); openMenuNearButton(e, _id); }}
+                    onClick={(e) => { e.stopPropagation(); openMenuNearButton(e, _id);  }}
                   >
                     ⋯
                   </button>
@@ -301,7 +531,7 @@ useEffect(() => {
                   {openMenuId === _id && (
                     <div
                       ref={menuRef}
-                      style={{ ...styles.menuContainer, left: `${menuPos.left}px`, top: `${menuPos.top}px`, position: 'fixed' }}
+                      style={{ ...styles.menuContainer, right: `2em`, top: `${menuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
                       role="menu"
                       aria-label="message menu"
                     >
@@ -329,15 +559,121 @@ useEffect(() => {
                 </div>
               </div>
             ) : (
-              <p style={{ marginTop: 8 }}>{text}</p>
+              <div style={{ marginTop: 8 }}>
+                {text && <p>{text}</p>}
+                {file && (
+                  <div>
+                    {file.includes('|') ? (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                        {file.split('|').map((imageUrl, idx) => (
+                          <div key={idx} style={{ position: 'relative', display: 'inline-block' }}>
+                            <img
+                              src={imageUrl}
+                              alt={`attachment-${idx}`}
+                              style={{ maxWidth: '200px', height: '200px', objectFit: 'cover', display: 'block', borderRadius: 6, cursor: 'pointer' }}
+                              onClick={() => setViewImageUrl(imageUrl)}
+                              onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, imageUrl)}
+                            />
+                            {imageMenuId === `${_id}-${idx}` && mine && (
+                              <div
+                                ref={imageMenuRef}
+                                style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                                role="menu"
+                                aria-label="image menu"
+                              >
+                                <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, idx)} role="menuitem">
+                                  Удалить изображение
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ position: 'relative', display: 'inline-block' }}>
+                        <img
+                          src={file}
+                          alt="attachment"
+                          style={{ maxWidth: '200px', display: 'block', marginTop: 8, borderRadius: 6, cursor: 'pointer' }}
+                          onClick={() => setViewImageUrl(file)}
+                          onContextMenu={(e) => mine && onImageContextMenu(e, _id, 0, file)}
+                        />
+                        {imageMenuId === `${_id}-0` && mine && (
+                          <div
+                            ref={imageMenuRef}
+                            style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                            role="menu"
+                            aria-label="image menu"
+                          >
+                            <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, 0)} role="menuitem">
+                              Удалить изображение
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Context menu for right-click */}
+                {contextMenuId === _id && (
+                  <div
+                    ref={contextMenuRef}
+                    style={{ ...styles.menuContainer, left: `${contextMenuPos.left}px`, top: `${contextMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                    role="menu"
+                    aria-label="context menu"
+                  >
+                    <div style={styles.menuItem} onClick={() => copyMessage(text)} role="menuitem">
+                      Скопировать сообщение
+                    </div>
+                    {mine && (
+                      <>
+                        <div style={styles.menuItem} onClick={() => { setContextMenuId(null); startEdit({ _id, text }); }} role="menuitem">
+                          Edit
+                        </div>
+                        <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => { setContextMenuId(null); onDelete(_id); }} role="menuitem">
+                          Delete
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                {/* Like/Dislike component */}
+                <div style={{ marginTop: 12 }}>
+                  <LikeDislike
+                    targetId={_id}
+                    type="message"
+                    initialLikes={likesCount}
+                    initialDislikes={dislikesCount}
+                    initialUserLike={userLike}
+                    isAuthenticated={!!props.myId}
+                  />
+                </div>
+              </div>
             )}
           </div>
-        ))}
+              );
+            })}
       </div>
-
       <div>
         <FormMessage onSend={handleSendMessage} />
       </div>
+      </div>
+
+      {showInfoPanel && (
+        <InfoUserChat 
+          userData={chatUserData} 
+          onClose={() => setShowInfoPanel(false)}
+        />
+      )}
+
+      {viewImageUrl && (
+        <ImageViewer
+          imageUrl={viewImageUrl}
+          onClose={() => setViewImageUrl(null)}
+        />
+      )}
     </>
   );
 }

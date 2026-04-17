@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client';
 import { GET_ME } from '../gql/query';
 import MyPosts from '../components/MyPosts';
 import ListMyUserChats from '../components/ListMyUserChats';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../css/main.css';
 
 const containerStyle = {
@@ -31,10 +31,24 @@ const MyProf = () => {
   const posts = me.posts || [];
   const comments = useMemo(() => (Array.isArray(me.comments) ? [...me.comments].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,6) : []), [me.comments]);
 
+  // derive unique categories from user's posts
+  const categories = useMemo(() => {
+    const map = new Map();
+    (posts || []).forEach(p => {
+      const cat = p?.category;
+      const id = cat?._id || 'nocat';
+      const name = cat?.catname || 'Без категории';
+      if (map.has(id)) {
+        map.get(id).count += 1;
+      } else {
+        map.set(id, { id, name, count: 1 });
+      }
+    });
+    return Array.from(map.values());
+  }, [posts]);
+
   if (loading) return <p>loading...</p>;
   if (error) return <p>error...</p>;
-
-  console.log('MyProf comments:', data.me);
 
   return (
     <div style={containerStyle}>
@@ -48,6 +62,21 @@ const MyProf = () => {
       <section style={centerStyle}>
         <div style={card}>
           <h2>Мои записи</h2>
+          {categories.length > 0 && (
+            <div className="my-categories" style={{ marginBottom: 12 }}>
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {categories.map(c => (
+                  <li key={c.id}>
+                    {c.id !== 'nocat' ? (
+                      <Link to={`/cats/${c.id}`}>{c.name}</Link>
+                    ) : (
+                      <span>{c.name}</span>
+                    )} <small>({c.count})</small>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <MyPosts posts={me} />
         </div>
       </section>
@@ -76,10 +105,14 @@ const MyProf = () => {
           {comments.map((c, idx) => (
             <div key={c._id} className="comment-item">
               <div className="comment-head">
-                <div className="comment-author">{c.author?.name || '—'}</div>
                 <div className="comment-date">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
               </div>
               <div className="comment-text">{c.text}</div>
+              <div className="comment-post">
+                <a href={`/posts/${c.post?._id}`} className="comment-post-link">
+                  {c.post?.title || '—'}
+                </a>
+              </div>
             </div>
           ))}
         </div>

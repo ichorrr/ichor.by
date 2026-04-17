@@ -602,36 +602,45 @@ a.delete-comm:hover {
 
 
 .chat-container {
-    display: flex;
+    display: inline;
+    float: left;
     height: 100%; /* Full height of the viewport */
 }
 
 .user-chats {
+    position: fixed;
     width: 300px; /* Fixed width for the chat list */
-    background-color: #f0f0f0; /* Light background for contrast */
-    padding: 70px 10px 10px 10px;
+    background: #f0f0f0 url(../img/backgray.png); /* Light background for contrast */
+    padding: 63px 10px 10px 10px;
     border-right: 1px solid #ccc; /* Optional border for separation */
 }
 
+.all-messages-block {
+  padding: 2em 1em 2em 1em;
+  background: url(../img/bg-chat.png) no-repeat center;
+  background-size: cover;
+  min-height:calc(100vh - 315px);
+}
+
+div.messages-block {
+  width: calc(100vw - 335px);
+  overflow: hidden;
+  position:static;
+  margin-bottom: 130px;
+  margin-top: 117px;
+}
+
+/* attachments inside messages */
+.messages-block img {
+  max-width: 100%;
+  border-radius: 6px;
+}
+
 .messages {
-    flex-grow: 1; /* Take the remaining space */
-    padding: 20px 0;
-    background-color: #fff; /* White background for messages */
-}
-
-
-.form-message {
-    width: 100%;
-    margin-top: 50px;
-    border-radius: 5px;
-}
-
-.form-message textarea {
-    width: 100%;
-    border-radius: 5px;
-    padding: 10px;
-    font-size: 1.2em;
-    resize: vertical; 
+  float: left;
+  margin-left: 320px; 
+  width: calc(100vw - 335px); 
+    background-color: #fff; 
 }
 
 /* start myposts li block */
@@ -760,7 +769,45 @@ h3.comment-name {
   padding-right: 1em;
   font-size: 1.1em;
 }
+
+.comment-post {
+  margin-top: .5em;
+}
+
+.comment-post-link {
+  color: #0286ab;
+  font-size: .9em;
+}
+.comments-post-link:hover {
+  color: #000;
+}
 /* end comments block */
+
+
+.leftStyle div.card {
+  position: fixed;
+  top:auto
+}
+
+.user-chats {
+  display: inline;
+  float: left;
+  width: 300px; /* Fixed width for the chat list */
+  height: 100vh;
+}
+
+.my-categories li {
+  display: inline-block;
+  margin: 1em .8em 0 0;
+  padding: .7em 1em;
+  font-size: .9em;
+  border: 1px solid #dadada;
+  border-radius: 8px;
+}
+
+.my-categories li a {
+  color: #868686;
+}
 
 /* start futer */
 
@@ -788,21 +835,28 @@ h3.comment-name {
 /* end futer */
 .form-message {
   display: block;
-  width: 50%;
-  margin: 0 auto;
+  width: calc(100% - 340px);
   padding: 10px;
-  background: transparent;
+    position: fixed;
+    bottom: 0;
+    margin-top: 50px;
+    margin-left: 1px;
+    background: #ffffff;
 }
 
 /* textarea */
 .fm-textarea {
+    width: calc(100% - 160px); /* full width minus button width and padding */
+    padding: 10px;
+    font-size: 1.2em; 
+
   flex: 1;
   min-height: 48px;
   max-height: 160px;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #e6e6e6;
-  background: #ffffff;
+  
   font-family: inherit;
   font-size: 0.95rem;
   line-height: 1.3;
@@ -854,23 +908,11 @@ h3.comment-name {
 .fm-button .icon { margin-left: 6px; display: inline-block; vertical-align: middle; }
 
 
-
-
-.messages-block {
-  max-width: 500px;
-  width: 50%;
-  margin: 90px auto;
-  background: #f9f9f9;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-  padding: 1.5em 1em;
-}
-
 /* adjust spacing because order is reversed */
 .message-block {
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #b9ddff;
   border-radius: 8px;
   margin-top: 1em; /* was margin-bottom */
   padding: 1em;
@@ -892,6 +934,50 @@ h3.comment-name {
   margin-bottom: 1em;
   padding: 1em;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  max-width: 100%;
+  text-align: left;
+}
+
+.head-chat-name {
+  font-weight: bold;
+  position: fixed;
+  z-index: 9; 
+  margin-left: 1px;
+  padding: 75px 0 0 10px;
+  width: calc(100vw - 340px);
+  background-color: #fff;
+  border-bottom: #e6e6e6 solid 1px;
+}
+
+.head-chat-name li {
+  display: inline-block;
+  margin-right: 1em;
+  vertical-align: top;
+}
+
+.head-chat-name li.rButMenu {
+  position: relative;
+  float: right;
+  display: flex;
+  right: .5em;
+  transform: translateY(50%);
+  font-weight: normal;
+  padding: .2em;
+  border-radius: 20px;
+  background-color: #eeeeee;
+}
+
+.head-chat-name h2 {
+  margin: .4em 0 .63em 0;
+  color: #00afe4;
+}
+
+.head-chat-name p.last-visit {
+  margin-top: -10px;
+  font-weight: normal;
+  font-size: .9em;
+  color: #aaaaaa;
+  padding-bottom: 1em;
 }
 
 .author-message {
@@ -900,18 +986,51 @@ h3.comment-name {
   margin-right: 1em;
 }
 
-.message-block > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: .5em;
-}
-
 .message-block p {
   margin: 0;
   color: #444;
   word-break: break-word;
   font-size: 1em;
+}
+
+/* chat bubble variants */
+
+
+.message-block.their {
+  background: #fff;
+  margin-right: auto;
+  width: fit-content;
+  margin-left: 0;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.1);
+}
+
+.message-block.mine {
+  width: fit-content;
+  max-width: 600px;
+  background: #e6f0ff;
+  margin-left: auto;
+  margin-right: 0;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 5px 5px 5px rgba(0,0,0,0.1);
+}
+
+.message-block p { white-space: pre-wrap; 
+padding-right: 1em;}
+
+.mine p, their p { 
+  text-align: left; }
+
+.mine span, .their span {
+  display: inline;
+  float: left;
+}
+
+.message-block img {
+  max-width: 240px;
+  border-radius: 8px;
+  display: block;
+  margin-top: 8px;
 }
 
 /* start cat list news */
@@ -1023,11 +1142,12 @@ h3.comment-name {
 }
 
 .all_post {
-  padding: 1.2em 2em;
-  float: left;
+  padding: 1em 1em;
+  float: right;
   background-color: #00b5e3;
   color: #fff;
-  border-radius: 10px;
+  font-size: .85em;
+  border-radius: 6px;
 }
 
 span.uname_weight {
@@ -1097,6 +1217,26 @@ div.xclose:hover {
     padding: 5px 10px;
     border-radius: 3px;
   }
+
+  .css-back-chat {
+    position: relative;
+    height: 80px;
+    width: 50px;
+    z-index: 999;
+    opacity: .8;
+    right: 0;
+  }
+
+  .css-back-chat:hover::after {
+
+    z-index: 1;
+    background: rgba(255,255,230,0.9);
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 3px;
+  }
+
 
   .loader-canvas {
     display: block;
@@ -2080,7 +2220,7 @@ input[type="text"], #password {
 }
 
   .all_post{
-    margin: 5em 0 3em 5%;
+    margin: 5em 1% 3em 5%;
   }
 
   .top-block h2 {
@@ -2256,7 +2396,7 @@ input[type="text"], #password {
 }
 
 .all_post{
-  margin: 5em 0 3em 5%;
+  margin: 3em 1% 3em 5%;
 }
 
 .myposts-li-block li {

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { format } from 'date-fns';
 import DeleteComm from './DeleteComm.js';
+import CommentCount from './CommentCount';
+import LikeDislike from './LikeDislike';
 
 const Comments = props =>  {
     const [text, setText] = useState("");
@@ -30,7 +32,7 @@ return (
         <div className='form-comment'>
           
           
-          <span className='length-comments'>всего {postcom.length} комментариев</span>
+          <CommentCount count={props.post.commentCount || postcom.length} text="всего {count} комментариев" className="length-comments" />
           <form onSubmit={event => {
             event.preventDefault();
             props.action({
@@ -47,19 +49,27 @@ return (
         )}
         
 
-        {postcom.map(({_id, text, createdAt, author}) => (
-              <>
-              <h3 className='comment-name'>Комментарии</h3>
-              <div key={_id} className='comment-block'  >
-              <div><span className='author-comment'>{author.name}</span><span>{format(new Date(createdAt), 'dd LLL yyyy  HH:mm')}</span></div>
-              <p>{text}</p>
-              
-              {props.me && props.me.me._id === author._id && (
-              <DeleteComm id={_id}/>
-    )}
-            
+        <h3 className='comment-name'>Комментарии</h3>
+        {postcom.map(({_id, text, createdAt, author, likesCount = 0, dislikesCount = 0}) => (
+              <div key={_id} className='comment-block'>
+                <div>
+                  <span className='author-comment'>{author.name}</span>
+                  <span>{format(new Date(createdAt), 'dd LLL yyyy  HH:mm')}</span>
+                </div>
+                <p>{text}</p>
+                <div style={{ marginTop: 8, display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <LikeDislike
+                    targetId={_id}
+                    type="comment"
+                    initialLikes={likesCount}
+                    initialDislikes={dislikesCount}
+                    isAuthenticated={!!props.me}
+                  />
+                  {props.me && props.me.me._id === author._id && (
+                    <DeleteComm id={_id} />
+                  )}
+                </div>
               </div>
-              </>
         ))}
     </div>
 )};

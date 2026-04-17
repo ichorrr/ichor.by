@@ -8,6 +8,7 @@ type User {
   email: String!
   avatar: String
   telephone: String
+  lastVisit: Date
   family: [User]
   chatUsers: [User!]!
   messages: [Message]
@@ -16,6 +17,7 @@ type User {
   cursor: String!
   hasNextPage: Boolean!
   lastMessage: Message
+  unreadCount: Int      # number of unread messages in the chat; computed server-side
   isAdmin: Boolean
 }
 
@@ -42,6 +44,10 @@ type Post {
   body3: String
   author: User!
   comments: [Comment!]!
+  commentCount: Int    # quick access to number of comments
+  likesCount: Int!
+  dislikesCount: Int!
+  userLike: String     # 'like', 'dislike', or null
 }
 
 type Cat {
@@ -57,6 +63,9 @@ type Comment {
   updatedAt: Date!
   post: Post!
   author: User!
+  likesCount: Int!
+  dislikesCount: Int!
+  userLike: String     # 'like', 'dislike', or null
 }
 
 type Message {
@@ -65,7 +74,11 @@ type Message {
   createdAt: Date!
   updatedAt: Date!
   file: String
+  read: Boolean        # whether recipient has seen it
+  unreadCount: Int      # number of unread messages in this conversation (computed by resolver)
   likesCount: Int!
+  dislikesCount: Int!
+  userLike: String     # 'like', 'dislike', or null
   author: User!
   addressee: String!
   chat: Chat
@@ -77,6 +90,13 @@ type postFeed {
   hasNextPage: Boolean!
 }
 
+type LikeResponse {
+  _id: ID!
+  likesCount: Int!
+  dislikesCount: Int!
+  userLike: String
+}
+
 type Mutation {
   signIn(email: String!, password: String!): String!
   signUp(name: String!, email: String!, password: String!): String!
@@ -86,10 +106,15 @@ type Mutation {
   updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
   createComment(text: String!, post: String!): Comment!
   deleteComment(_id: String!): Boolean!
-  createMessage(text: String!, file: String, addressee: String!): Message!
+  createMessage(text: String, file: String, addressee: String!): Message!
   deleteMessage(_id: String!): Boolean!
   updateMessage(_id: String!, text: String!, file: String, addressee: String): Message!
+  updateUser(name: String, email: String, telephone: String, avatar: String): User!
+  deleteAvatar: Boolean!
   deleteUserfromMyListUsersChats(userId: ID!): User!
+  deleteImagesInMessage(_id: String!, imageIndex: Int): Message!
+  clearChat(addressee: String!): Boolean!
+  toggleLike(targetId: String!, type: String!, likeType: String!): LikeResponse!
 }
 
 type Query {
@@ -108,6 +133,8 @@ type Query {
   getMessage(_id: ID!): Message
   getMyListUsersChats: [User!]!
   getUserMessages(addressee: [String!], users: [ID!]): [Message!]!
+  getUnreadMessagesCount: Int!
+  getCommentCount(post: String!): Int!
   mesFeed(cursor: String, limit: Int): [Message!]!
   getUserByEmail(email: String!): User
   getUserByName(name: String!): User

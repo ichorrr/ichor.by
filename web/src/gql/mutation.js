@@ -51,10 +51,11 @@ const EDIT_POST = gql`
     }`;
 
 const CREATE_MESSAGE = gql`
-  mutation createMessage($text: String!, $author: ID!, $addressee: ID!) {
-    createMessage(text: $text, author: $author, addressee: $addressee) {
+  mutation createMessage($text: String, $file: String, $author: ID!, $addressee: ID!) {
+    createMessage(text: $text, file: $file, author: $author, addressee: $addressee) {
       _id
       text
+      file
       createdAt
       author {
         _id
@@ -86,10 +87,33 @@ const CREATE_MESSAGE = gql`
     }
   `;
 
+  const UPDATE_USER = gql`
+    mutation updateUser($name: String, $email: String, $telephone: String, $avatar: String) {
+      updateUser(name: $name, email: $email, telephone: $telephone, avatar: $avatar) {
+        _id
+        name
+        email
+        telephone
+        avatar
+      }
+    }
+  `;
+
+  const DELETE_USER_FROM_CHATS = gql`
+    mutation deleteUserFromChats($userId: ID!) {
+      deleteUserfromMyListUsersChats(userId: $userId) {
+        _id
+        name
+      }
+    }
+  `;
+
     export {
       EDIT_POST,
       DELETE_POST,
       DELETE_COMM,
       CREATE_MESSAGE,
-      DELETE_MESSAGE
+      DELETE_MESSAGE,
+      UPDATE_USER,
+      DELETE_USER_FROM_CHATS
     };

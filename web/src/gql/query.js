@@ -20,13 +20,17 @@ const GET_MY_LIST_USERS_CHATS = gql`
       _id
       name
       avatar
+      lastVisit
       lastMessage {
         _id
         text
+        file
         createdAt
+        unreadCount
         author {
           _id
           name
+          avatar
         }
       }
     }
@@ -93,12 +97,30 @@ const GET_USER_MESSAGES = gql`
     getUserMessages(addressee: $addressee, users: $users) {
       _id
       text
+      file
+      read
       createdAt
+      likesCount
+      dislikesCount
+      userLike
       author {
         _id
+        avatar
         name
       }
     }
+  }
+`;
+
+const GET_UNREAD_MESSAGES_COUNT = gql`
+  query unreadMessagesCount {
+    getUnreadMessagesCount
+  }
+`;
+
+const GET_COMMENT_COUNT = gql`
+  query commentCount($post: String!) {
+    getCommentCount(post: $post)
   }
 `;
 
@@ -157,6 +179,14 @@ const GET_NOTES = gql`
         body
         body2
         body3
+        likesCount
+        dislikesCount
+        comments {
+          _id
+          text
+          likesCount
+          dislikesCount
+}
         author {
           _id
           name
@@ -277,6 +307,8 @@ const GET_POST = gql`
       createdAt
       updatedAt
       viewsCount
+      likesCount
+      dislikesCount
       category {
         _id
         catname
@@ -289,10 +321,12 @@ const GET_POST = gql`
         name
         email
       }
+      commentCount
         comments {
         _id
         text
-
+        likesCount
+        dislikesCount
           createdAt
           post {
             _id
@@ -366,6 +400,8 @@ export {
   GET_COMMENTS,
   IS_LOGGED_IN,
   GET_USER_MESSAGES,
+  GET_UNREAD_MESSAGES_COUNT,
+  GET_COMMENT_COUNT,
   GET_MY_LIST_USERS_CHATS,
   GET_USERS
 };

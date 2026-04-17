@@ -146,14 +146,27 @@ A {
 }
 
 .log-out {
-	padding: 1.2em 1.5em 1.3em 1.5em;
+	padding: .7em .9em .6em .9em;
 	position: absolute;
 	float: right;
 	color: #fff;
 	right: 0;
 	cursor: pointer;
-	margin-left: 2em;
+	margin: .6em 1em 0 0;
 	letter-spacing: .02em;
+	transition: transform 0.3s ease-in-out, background-color 0.2s;
+}
+
+.log-out:hover {
+	color: #159dc3;
+}
+
+#ahead .top_head li.log-out, .log-out div {
+	border-radius: 6px;
+}
+
+#ahead .top_head li.log-out {
+	border: #555555 solid 1px;
 }
 
 .log-out-mb {
@@ -538,19 +551,35 @@ fill: #fff;  }
 	background-color: #159dc3;
 	float: right;
 	position: absolute;
-	display: block;
-	z-index: -1;
-	padding: 70px 0 0 0;
+	z-index: 9999;
+	padding-top: 10px;
+	margin: 40px 0 0 0;
 	top: 0;
 	width: 100%;
 	right: 0;
+	overflow: hidden;
+	font-size: .9em;
+	/* start hidden for smooth transition */
+	opacity: 0;
+	transform: translateY(-8px);
+	max-height: 0;
+	pointer-events: none;
+	transition: opacity 200ms ease, transform 200ms ease, max-height 220ms ease;
+}
+
+.popup-menu.open {
+	opacity: 1;
+	transform: translateY(0);
+	max-height: 180px; /* enough to show items; adjust if needed */
+	pointer-events: auto;
 }
 
 
 #ahead .popup-link {
 	display: block;
-	padding: 0;
+	padding-left: 23px;
 	font-weight: normal;
+	text-align: left;
 	line-height: 3em;
 	color: #fff;
 	text-decoration: none;
@@ -580,20 +609,20 @@ fill: #fff;  }
 
 /* popup menu hover */
 .popup-link:hover {
+	z-index: -1;
 	background-color: #0c4553;
 	color: #fff;
 }
 
 .avatar {
 	border-radius: 50%;
-	width: 32px;
-	height: 32px;
+	width: 28px;
+	height: 28px;
 	vertical-align: middle;
-	margin-right: 8px;
 }
 
 .user-info img {
-	margin-right: 8px;
+	margin-right: 14px;
 }
 
 .me-name {

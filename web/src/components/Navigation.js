@@ -1,18 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, withRouter } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import { GET_ME } from '../gql/query';
 import CatsPage from '../pages/cats';
+import UnreadMessagesIndicator from './UnreadMessagesIndicator';
 
 
  const tkn = {
    isLoggedIn: !!localStorage.getItem('token')
  };
 
+ 
 const Navigation = () => {
 const navigate = useNavigate();
 const [isAct, setAct] = useState(false);
 const [isMenuOpen, setIsMenuOpen] = useState(false);
+const rootEl = useRef(null);
+
+  // close popup when clicking outside
+  useEffect(() => {
+    const onClick = e => {
+      if (isMenuOpen && rootEl.current && !rootEl.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
+  }, [isMenuOpen]);
+
 
 function li_uprises() {
   const nav = document.getElementById("nav");
@@ -31,6 +46,7 @@ const logout = () => {
   localStorage.removeItem('token');
   window.location.replace('/');
 };
+
 const { data, loading, error } = useQuery(GET_ME);
 if (loading) return <p>Загрузка...</p>;
 
@@ -79,17 +95,15 @@ return (
               </ul>
               </span>
           </li>
-          {tkn.isLoggedIn ? (
-          <>
-                        <li className="log-out" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+           {tkn.isLoggedIn ? (
+           <>
+                    <li className="log-out" ref={rootEl}  onClick={() => { setIsMenuOpen(!isMenuOpen); }} style={{ background: isMenuOpen ? '#159dc3' : 'transparent', border: isMenuOpen ? 'none' : '' }} >
                            <div className="user-info">
-                            
                             <img className="avatar" src={data.me.avatar}  />
                             <div className='me-name'>{data.me.name}</div>
-                            
+                            <div style={{ marginLeft: 6 }}><UnreadMessagesIndicator /></div>
                             </div>
-                            {isMenuOpen && (
-                              <div className="popup-menu">
+                            <div className={`popup-menu ${isMenuOpen ? 'open' : 'closed'}`}>
                                 <ul className="popup-list">
                                   <li>
                                     <NavLink to="/myprofile" onClick={() => setIsMenuOpen(false)} className="popup-link">
@@ -103,7 +117,6 @@ return (
                                   </li>
                                 </ul>
                               </div>
-                            )}
                         </li>
                         
                         </>
