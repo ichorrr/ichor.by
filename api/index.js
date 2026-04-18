@@ -103,17 +103,18 @@ const resolvers = {
 
           // If API client passed addressee pair explicitly (legacy behavior) handle safely
           if (args?.addressee && Array.isArray(args.addressee) && args.addressee.length === 2) {
-            const [a, b] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
+            const [aStr, bStr] = args.addressee.map(id => String(id));
+            const [aId, bId] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
             const messages = await models.Message.find({
               $or: [
-                { addressee: a, user: b },
-                { addressee: b, user: a }
+                { addressee: aStr, user: bId },
+                { addressee: bStr, user: aId }
               ]
             })
             .populate('user', 'name avatar')
             .sort({ createdAt: 1, updatedAt: 1 });
 
-            return messages; // if you expect messages here, otherwise remove this branch
+            return messages;
           }
 
           // Default: return family members with last message in chat with current user
@@ -125,8 +126,8 @@ const resolvers = {
           const chats = await Promise.all(familyUsers.map(async (fam) => {
             const lastMessageDoc = await models.Message.findOne({
               $or: [
-                { addressee: fam._id, user: currentUser._id },
-                { addressee: currentUser._id, user: fam._id }
+                { addressee: String(fam._id), user: currentUser._id },
+                { addressee: String(currentUser._id), user: fam._id }
               ]
             })
             .sort({ createdAt: -1 })
@@ -137,7 +138,7 @@ const resolvers = {
             if (lastMessageDoc) {
               // compute unread count for messages sent *to* current user from this family member
               unreadCount = await models.Message.countDocuments({
-                addressee: currentUser._id,
+                addressee: String(currentUser._id),
                 user: fam._id,
                 read: false
               });
@@ -182,22 +183,26 @@ const resolvers = {
             extensions: { code: 'BAD_USER_INPUT' },
         });
     }
+    
+    // Convert both IDs to ObjectId for user field comparison
+    const [userAId, userBId] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
+    const [userAStr, userBStr] = args.addressee.map(id => String(id)); // Keep as strings for addressee field
+    
     // mark incoming messages as read for current user
     if (user && user.id) {
-      const otherId = args.addressee.find(id => id !== user.id);
+      const otherId = args.addressee.find(id => String(id) !== String(user.id));
       if (otherId) {
         await models.Message.updateMany(
-          { addressee: user.id, user: otherId, read: false },
+          { addressee: String(user.id), user: new mongoose.Types.ObjectId(otherId), read: false },
           { $set: { read: true } }
         );
       }
     }
 
-    const [userA, userB] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
     const messages = await models.Message.find({
         $or: [
-            { addressee: userA, user: userB },
-            { addressee: userB, user: userA }
+            { addressee: userAStr, user: userBId },
+            { addressee: userBStr, user: userAId }
         ]
     })
     .populate('user', 'name avatar') // include avatar
@@ -242,7 +247,7 @@ const resolvers = {
         if (!user) {
           throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
         }
-        return await models.Message.countDocuments({ addressee: user.id, read: false });
+        return await models.Message.countDocuments({ addressee: String(user.id), read: false });
       },
       async getPost(parent, args, { models }) {
         const post = await models.Post.findOneAndUpdate(
@@ -660,10 +665,21 @@ const resolvers = {
           'You must be signed in to create a message'
         );
       }
+      
+      // Convert addressee string to ObjectId
+      let addresseeId;
+      try {
+        addresseeId = new mongoose.Types.ObjectId(args.addressee);
+      } catch (err) {
+        throw new GraphQLError('Invalid recipient ID', {
+            extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
       const newMessage = new models.Message({
         text: args.text,
         file: args.file,
-        addressee: args.addressee,
+        addressee: addresseeId.toString(), // Store as string but ensure it's valid
         likesCount: 0,
         user: new mongoose.Types.ObjectId(user.id)
       });
@@ -673,21 +689,23 @@ const resolvers = {
         new mongoose.Types.ObjectId(user.id)
       );
 
-      const recipient = await models.User.findById(args.addressee);
+      const recipient = await models.User.findById(addresseeId);
       
        if (!recipient) {
         throw new GraphQLError('Recipient not found', {
             extensions: { code: 'NOT_FOUND' },
         });
        }
-       if (!recipient.family.includes(user.id)) {
-        recipient.family.push(user.id); // Add sender's ID to recipient's family
-        await recipient.save(); // Save the updated recipient
+       
+       const senderIdObj = new mongoose.Types.ObjectId(user.id);
+       if (!recipient.family.some(id => id.equals(senderIdObj))) {
+        recipient.family.push(senderIdObj);
+        await recipient.save();
        }
 
       author.messages.push(newMessage.id);
-      if(!author.family.includes(args.addressee)) {
-        author.family.addToSet(args.addressee);
+      if(!author.family.some(id => id.equals(addresseeId))) {
+        author.family.addToSet(addresseeId);
       }
       await author.save();
       return createMessage;
@@ -766,13 +784,14 @@ const resolvers = {
       
       try {
         const currentUserId = user.id;
-        const addresseeId = addressee;
+        const currentUserIdStr = String(currentUserId);
+        const addresseeStr = String(addressee);
         
         // Delete all messages between the two users
         const messages = await models.Message.find({
           $or: [
-            { user: currentUserId, addressee: addresseeId },
-            { user: addresseeId, addressee: currentUserId }
+            { user: new mongoose.Types.ObjectId(currentUserId), addressee: addresseeStr },
+            { user: new mongoose.Types.ObjectId(addressee), addressee: currentUserIdStr }
           ]
         });
         
@@ -794,8 +813,8 @@ const resolvers = {
         // Delete all messages
         const result = await models.Message.deleteMany({
           $or: [
-            { user: currentUserId, addressee: addresseeId },
-            { user: addresseeId, addressee: currentUserId }
+            { user: new mongoose.Types.ObjectId(currentUserId), addressee: addresseeStr },
+            { user: new mongoose.Types.ObjectId(addressee), addressee: currentUserIdStr }
           ]
         });
         

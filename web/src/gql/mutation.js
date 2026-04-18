@@ -51,20 +51,19 @@ const EDIT_POST = gql`
     }`;
 
 const CREATE_MESSAGE = gql`
-  mutation createMessage($text: String, $file: String, $author: ID!, $addressee: ID!) {
-    createMessage(text: $text, file: $file, author: $author, addressee: $addressee) {
+  mutation createMessage($text: String, $file: String, $addressee: String!) {
+    createMessage(text: $text, file: $file, addressee: $addressee) {
       _id
       text
       file
+      read
       createdAt
       author {
         _id
         name
+        avatar
       }
-      addressee {
-        _id
-        name
-      }
+      addressee
     }
   }
 `;

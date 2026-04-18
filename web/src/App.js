@@ -11,7 +11,14 @@ import {
 import Pages from './pages'
 import { IS_LOGGED_IN } from './gql/query'
 import { setContext } from '@apollo/client/link/context'
- const uri = process.env.API_URI;
+
+ // Determine API URI based on environment
+ const uri =
+   (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+     ? 'http://localhost:4000/graphql'
+     : process.env.API_URI || 'https://api.ichor.by/graphql';
+
+ console.log('Apollo API URI:', uri);
  const httpLink = createHttpLink({ uri });
  const cache = new InMemoryCache();
 
@@ -32,7 +39,6 @@ import { setContext } from '@apollo/client/link/context'
  });
 
  const client = new ApolloClient({
-   uri,
    link: authLink.concat(httpLink),
    cache,
    resolvers: {},
