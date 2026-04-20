@@ -42,9 +42,7 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const API_BASE = window.location.hostname === 'localhost' && window.location.port === '1234'
-        ? 'http://localhost:4000'
-        : '';
+    const API_BASE = process.env.API_URI.replace('/graphql', '');
 
     const handleSend = async () => {
         const text = (message || '').trim();
