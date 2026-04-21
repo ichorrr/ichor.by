@@ -72,7 +72,7 @@ const Fpost = ({post}) => {
               </li>
               <li>
                 <Link  to={`/users/${iduser}`}>
-                  {`Автор ${data.postFirst.author.name}`}
+                  👤 {`${data.postFirst.author.name}`}
                 </Link>
               </li>
             </ul>

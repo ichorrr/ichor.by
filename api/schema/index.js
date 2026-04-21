@@ -7,6 +7,7 @@ type User {
   name: String!
   email: String!
   avatar: String
+  bio: String
   telephone: String
   lastVisit: Date
   family: [User]
@@ -109,7 +110,7 @@ type Mutation {
   createMessage(text: String, file: String, addressee: String!): Message!
   deleteMessage(_id: String!): Boolean!
   updateMessage(_id: String!, text: String!, file: String, addressee: String): Message!
-  updateUser(name: String, email: String, telephone: String, avatar: String): User!
+  updateUser(name: String, email: String, telephone: String, avatar: String, bio: String): User!
   deleteAvatar: Boolean!
   deleteUserfromMyListUsersChats(userId: ID!): User!
   deleteImagesInMessage(_id: String!, imageIndex: Int): Message!

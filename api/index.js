@@ -710,7 +710,7 @@ const resolvers = {
       await author.save();
       return createMessage;
     },
-    updateUser: async (_, { name, email, telephone, avatar }, { models, user }) => {
+    updateUser: async (_, { name, email, telephone, avatar, bio }, { models, user }) => {
       if (!user) {
         throw new GraphQLError('You must be signed in to update profile', { extensions: { code: 'UNAUTHENTICATED' } });
       }
@@ -728,7 +728,8 @@ const resolvers = {
               ...(name !== undefined && name ? { name } : {}), 
               ...(email !== undefined && email ? { email } : {}), 
               ...(telephone !== undefined && telephone ? { telephone } : {}), 
-              ...(avatar !== undefined && avatar ? { avatar } : {})
+              ...(avatar !== undefined && avatar ? { avatar } : {}),
+              ...(bio !== undefined ? { bio } : {})
             } 
           },
           { new: true }
@@ -738,7 +739,7 @@ const resolvers = {
           throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
         }
 
-        console.log(`User ${currentUserId} updated`, { name, email, telephone, avatar: avatar ? 'yes' : 'no' });
+        console.log(`User ${currentUserId} updated`, { name, email, telephone, avatar: avatar ? 'yes' : 'no', bio });
         return updated;
       } catch (err) {
         console.error('updateUser error:', err);

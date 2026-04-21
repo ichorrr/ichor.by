@@ -7,10 +7,15 @@ const ImageViewer = ({ imageUrl, onClose }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  
+  // Handle single image or array of images
+  const images = Array.isArray(imageUrl) ? imageUrl : [imageUrl];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const currentImage = images[currentImageIndex];
 
   const handleDownload = async () => {
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(currentImage);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -35,6 +40,18 @@ const ImageViewer = ({ imageUrl, onClose }) => {
   };
 
   const handleResetZoom = () => {
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+    setZoom(1);
+    setOffset({ x: 0, y: 0 });
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
     setZoom(1);
     setOffset({ x: 0, y: 0 });
   };
@@ -96,6 +113,14 @@ const ImageViewer = ({ imageUrl, onClose }) => {
       e.preventDefault();
       handleResetZoom();
     }
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handlePrevImage();
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNextImage();
+    }
   };
 
   React.useEffect(() => {
@@ -107,7 +132,7 @@ const ImageViewer = ({ imageUrl, onClose }) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragStart, offset, zoom]);
+  }, [isDragging, dragStart, offset, zoom, currentImageIndex]);
 
   const styles = {
     overlay: {
@@ -151,6 +176,19 @@ const ImageViewer = ({ imageUrl, onClose }) => {
       zIndex: 2001,
       flexDirection: 'column'
     },
+    navigationControls: {
+      position: 'absolute',
+      bottom: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      gap: '12px',
+      alignItems: 'center',
+      zIndex: 2001,
+      background: 'rgba(0, 0, 0, 0.6)',
+      padding: '12px 16px',
+      borderRadius: '20px'
+    },
     button: {
       background: 'rgba(255, 255, 255, 0.9)',
       border: 'none',
@@ -164,6 +202,27 @@ const ImageViewer = ({ imageUrl, onClose }) => {
       fontSize: '20px',
       transition: 'all 0.2s',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+    },
+    navButton: {
+      background: 'rgba(255, 255, 255, 0.9)',
+      border: 'none',
+      borderRadius: '6px',
+      width: '36px',
+      height: '36px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      fontSize: '18px',
+      transition: 'all 0.2s',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+    },
+    imageCounter: {
+      color: '#fff',
+      fontSize: '14px',
+      fontWeight: '600',
+      minWidth: '60px',
+      textAlign: 'center'
     },
     downloadButton: {
       background: 'rgba(255, 255, 255, 0.9)',
@@ -205,7 +264,7 @@ const ImageViewer = ({ imageUrl, onClose }) => {
       >
         <img
           ref={imgRef}
-          src={imageUrl}
+          src={currentImage}
           alt="Full view"
           style={styles.image}
           draggable={false}
@@ -263,6 +322,33 @@ const ImageViewer = ({ imageUrl, onClose }) => {
             ✕
           </button>
         </div>
+        
+        {/* Navigation controls for multiple images */}
+        {images.length > 1 && (
+          <div style={styles.navigationControls}>
+            <button
+              style={styles.navButton}
+              onClick={handlePrevImage}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(33, 150, 243, 0.9)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.9)'}
+              title="Previous image (← key)"
+            >
+              ←
+            </button>
+            <div style={styles.imageCounter}>
+              {currentImageIndex + 1} / {images.length}
+            </div>
+            <button
+              style={styles.navButton}
+              onClick={handleNextImage}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(33, 150, 243, 0.9)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.9)'}
+              title="Next image (→ key)"
+            >
+              →
+            </button>
+          </div>
+        )}
         
         {zoom > 1 && (
           <div style={styles.info}>

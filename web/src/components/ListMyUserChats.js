@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
+import { useParams } from 'react-router-dom';
 import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
 import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
 import UnreadBadge from './UnreadBadge';
@@ -53,6 +54,10 @@ const styles = {
         transition: 'background 0.15s',
         textDecoration: 'none',
         color: 'inherit'
+    },
+    chatItemActive: {
+        background: '#e3f2fd',
+        borderLeft: '4px solid #2196F3',
     },
     chatItemHover: {
         background: '#fafafa',
@@ -153,6 +158,10 @@ const ListMyUserChats = () => {
     const [query, setQuery] = useState('');
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuUserId, setContextMenuUserId] = useState(null);
+    const { id: activeUserId } = useParams(); // Get current active chat user ID from URL
+
+    
+    const API_BASE = process.env.API_URI.replace('/graphql', '');
 
     const { loading: loadingMessages, error: errorMessages, data: dataMessages, refetch } = useQuery(GET_MY_LIST_USERS_CHATS, {
         fetchPolicy: 'network-only',
@@ -283,7 +292,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                       const subtitle = user.email || user.telephone || '';
                       return (
                         <a key={id} href={`/chat/${id}`} style={styles.chatItem}>
-                          <img src={user.avatar || '/default-avatar.png'} alt={user.name} style={styles.avatar} />
+                          <img src={user.avatar || `${API_BASE}/avatars/default-avatar.png`} alt={user.name} style={styles.avatar} />
                           <div style={styles.chatInfo}>
                               <div style={styles.name}>{user.name}</div>
                               <div style={{ ...styles.lastMessagePreview, fontSize: 13, color: '#888' }}>{subtitle}</div>
@@ -310,11 +319,11 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                      <a
                             key={_id}
                             href={`/chat/${_id}`}
-                            style={styles.chatItem}
+                            style={activeUserId === _id ? { ...styles.chatItem, ...styles.chatItemActive } : styles.chatItem}
                             onContextMenu={(e) => handleContextMenu(e, _id)}
                         >
                             <img
-                                src={avatar || '/default-avatar.png'}
+                                src={avatar || `${API_BASE}/avatars/default-avatar.png`}
                                 alt={name}
                                 style={styles.avatar}
                             />

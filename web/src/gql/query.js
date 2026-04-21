@@ -248,6 +248,7 @@ const GET_ME = gql`
         name
       }
       avatar
+      bio
       isAdmin
       messages {
         _id

@@ -49,7 +49,7 @@ const MyPosts = ({posts}) => {
                   {`${post.category.catname}`}
                 </Link>
                 <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-                <span>{`Просмотров ${post.viewsCount}`}</span>
+                <span>👁️ {post.viewsCount}</span>
                 <span>{`Комментариев ${post.comments.length}`}</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
                   <LikeDislike

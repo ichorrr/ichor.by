@@ -11,18 +11,20 @@ const GET_CURRENT_USER = gql`
       email
       telephone
       avatar
+      bio
     }
   }
 `;
 
 const UPDATE_USER_MUTATION = gql`
-  mutation UpdateUser($name: String, $email: String, $telephone: String, $avatar: String) {
-    updateUser(name: $name, email: $email, telephone: $telephone, avatar: $avatar) {
+  mutation UpdateUser($name: String, $email: String, $telephone: String, $avatar: String, $bio: String) {
+    updateUser(name: $name, email: $email, telephone: $telephone, avatar: $avatar, bio: $bio) {
       _id
       name
       email
       telephone
       avatar
+      bio
     }
   }
 `;
@@ -215,6 +217,7 @@ const ProfileSettings = () => {
             if (profile.name) updateVars.name = profile.name;
             if (profile.email) updateVars.email = profile.email;
             if (profile.telephone) updateVars.telephone = profile.telephone;
+            if (profile.bio !== undefined) updateVars.bio = profile.bio;
 
             if (Object.keys(updateVars).length > 0) {
                 await updateUser({
@@ -331,7 +334,7 @@ const ProfileSettings = () => {
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                 </select>
-                <button type="submit">Save Settings gdajdaj</button>
+                <button type="submit">Save Settings</button>
             </form>
             {error && <p className="error">{error}</p>}
             {saved && <p className="success">Settings saved successfully!</p>}

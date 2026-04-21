@@ -43,7 +43,7 @@ const UserPosts = ({posts}) => {
             {`${post.category.catname}`}
           </Link>
             <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-            <span>{`Просмотров ${post.viewsCount}`}</span>
+            <span>👁️ {post.viewsCount}</span>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
               <LikeDislike
                 targetId={post._id}

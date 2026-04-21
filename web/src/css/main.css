@@ -972,6 +972,19 @@ h3.comment-name {
   color: #00afe4;
 }
 
+.avatar-chat {
+  width: 55px;
+  height: 55px;
+  border-radius: 100%;
+  background-color: #e2e2e2;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: .5em;
+  overflow: hidden;
+  display: inline-block;
+  margin-right: .3em;
+}
+
 .head-chat-name p.last-visit {
   margin-top: -10px;
   font-weight: normal;

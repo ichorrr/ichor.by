@@ -68,11 +68,11 @@ const Post = ({ post }) => {
           </li>
           <li>
             <Link  to={`/users/${iduser}`}>
-              {`Автор ${post.author.name}`}
+              👤 {post.author.name}
             </Link>
           </li>
           <li  className='plank-span'>
-            <span>{`Просмотров ${post.viewsCount}`}</span>
+            <span>👁️ {post.viewsCount}</span>
           </li>
           <li style={{ marginLeft: 'auto' }}>
             <LikeDislike

@@ -54,6 +54,9 @@ const User = model(
       avatar: {
         type: String
       },
+      bio: {
+        type: String
+      },
       isAdmin: {
         type: Boolean,
         default: false

@@ -448,12 +448,15 @@ useEffect(() => {
     <>
       <div className='head-chat-name'> 
             <ul style={{alignItems: 'center', display: 'inline', float: 'left', width: '100%'}}>
-              <li>
+              <li style={{ transform: 'translateY(25%)' }}>
                 <Link to='/myposts'  className="css-back-chat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
                   <path className="xcls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
                 </svg>
               </Link>
+              </li>
+              <li>
+                <img src={chatUserData?.avatar || '/avatars/default-avatar.png'} alt={chatUserData?.name} className='avatar-chat' />
               </li>
               <li>
                 <h2>{props.nameChatId}</h2>
@@ -571,7 +574,7 @@ useEffect(() => {
                               src={imageUrl}
                               alt={`attachment-${idx}`}
                               style={{ maxWidth: '200px', height: '200px', objectFit: 'cover', display: 'block', borderRadius: 6, cursor: 'pointer' }}
-                              onClick={() => setViewImageUrl(imageUrl)}
+                              onClick={() => setViewImageUrl(file.split('|'))}
                               onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, imageUrl)}
                             />
                             {imageMenuId === `${_id}-${idx}` && mine && (
@@ -595,7 +598,7 @@ useEffect(() => {
                           src={file}
                           alt="attachment"
                           style={{ maxWidth: '200px', display: 'block', marginTop: 8, borderRadius: 6, cursor: 'pointer' }}
-                          onClick={() => setViewImageUrl(file)}
+                          onClick={() => setViewImageUrl([file])}
                           onContextMenu={(e) => mine && onImageContextMenu(e, _id, 0, file)}
                         />
                         {imageMenuId === `${_id}-0` && mine && (

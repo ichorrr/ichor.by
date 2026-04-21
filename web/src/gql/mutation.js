@@ -87,13 +87,14 @@ const CREATE_MESSAGE = gql`
   `;
 
   const UPDATE_USER = gql`
-    mutation updateUser($name: String, $email: String, $telephone: String, $avatar: String) {
-      updateUser(name: $name, email: $email, telephone: $telephone, avatar: $avatar) {
+    mutation updateUser($name: String, $email: String, $telephone: String, $avatar: String, $bio: String) {
+      updateUser(name: $name, email: $email, telephone: $telephone, avatar: $avatar, bio: $bio) {
         _id
         name
         email
         telephone
         avatar
+        bio
       }
     }
   `;
