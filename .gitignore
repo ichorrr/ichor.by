@@ -9,6 +9,11 @@ web/.parcel-cache/
 */.parcel-cache/
 web/dist/
 
+api/imgmessages/
+api/imgposts/
+api/avatars/
+api/uploads/
+
 .gitignore
 
 dist/
