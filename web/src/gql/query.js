@@ -21,6 +21,7 @@ const GET_MY_LIST_USERS_CHATS = gql`
       name
       avatar
       lastVisit
+      unreadCount
       lastMessage {
         _id
         text
@@ -66,6 +67,10 @@ const GET_CAT = gql`
         title
         createdAt
         viewsCount
+        likesCount
+        dislikesCount
+        commentCount
+        tags
         author{
           _id
           name
@@ -270,6 +275,10 @@ const GET_ME = gql`
         createdAt
         updatedAt
         viewsCount
+        likesCount
+        dislikesCount
+        commentCount
+        tags
         category {
           _id
           catname
@@ -305,6 +314,11 @@ const GET_POST = gql`
       imageUrl2
       imageUrl3
       scriptUrl
+      externalSource {
+        icon
+        url
+      }
+      tags
       createdAt
       updatedAt
       viewsCount

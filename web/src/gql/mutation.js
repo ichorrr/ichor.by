@@ -8,6 +8,9 @@ const EDIT_POST = gql`
       $imageUrl2: String, 
       $imageUrl3: String,
       $scriptUrl: Boolean, 
+      $externalSource: ExternalSourceInput,
+      $tags: [String],
+      $category: String,
       $title: String!, 
       $body: String!, 
       $body2: String, 
@@ -20,6 +23,9 @@ const EDIT_POST = gql`
         imageUrl2: $imageUrl2, 
         imageUrl3: $imageUrl3, 
         scriptUrl: $scriptUrl, 
+        externalSource: $externalSource,
+        tags: $tags,
+        category: $category,
         title: $title, 
         body: $body, 
         body2: $body2, 
@@ -32,6 +38,11 @@ const EDIT_POST = gql`
         imageUrl2
         imageUrl3
         scriptUrl
+        externalSource {
+          icon
+          url
+        }
+        tags
         createdAt
         category{
           _id

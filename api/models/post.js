@@ -25,6 +25,15 @@ const Post = model(
         type: Boolean,
         default: false
       },
+      externalSource: {
+        icon: String,
+        url: String
+      },
+      tags: [
+        {
+          type: String
+        }
+      ],
       category: {
         type: Types.ObjectId,
         ref: 'Cat'

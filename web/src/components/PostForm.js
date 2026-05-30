@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import styled from 'styled-components';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-import IsAdmin from './isAdmin.js';
+import { GET_ME } from '../gql/query';
 import Button from './Button';
 
 const Wrapper = styled.div`
@@ -24,9 +24,7 @@ const Form = styled.form`
 `;
 
 const PostForm = props => {
-
-  console.log(props)
-  // set the default state of the form\
+  // set the default state of the form
   const inputFileRef = useRef(null);
   const inputFileRef2 = useRef(null);
   const inputFileRef3 = useRef(null);
@@ -40,10 +38,20 @@ const PostForm = props => {
   const [imageUrl2, setImageUrl2] = useState({imageUrl2: props.imageUrl2 || ''});
   const [imageUrl3, setImageUrl3] = useState({imageUrl3: props.imageUrl3 || ''});
   const [scriptUrl, setScriptUrl] = useState({scriptUrl: props.scriptUrl || false});
+  const [externalSourceIcon, setExternalSourceIcon] = useState(
+    props.externalSource && typeof props.externalSource === 'object'
+      ? props.externalSource.icon || ''
+      : ''
+  );
+  const [externalSourceUrl, setExternalSourceUrl] = useState(
+    props.externalSource && typeof props.externalSource === 'object'
+      ? props.externalSource.url || ''
+      : typeof props.externalSource === 'string'
+      ? props.externalSource
+      : ''
+  );
+  const [tags, setTags] = useState({tags: Array.isArray(props.tags) ? props.tags.join(', ') : (props.tags || '')});
   const [value, setValue] = useState( { category: props.category, title: props.title || ''} );
-  
-
-console.log(<IsAdmin />);
 
   // update the state when a user types in the form
   const onChange = event => {
@@ -65,11 +73,27 @@ console.log(<IsAdmin />);
     setBody3({body3});
   };
 
-  const onChangeCHK = (event) => {
+  const { data } = useQuery(GET_ME);
+  const isAdmin = data?.me?.isAdmin;
+  const adminOnlyCategoryIds = [
+    '6251ef28413373118838bbdd',
+    '6251f1532f7a51343c8ed7df',
+  ];
+  const defaultNoteCategory = '6251f1632f7a51343c8ed7e0';
 
+  const externalSourcesList = [
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=onliner.by`, url: 'https://www.onliner.by/' },
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=lenta.ru`, url: 'https://lenta.ru/' },
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=bbc.com`, url: 'https://www.bbc.com/' },
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=edition.cnn.com`, url: 'https://edition.cnn.com/' },
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=realt.by`, url: 'https://realt.by/' },
+    { icon: `https://www.google.com/s2/favicons?sz=64&domain=ixbt.com`, url: 'https://www.ixbt.com/' },
+  ];
+
+  const onChangeCHK = (event) => {
     let scriptUrl = event.target.checked;
 
-  setScriptUrl({scriptUrl});
+    setScriptUrl({scriptUrl});
   };
 
   const onClickRemoveImage =  async (imageUrl) => {
@@ -92,8 +116,7 @@ console.log(<IsAdmin />);
     setIconPost({iconPost});
   };
 
-  const handleChangeFile = async (imageUrl) =>{
-
+  const handleChangeFile = async (event) => {
           const formData = new FormData();
           const file = event.target.files[0];
           formData.append('imageUrl', file);
@@ -102,12 +125,10 @@ console.log(<IsAdmin />);
             body: formData,
           });
           const data = await res.json();
-          imageUrl = await data.url;
-          setImageUrl({ imageUrl});
+          setImageUrl({ imageUrl: data.url });
   }
 
-  const handleChangeFile2 = async (imageUrl2) =>{
-
+  const handleChangeFile2 = async (event) => {
           const formData2 = new FormData();
           const file2 = event.target.files[0];
           formData2.append('imageUrl2', file2);
@@ -116,12 +137,10 @@ console.log(<IsAdmin />);
             body: formData2,
           });
           const data2 = await res2.json();
-          imageUrl2 = await data2.url;
-          setImageUrl2({ imageUrl2});
+          setImageUrl2({ imageUrl2: data2.url });
   }
 
-  const handleChangeFile3 = async (imageUrl3) =>{
-
+  const handleChangeFile3 = async (event) => {
     const formData3 = new FormData();
     const file3 = event.target.files[0];
     formData3.append('imageUrl3', file3);
@@ -130,12 +149,10 @@ console.log(<IsAdmin />);
       body: formData3,
     });
     const data3 = await res3.json();
-    imageUrl3 = await data3.url;
-    setImageUrl3({ imageUrl3});
+    setImageUrl3({ imageUrl3: data3.url });
 }
 
-const ihandleChangeFile = async (iconPost) =>{
-
+const ihandleChangeFile = async (event) => {
   const iformData = new FormData();
   const ifile = event.target.files[0];
   iformData.append('iconPost', ifile);
@@ -144,8 +161,7 @@ const ihandleChangeFile = async (iconPost) =>{
     body: iformData,
   });
   const idata = await ires.json();
-  iconPost = await idata.url;
-  setIconPost({ iconPost });
+  setIconPost({ iconPost: idata.url });
 }
 
   return (
@@ -153,20 +169,34 @@ const ihandleChangeFile = async (iconPost) =>{
       <Form
         onSubmit={event => {
           event.preventDefault();
+          const tagsArray = tags.tags ? tags.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
 
-          props.action({
-            variables: {
-              ...value,
-              ...body,
-              ...body2,
-              ...body3,
-              ...iconPost,
-              ...imageUrl,
-              ...imageUrl2,
-              ...imageUrl3,
-              ...scriptUrl
-            }
-          });
+          if (!isAdmin && adminOnlyCategoryIds.includes(value.category)) {
+            alert('Только администратор может выбрать категорию Новости или Статьи.');
+            return;
+          }
+
+            const categoryToSend = isAdmin ? value.category : defaultNoteCategory;
+
+            props.action({
+              variables: {
+                ...value,
+                category: categoryToSend,
+                ...body,
+                ...body2,
+                ...body3,
+                ...iconPost,
+                ...imageUrl,
+                ...imageUrl2,
+                ...imageUrl3,
+                ...scriptUrl,
+                externalSource: isAdmin && (externalSourceUrl || externalSourceIcon) ? {
+                  icon: externalSourceIcon,
+                  url: externalSourceUrl
+                } : null,
+                tags: tagsArray
+              }
+            });
         }}
       >
         
@@ -210,6 +240,63 @@ const ihandleChangeFile = async (iconPost) =>{
 
       <div className="empty-div"></div>
 
+      {isAdmin ? (
+        <>
+          <label htmlFor="externalSourceUrl">URL источника</label>
+          <input
+            type="url"
+            name="externalSourceUrl"
+            id="externalSourceUrl"
+            placeholder="https://example.com"
+            onChange={event => setExternalSourceUrl(event.target.value)}
+            value={externalSourceUrl}
+          />
+
+          <div className="empty-div"></div>
+
+          <label htmlFor="externalSourceIcon">Иконка источника</label>
+          <input
+            type="text"
+            name="externalSourceIcon"
+            id="externalSourceIcon"
+            placeholder="URL иконки или emoji"
+            onChange={event => setExternalSourceIcon(event.target.value)}
+            value={externalSourceIcon}
+          />
+
+          <div className="empty-div"></div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            {externalSourcesList.map((s, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => { setExternalSourceUrl(s.url); setExternalSourceIcon(s.icon); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, border: '1px solid #ddd', background: '#fff', cursor: 'pointer' }}
+                title={s.url}
+              >
+                <img src={s.icon} alt="src" style={{ width: 18, height: 18 }} />
+                <span style={{ fontSize: 12 }}>{new URL(s.url).hostname}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      <div className="empty-div"></div>
+
+      <label htmlFor="tags">Теги (через запятую)</label>
+      <input
+        type="text"
+        name="tags"
+        id="tags"
+        placeholder="tag1, tag2, tag3"
+        onChange={event => setTags({ tags: event.target.value })}
+        value={tags.tags}
+      />
+
+      <div className="empty-div"></div>
+
 
 {/* Model Icon Upload */}
         <div className="iconBlock">
@@ -242,27 +329,32 @@ const ihandleChangeFile = async (iconPost) =>{
 {/* End Model Icon Upload */}
 
 <div className="empty-div"></div>
-      { <IsAdmin /> && (
+{isAdmin && (
         <>
-      	<div className="css-checkbox" >
-          <input type="checkbox" id="scriptUrl" name="scriptUrl" checked={scriptUrl.scriptUrl} onChange={onChangeCHK}  />
-          <label htmlFor="scriptUrl">Опубликовать на главной странице</label>
-          <p>{scriptUrl.scriptUrl ? "checkedd" : "unchecked"}</p>
-        </div>
-        <div className="empty-div"></div>
+          <div className="css-checkbox">
+            <input type="checkbox" id="scriptUrl" name="scriptUrl" checked={scriptUrl.scriptUrl} onChange={onChangeCHK} />
+            <label htmlFor="scriptUrl">Опубликовать на главной странице</label>
+            <p>{scriptUrl.scriptUrl ? "checkedd" : "unchecked"}</p>
+          </div>
+          <div className="empty-div"></div>
         </>
       )}
 
-      <label htmlFor="category" className="style-select">
-      <span>Выберите категорию записи</span>
-               <select onChange={onChange} type="text"
-                 id="category" name="category" value={value.category}>
-                 <option >Введите категорию</option>
-                 <option value="6251ef28413373118838bbdd">Новости</option>
-                 <option value="6251f1532f7a51343c8ed7df">Статьи</option>
-                 <option value="6251f1632f7a51343c8ed7e0">Заметки</option>
-               </select>
-             </label>
+      {isAdmin ? (
+        <label htmlFor="category" className="style-select">
+          <span>Выберите категорию записи</span>
+          <select onChange={onChange} type="text"
+            id="category" name="category" value={value.category}>
+            <option value="">Введите категорию</option>
+            <option value="6251ef28413373118838bbdd" disabled={!isAdmin}>Новости</option>
+            <option value="6251f1532f7a51343c8ed7df" disabled={!isAdmin}>Статьи</option>
+            <option value="6251f1632f7a51343c8ed7e0">Заметки</option>
+          </select>
+        </label>
+      ) : (
+        // non-admins shouldn't see category selector; default to Notes
+        <input type="hidden" name="category" value={defaultNoteCategory} />
+      )}
 
         <div className="empty-div"></div>
 

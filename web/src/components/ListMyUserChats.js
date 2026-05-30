@@ -111,6 +111,10 @@ const styles = {
         fontSize: '0.78rem',
         color: '#9aa0a6',
     },
+    visitInfo: {
+        fontSize: '0.78rem',
+        color: '#9aa0a6',
+    },
     unreadBadge: {
         background: '#ff4d4f',
         color: '#fff',
@@ -152,6 +156,22 @@ const styles = {
 };
 
 const truncate = (text, n = 15) => (text && text.length > n ? text.slice(0, n) + '...' : text || '');
+
+const formatLastVisit = (date) => {
+    if (!date) return '';
+    const visitDate = new Date(date);
+    const now = new Date();
+    const diffMs = now - visitDate;
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffDays > 14) return 'был давно';
+    if (diffDays > 7) return 'был неделю назад';
+
+    return visitDate.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit'
+    }) + ' ' + visitDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
 const ListMyUserChats = () => {
     // hooks
@@ -303,7 +323,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                 </>
             ) : (
                 // chats list (filtered by query if any)
-                filteredChats.map(({ _id, name, avatar, lastMessage }) => {
+                filteredChats.map(({ _id, name, avatar, lastMessage, lastVisit, unreadCount }) => {
                     let preview;
                     if (lastMessage?.text) {
                         preview = truncate(lastMessage.text, 15);
@@ -313,7 +333,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                         preview = 'No messages yet';
                     }
                     const timeStr = lastMessage?.createdAt ? `${new Date(lastMessage.createdAt).toLocaleDateString()} ${new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
-                    const unreadCount = lastMessage?.unreadCount || 0;
+                    const unreadCountValue = unreadCount || lastMessage?.unreadCount || 0;
 
                 return (
                      <a
@@ -333,9 +353,12 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                                     <div style={styles.lastMessagePreview}>{preview}</div>
                                     <div style={styles.right}>
                                         <div style={styles.time}>{timeStr}</div>
-                                        <UnreadBadge count={unreadCount} />
+                                        <UnreadBadge count={unreadCountValue} />
                                     </div>
                                 </div>
+                                {lastVisit ? (
+                                    <div style={styles.visitInfo}>{formatLastVisit(lastVisit)}</div>
+                                ) : null}
                             </div>
                         </a>
                 );

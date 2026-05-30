@@ -28,6 +28,16 @@ type Chat {
   messages: [Message!]!
 }
 
+type ExternalSource {
+  icon: String
+  url: String
+}
+
+input ExternalSourceInput {
+  icon: String
+  url: String
+}
+
 type Post {
   _id: ID!
   iconPost: String
@@ -35,11 +45,13 @@ type Post {
   imageUrl2: String
   imageUrl3: String
   scriptUrl: Boolean
+  externalSource: ExternalSource
+  tags: [String]
   title: String!
   createdAt: Date!
   updatedAt: Date!
-  category: Cat!
-  viewsCount: String!
+  category: Cat
+  viewsCount: Int
   body: String!
   body2: String
   body3: String
@@ -102,9 +114,9 @@ type Mutation {
   signIn(email: String!, password: String!): String!
   signUp(name: String!, email: String!, password: String!): String!
   createCat(catname: String!): Cat!
-  createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, category: String!, body: String!, body2: String, body3: String): Post!
+  createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String!, body: String!, body2: String, body3: String): Post!
   deletePost(_id: String!): Boolean!
-  updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, body: String!, body2: String, body3: String): Post!
+  updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String, body: String!, body2: String, body3: String): Post!
   createComment(text: String!, post: String!): Comment!
   deleteComment(_id: String!): Boolean!
   createMessage(text: String, file: String, addressee: String!): Message!

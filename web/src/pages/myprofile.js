@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_ME } from '../gql/query';
 import MyPosts from '../components/MyPosts';
 import ListMyUserChats from '../components/ListMyUserChats';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../css/main.css';
 
 const containerStyle = {
@@ -30,11 +30,13 @@ const MyProf = () => {
   const me = data?.me || {};
   const posts = me.posts || [];
   const comments = useMemo(() => (Array.isArray(me.comments) ? [...me.comments].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0,6) : []), [me.comments]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('date');
 
-  // derive unique categories from user's posts
   const categories = useMemo(() => {
     const map = new Map();
-    (posts || []).forEach(p => {
+    posts.forEach(p => {
       const cat = p?.category;
       const id = cat?._id || 'nocat';
       const name = cat?.catname || 'Без категории';
@@ -44,8 +46,38 @@ const MyProf = () => {
         map.set(id, { id, name, count: 1 });
       }
     });
-    return Array.from(map.values());
+    return [{ id: 'all', name: 'Все', count: posts.length }, ...Array.from(map.values())];
   }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return posts
+      .filter(post => {
+        if (selectedCategoryId !== 'all' && post.category?._id !== selectedCategoryId) {
+          return false;
+        }
+        if (!query) return true;
+        const text = [post.title, post.body, post.body2, post.body3, post.category?.catname, ...(post.tags || [])]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+        return text.includes(query);
+      })
+      .sort((a, b) => {
+        if (sortBy === 'rating') {
+          const aRating = (a.likesCount || 0) - (a.dislikesCount || 0);
+          const bRating = (b.likesCount || 0) - (b.dislikesCount || 0);
+          return bRating - aRating;
+        }
+        if (sortBy === 'views') {
+          return (b.viewsCount || 0) - (a.viewsCount || 0);
+        }
+        if (sortBy === 'comments') {
+          return (b.commentCount || 0) - (a.commentCount || 0);
+        }
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+  }, [posts, selectedCategoryId, searchQuery, sortBy]);
 
   if (loading) return <p>loading...</p>;
   if (error) return <p>error...</p>;
@@ -62,22 +94,37 @@ const MyProf = () => {
       <section style={centerStyle}>
         <div style={card}>
           <h2>Мои записи</h2>
+          <div className="search-sort-controls">
+            <input
+              type="text"
+              placeholder="Поиск по моим заметкам"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="search-input"
+            />
+            <select className="sort-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="date">По дате</option>
+              <option value="rating">По рейтингу</option>
+              <option value="views">По просмотрам</option>
+              <option value="comments">По комментариям</option>
+            </select>
+          </div>
           {categories.length > 0 && (
             <div className="my-categories" style={{ marginBottom: 12 }}>
               <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
                 {categories.map(c => (
-                  <li key={c.id}>
-                    {c.id !== 'nocat' ? (
-                      <Link to={`/cats/${c.id}`}>{c.name}</Link>
-                    ) : (
-                      <span>{c.name}</span>
-                    )} <small>({c.count})</small>
+                  <li
+                    key={c.id}
+                    className={selectedCategoryId === c.id ? 'active' : ''}
+                    onClick={() => setSelectedCategoryId(c.id)}
+                  >
+                    <span>{c.name}</span> <small>({c.count})</small>
                   </li>
                 ))}
               </ul>
             </div>
           )}
-          <MyPosts posts={me} />
+          <MyPosts posts={filteredPosts} userName={me.name} />
         </div>
       </section>
 

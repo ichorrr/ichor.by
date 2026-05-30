@@ -83,7 +83,11 @@ const resolvers = {
       },
   
       async getPosts() {
-        return await models.Post.find().limit(100).sort({createdAt: -1, updatedAt: -1});
+        return await models.Post.find()
+          .limit(100)
+          .sort({ createdAt: -1, updatedAt: -1 })
+          .populate('category')
+          .populate('author');
       },
       async getMessages(parent, args, { models }) {
         const messages = await models.Message.find({}).sort({createdAt: -1, updatedAt: -1});
@@ -134,14 +138,13 @@ const resolvers = {
             .populate('user', '_id name avatar');
 
             let lastMessage = null;
-            let unreadCount = 0;
+            let unreadCount = await models.Message.countDocuments({
+              addressee: String(currentUser._id),
+              user: fam._id,
+              read: false
+            });
+
             if (lastMessageDoc) {
-              // compute unread count for messages sent *to* current user from this family member
-              unreadCount = await models.Message.countDocuments({
-                addressee: String(currentUser._id),
-                user: fam._id,
-                read: false
-              });
               lastMessage = {
                 _id: lastMessageDoc._id,
                 text: lastMessageDoc.text,
@@ -156,10 +159,18 @@ const resolvers = {
               _id: fam._id,
               name: fam.name,
               avatar: fam.avatar || null,
-              lastVisit: fam.lastVisit || new Date(),
-              lastMessage
+              lastVisit: fam.lastVisit || null,
+              lastMessage,
+              unreadCount
             };
           }));
+
+          // debug: log computed chats with unread counts before returning
+          try {
+            console.log('DEBUG getMyListUsersChats result:', JSON.stringify(chats.map(c => ({ _id: String(c._id), name: c.name, unreadCount: c.unreadCount, lastMessage: { _id: c.lastMessage?._id, unreadCount: c.lastMessage?.unreadCount } })), null, 2));
+          } catch (e) {
+            console.error('DEBUG stringify error', e);
+          }
 
           // sort by most recent lastMessage (newest first)
           chats.sort((a, b) => {
@@ -349,12 +360,12 @@ const resolvers = {
         });
         // if no user is found, throw an authentication error
         if (!username) {
-          throw new AuthenticationError('Error signing in');
+          throw new GraphQLError('Error signing in', { extensions: { code: 'UNAUTHENTICATED' } });
         }
         // if the passwords don't match, throw an authentication error
         const valid = await bcrypt.compare(password, username.password);
         if (!valid) {
-          throw new AuthenticationError('Error signing in');
+          throw new GraphQLError('Error signing in', { extensions: { code: 'UNAUTHENTICATED' } });
         }
         // update last visit time
         username.lastVisit = new Date();
@@ -372,7 +383,7 @@ const resolvers = {
         
         // if not a user, throw an Authentication Error
         if (!user) {
-          throw new AuthenticationError('You must be signed in to delete a note');
+          throw new GraphQLError('You must be signed in to delete a note', { extensions: { code: 'UNAUTHENTICATED' } });
         }
   
         // find the note
@@ -425,7 +436,7 @@ const resolvers = {
         
         // if not a user, throw an Authentication Error
         if (!user) {
-          throw new AuthenticationError('You must be signed in to delete a note');
+          throw new GraphQLError('You must be signed in to delete a note', { extensions: { code: 'UNAUTHENTICATED' } });
         }
   
         // find the note
@@ -454,7 +465,7 @@ const resolvers = {
       deleteMessage: async (parent, { _id }, { models, user }) => {
         // if not a user, throw an Authentication Error
         if (!user) {  
-          throw new AuthenticationError('You must be signed in to delete a message');
+          throw new GraphQLError('You must be signed in to delete a message', { extensions: { code: 'UNAUTHENTICATED' } });
         }
         // find the message
         const message = await models.Message.findById(_id);
@@ -485,7 +496,7 @@ const resolvers = {
       deleteImagesInMessage: async (parent, { _id, imageIndex }, { models, user }) => {
         // if not a user, throw an Authentication Error
         if (!user) {
-          throw new AuthenticationError('You must be signed in to delete a message');
+          throw new GraphQLError('You must be signed in to delete a message', { extensions: { code: 'UNAUTHENTICATED' } });
         }
         // find the message
         const message = await models.Message.findById(_id);
@@ -554,46 +565,95 @@ const resolvers = {
         }
       },
   
-      updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, title, body, body2, body3, _id }, { models, user }) => {
+      updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, externalSource, tags, title, body, body2, body3, category, _id }, { models, user }) => {
         // if not a user, throw an Authentication Error
         if (!user) {
-          throw new AuthenticationError('You must be signed in to update a note');
+          throw new GraphQLError('You must be signed in to update a note', { extensions: { code: 'UNAUTHENTICATED' } });
         }
+
+        const currentUser = await models.User.findById(user.id);
+        const restrictedCategoryIds = [
+          '6251ef28413373118838bbdd',
+          '6251f1532f7a51343c8ed7df',
+        ];
+
+        if (!currentUser?.isAdmin && category && restrictedCategoryIds.includes(category)) {
+          throw new GraphQLError('Only administrators can select category Новости or Статьи.', { extensions: { code: 'FORBIDDEN' } });
+        }
+
         // find the note
         const note = await models.Post.findById(_id);
         // if the note owner and current user don't match, throw a forbidden error
         if (note && String(note.author) !== user.id) {
-          throw new ForbiddenError(
+          throw new GraphQLError(
             "You don't have permissions to update the note"
-          );
+          , { extensions: { code: 'FORBIDDEN' } });
         }
-        // Update the note in the db and return the updated note
-        return await models.Post.findOneAndUpdate(
+        const externalSourceValue = externalSource && typeof externalSource === 'object'
+          ? externalSource
+          : { url: externalSource };
+
+        const updateFields = {
+          title,
+          body,
+          body2,
+          body3,
+          iconPost,
+          imageUrl,
+          imageUrl2,
+          imageUrl3,
+          scriptUrl,
+          externalSource: externalSourceValue,
+          tags,
+        };
+
+        if (category) {
+          updateFields.category = new mongoose.Types.ObjectId(category);
+        }
+
+        const updatedPost = await models.Post.findOneAndUpdate(
           {
             _id: _id
           },
           {
-            $set: {
-              title,
-              body,
-              body2,
-              body3,
-              iconPost,
-              imageUrl,
-              imageUrl2,
-              imageUrl3,
-              scriptUrl
-            }
+            $set: updateFields
           },
           {
             new: true
           }
         );
+
+        if (category && note && String(note.category) !== String(category)) {
+          const oldCat = await models.Cat.findById(note.category);
+          const newCat = await models.Cat.findById(category);
+
+          if (oldCat) {
+            oldCat.posts = oldCat.posts.filter(id => String(id) !== String(note._id));
+            await oldCat.save();
+          }
+
+          if (newCat) {
+            newCat.posts.push(updatedPost._id);
+            await newCat.save();
+          }
+        }
+
+        return updatedPost;
       },
   
       createPost: async (parent, args, { models, user }) => {
         if (!user) {
-          throw new AuthenticationError('You must be signed in to create a note');
+          throw new GraphQLError('You must be signed in to create a note', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+
+        const currentUser = await models.User.findById(user.id);
+        const restrictedCategoryIds = [
+          '6251ef28413373118838bbdd',
+          '6251f1532f7a51343c8ed7df',
+        ];
+
+        if (!currentUser?.isAdmin && restrictedCategoryIds.includes(args.category)) {
+          throw new GraphQLError('Only administrators can select category Новости or Статьи.', { extensions: { code: 'FORBIDDEN' } });
         }
   
         const newPost = await models.Post({
@@ -603,38 +663,42 @@ const resolvers = {
           imageUrl2: args.imageUrl2,
           imageUrl3: args.imageUrl3,
           scriptUrl: args.scriptUrl,
+          externalSource: args.externalSource && typeof args.externalSource === 'object'
+            ? args.externalSource
+            : { url: args.externalSource },
+          tags: args.tags,
           body: args.body,
           body2: args.body2,
           body3: args.body3,
-          category: args.category,
+          category: new mongoose.Types.ObjectId(args.category),
           author: new mongoose.Types.ObjectId(user.id)
         });
-  
+
         const createPost = await newPost.save();
-  
+
         const cat = await models.Cat.findById(
           new mongoose.Types.ObjectId(args.category)
         );
         const author = await models.User.findById(
           new mongoose.Types.ObjectId(user.id)
         );
-  
+
         author.posts.push(newPost.id);
         cat.posts.push(newPost.id);
-  
+
         await author.save();
         await cat.save();
-  
+
         return createPost;
       },
   
       createComment: async (_, args, { models, user }) => {
         if (!user) {
-          throw new AuthenticationError(
+          throw new GraphQLError(
             'You must be signed in to create a comments'
-          );
+          , { extensions: { code: 'UNAUTHENTICATED' } });
         }
-  
+
         const newComment = new models.Comment({
           text: args.text,
           post: args.post,
@@ -661,9 +725,9 @@ const resolvers = {
 
     createMessage: async (_, args, { models, user }) => {
       if (!user) {
-        throw new AuthenticationError(
+        throw new GraphQLError(
           'You must be signed in to create a message'
-        );
+        , { extensions: { code: 'UNAUTHENTICATED' } });
       }
       
       // Convert addressee string to ObjectId
@@ -749,7 +813,7 @@ const resolvers = {
     updateMessage: async (_, { _id, text, file }, { models, user }) => {
       // if not a user, throw an Authentication Error
       if (!user) {
-        throw new AuthenticationError('You must be signed in to update a message');
+        throw new GraphQLError('You must be signed in to update a message', { extensions: { code: 'UNAUTHENTICATED' } });
       }
       // find the message
       const message = await models.Message.findById(_id);
@@ -780,7 +844,7 @@ const resolvers = {
     },
     clearChat: async (_, { addressee }, { models, user }) => {
       if (!user) {
-        throw new AuthenticationError('You must be signed in to clear a chat');
+        throw new GraphQLError('You must be signed in to clear a chat', { extensions: { code: 'UNAUTHENTICATED' } });
       }
       
       try {
@@ -827,7 +891,7 @@ const resolvers = {
     },
     toggleLike: async (_, { targetId, type, likeType }, { models, user }) => {
       if (!user) {
-        throw new AuthenticationError('You must be signed in to like');
+        throw new GraphQLError('You must be signed in to like', { extensions: { code: 'UNAUTHENTICATED' } });
       }
 
       try {

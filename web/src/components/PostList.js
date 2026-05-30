@@ -79,10 +79,14 @@ const PostList = ({ post }) => {
       <Link style={linkStyle} to={`/cats/${idcat}`}>
         <H4R>{post.category.catname}</H4R>
       </Link>
+      {/* separator div */}
+      <div className="css-plank-cat f hdpltkt" />
       <H4R>{format(new Date(post.createdAt), 'dd LLL yyyy')}</H4R>
-      <Link style={linkStyle} to={`/users/${iduser}`}>
-        <H4R>👤 {post.author.name}</H4R>
-      </Link>
+      {(!['6251ef28413373118838bbdd', '6251f1532f7a51343c8ed7df'].includes(idcat)) && (
+        <Link style={linkStyle} to={`/users/${iduser}`}>
+          <H4R>👤 {post.author.name}</H4R>
+        </Link>
+      )}
       <H4R>👁️ {post.viewsCount}</H4R>
       <PRiv4>
         <ReactMarkdown children={post.body} />

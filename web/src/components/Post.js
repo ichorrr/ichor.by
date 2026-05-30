@@ -4,10 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, gql } from '@apollo/client';
 import PostUser from './PostUser';
 import { format } from 'date-fns';
-import styled from 'styled-components';
 import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments.js';
-import { useNavigate } from 'react-router-dom';
 import {GET_ME} from '../gql/query';
 import LikeDislike from './LikeDislike';
 
@@ -35,8 +33,15 @@ const Post = ({ post }) => {
   let idcat = post.category._id;
   let iduser = post.author._id;
 
-  
-    const { data: datacom } = useQuery( GET_ME);
+  const sourceUrl = post.externalSource && typeof post.externalSource === 'string'
+    ? post.externalSource
+    : post.externalSource?.url;
+  const sourceIcon = post.externalSource && typeof post.externalSource === 'object'
+    ? post.externalSource.icon
+    : null;
+  const sourceHref = sourceUrl ? (sourceUrl.startsWith('http') ? sourceUrl : `https://${sourceUrl}`) : null;
+
+  const { data: datacom } = useQuery( GET_ME);
     
 
   const [ data, { loading, error } ] = useMutation( NEW_COMMENT, {
@@ -84,11 +89,33 @@ const Post = ({ post }) => {
             />
           </li>
           </ul>
-        <PostUser post={post} me={datacom} />
+          <PostUser post={post} me={datacom} />
         </div>
-              
-           
       </div>
+
+      {(sourceHref || (post.tags && post.tags.length > 0)) && (
+        <div className="post-details-row">
+          {sourceHref && (
+            <div className="post-external-source">
+              {sourceIcon ? (
+                sourceIcon.startsWith('http') ? (
+                  <img className="external-source-icon" src={sourceIcon} alt="source icon" />
+                ) : (
+                  <span className="external-source-icon-text">{sourceIcon}</span>
+                )
+              ) : null}
+              <a href={sourceHref} target="_blank" rel="noreferrer">{sourceUrl}</a>
+            </div>
+          )}
+          {post.tags && post.tags.length > 0 && (
+            <div className="post-tags">
+              {post.tags.filter(Boolean).map(tag => (
+                <span key={tag} className="tag">{tag.startsWith('#') ? tag : `#${tag}`}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
 
     <div className="post-canvas" >
