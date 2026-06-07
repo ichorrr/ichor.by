@@ -1401,10 +1401,11 @@ app.use(express.static("/"));
   
   await server.start();
 
+  const PORT = process.env.PORT || 4000;
+
   app.use(
     '/graphql',
     expressMiddleware(server, {
-      listen: { port: 4000 },
       context: async ({ req }) => {
         // get the user token from the headers
         const token = req.headers.authorization || '';
@@ -1418,5 +1419,5 @@ app.use(express.static("/"));
     }),
   );
 
-  await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://api.ichor.by/graphql`);
+  await new Promise((resolve) => httpServer.listen(PORT, resolve));
+  console.log(`🚀 Server ready at http://api.ichor.by/graphql on port ${PORT}`);
