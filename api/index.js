@@ -1343,32 +1343,36 @@ app.post('/uploadmessage', uploadMessage.single('file'), (req, res) => {
 });
 
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
+  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `https://api.ichor.by/uploads/${req.file.originalname}`,
-  })
-  console.log(req.file)
-})
+    url: `${req.protocol}://${req.get('host')}/uploads/${filename}`,
+  });
+  console.log(req.file);
+});
 
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
+  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
-  })
-  console.log(req.file)
-})
+    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+  });
+  console.log(req.file);
+});
 
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
+  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
-  })
-  console.log(req.file)
-})
+    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+  });
+  console.log(req.file);
+});
 
-app.post('/upload4', upload3.single('iconPost'), (req, res) => {
+app.post('/upload4', upload4.single('iconPost'), (req, res) => {
+  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `https://api.ichor.by/imgposts/${req.file.originalname}`,
-  })
-  console.log(req.file)
-})
+    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+  });
+  console.log(req.file);
+});
 
 app.use(express.static("/"));
 

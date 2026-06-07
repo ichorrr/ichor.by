@@ -6,7 +6,7 @@ import FormMessage from './FormMessage';
 import InfoUserChat from './InfoUserChat';
 import ImageViewer from './ImageViewer';
 import LikeDislike from './LikeDislike';
-import { addListener } from 'process';
+import { getApiBase } from '../utils/api';
 
 const styles = {
   deleteButton: {
@@ -90,6 +90,22 @@ const styles = {
   }
 };
 
+const getFileAttachments = (file) => {
+  if (!file) return [];
+  return file.split('|').filter(Boolean);
+};
+
+const getAttachmentType = (url) => {
+  const normalized = url.split('?')[0].toLowerCase();
+  const ext = normalized.split('.').pop();
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return 'image';
+  if (['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+  if (['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return 'audio';
+  return 'file';
+};
+
+const getAttachmentName = (url) => decodeURIComponent(url.split('/').pop().split('?')[0]);
+
 const CREATE_MESSAGE = gql`
 mutation createMessage($text: String, $file: String, $addressee: String!) {
     createMessage(text: $text, file: $file, addressee: $addressee) {
@@ -171,8 +187,10 @@ const Messages = props => {
   const [chatMenuId, setChatMenuId] = useState(null);
   const chatMenuRef = useRef(null);
 
+  const API_BASE = getApiBase();
+
   // Image viewer state
-  const [viewImageUrl, setViewImageUrl] = useState(null);
+  const [viewMedia, setViewMedia] = useState(null);
 
     const [deleteMessage] = useMutation(DELETE_MESSAGE, {
     // automatically refetch messages after delete
@@ -456,7 +474,7 @@ useEffect(() => {
               </Link>
               </li>
               <li>
-                <img src={chatUserData?.avatar || '/avatars/default-avatar.png'} alt={chatUserData?.name} className='avatar-chat' />
+                <img src={chatUserData?.avatar || `${API_BASE}/avatars/default-avatar.png`} alt={chatUserData?.name} className='avatar-chat' />
               </li>
               <li>
                 <h2>{props.nameChatId}</h2>
@@ -564,57 +582,64 @@ useEffect(() => {
             ) : (
               <div style={{ marginTop: 8 }}>
                 {text && <p>{text}</p>}
-                {file && (
-                  <div>
-                    {file.includes('|') ? (
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                        {file.split('|').map((imageUrl, idx) => (
-                          <div key={idx} style={{ position: 'relative', display: 'inline-block' }}>
-                            <img
-                              src={imageUrl}
-                              alt={`attachment-${idx}`}
-                              style={{ maxWidth: '200px', height: '200px', objectFit: 'cover', display: 'block', borderRadius: 6, cursor: 'pointer' }}
-                              onClick={() => setViewImageUrl(file.split('|'))}
-                              onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, imageUrl)}
-                            />
-                            {imageMenuId === `${_id}-${idx}` && mine && (
+                        {file && (
+                  <div style={{ marginTop: 12 }}>
+                    {(() => {
+                      const attachments = getFileAttachments(file);
+                      return (
+                        <div className="message-attachments">
+                          {attachments.map((attachmentUrl, idx) => {
+                            const type = getAttachmentType(attachmentUrl);
+                            const name = getAttachmentName(attachmentUrl);
+                            const openViewerAt = () => setViewMedia({ urls: attachments, startIndex: idx });
+                            const attachmentKey = `${_id}-${idx}`;
+
+                            return (
                               <div
-                                ref={imageMenuRef}
-                                style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
-                                role="menu"
-                                aria-label="image menu"
+                                key={attachmentKey}
+                                className="message-attachment"
+                                style={{ position: 'relative', minWidth: 120, maxWidth: 240, cursor: 'pointer' }}
+                                onClick={openViewerAt}
                               >
-                                <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, idx)} role="menuitem">
-                                  Удалить изображение
-                                </div>
+                                {type === 'image' ? (
+                                  <img
+                                    src={attachmentUrl}
+                                    alt={name}
+                                    style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
+                                    onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}
+                                  />
+                                ) : type === 'video' ? (
+                                  <div style={{ width: '100%', height: 160, borderRadius: 8, overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                    <span>🎬 {name}</span>
+                                  </div>
+                                ) : type === 'audio' ? (
+                                  <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
+                                    <span>🎧 {name}</span>
+                                  </div>
+                                ) : (
+                                  <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
+                                    <span>📄 {name}</span>
+                                  </div>
+                                )}
+
+                                {type === 'image' && imageMenuId === attachmentKey && mine && (
+                                  <div
+                                    ref={imageMenuRef}
+                                    style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                                    role="menu"
+                                    aria-label="image menu"
+                                  >
+                                    <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, idx)} role="menuitem">
+                                      Удалить изображение
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ position: 'relative', display: 'inline-block' }}>
-                        <img
-                          src={file}
-                          alt="attachment"
-                          style={{ maxWidth: '200px', display: 'block', marginTop: 8, borderRadius: 6, cursor: 'pointer' }}
-                          onClick={() => setViewImageUrl([file])}
-                          onContextMenu={(e) => mine && onImageContextMenu(e, _id, 0, file)}
-                        />
-                        {imageMenuId === `${_id}-0` && mine && (
-                          <div
-                            ref={imageMenuRef}
-                            style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
-                            role="menu"
-                            aria-label="image menu"
-                          >
-                            <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, 0)} role="menuitem">
-                              Удалить изображение
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 )}
                 
@@ -671,10 +696,11 @@ useEffect(() => {
         />
       )}
 
-      {viewImageUrl && (
+      {viewMedia && (
         <ImageViewer
-          imageUrl={viewImageUrl}
-          onClose={() => setViewImageUrl(null)}
+          mediaUrls={viewMedia.urls}
+          startIndex={viewMedia.startIndex}
+          onClose={() => setViewMedia(null)}
         />
       )}
     </>

@@ -12,6 +12,17 @@ const UserPosts = ({posts}) => {
     document.title = `${posts.name} Posts > ichor.by`;
   });
 
+  const getExternalSource = (post) => {
+    const sourceUrl = post.externalSource && typeof post.externalSource === 'string'
+      ? post.externalSource
+      : post.externalSource?.url;
+    const sourceIcon = post.externalSource && typeof post.externalSource === 'object'
+      ? post.externalSource.icon
+      : null;
+    const sourceHref = sourceUrl ? (sourceUrl.startsWith('http') ? sourceUrl : `https://${sourceUrl}`) : null;
+    return { sourceUrl, sourceIcon, sourceHref };
+  };
+
   let uname = posts.id;
   const isAuthenticated = !!localStorage.getItem('token');
 
@@ -33,12 +44,26 @@ const UserPosts = ({posts}) => {
       </div>
     </div>
     <ul>
-      {data.postFeed.posts.map(post => (
-        <li key={post._id} className="mypost_li">
-        <Link  to={`/users/${uname}/post/${post._id}`}>
-          <h1>{post.title}</h1>
-        </Link>
-          <div className="css-plank-cat">
+      {data.postFeed.posts.map(post => {
+        const { sourceHref, sourceUrl, sourceIcon } = getExternalSource(post);
+        return (
+          <li key={post._id} className="mypost_li">
+            <Link to={`/users/${uname}/post/${post._id}`}>
+              <h1>{post.title}</h1>
+            </Link>
+            {sourceHref && (
+              <div className="list-external-source">
+                {sourceIcon ? (
+                  sourceIcon.startsWith('http') ? (
+                    <img src={sourceIcon} alt="source icon" />
+                  ) : (
+                    <span className="external-source-label">{sourceIcon}</span>
+                  )
+                ) : null}
+                <a href={sourceHref} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>{sourceUrl}</a>
+              </div>
+            )}
+            <div className="css-plank-cat">
           <Link  to={`/cats/${post.category._id}`}>
             {`${post.category.catname}`}
           </Link>
@@ -55,7 +80,8 @@ const UserPosts = ({posts}) => {
             </div>
           </div>
           </li>
-      ))}
+        );
+      })}
       </ul>
 
     {data.postFeed.hasNextPage && (

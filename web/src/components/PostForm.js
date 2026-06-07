@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import { GET_ME } from '../gql/query';
+import { getApiBase } from '../utils/api';
 import Button from './Button';
 
 const Wrapper = styled.div`
@@ -75,6 +76,7 @@ const PostForm = props => {
 
   const { data } = useQuery(GET_ME);
   const isAdmin = data?.me?.isAdmin;
+  const API_BASE = getApiBase();
   const adminOnlyCategoryIds = [
     '6251ef28413373118838bbdd',
     '6251f1532f7a51343c8ed7df',
@@ -117,52 +119,68 @@ const PostForm = props => {
   };
 
   const handleChangeFile = async (event) => {
-          const formData = new FormData();
-          const file = event.target.files[0];
-          formData.append('imageUrl', file);
-          const res = await fetch('https://api.ichor.by/upload', {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await res.json();
-          setImageUrl({ imageUrl: data.url });
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('imageUrl', file);
+
+    const res = await fetch(`${API_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+    setImageUrl({ imageUrl: data.url });
   }
 
   const handleChangeFile2 = async (event) => {
-          const formData2 = new FormData();
-          const file2 = event.target.files[0];
-          formData2.append('imageUrl2', file2);
-          const res2 = await fetch('https://api.ichor.by/upload2', {
-            method: 'POST',
-            body: formData2,
-          });
-          const data2 = await res2.json();
-          setImageUrl2({ imageUrl2: data2.url });
+    const file2 = event.target.files?.[0];
+    if (!file2) return;
+
+    const formData2 = new FormData();
+    formData2.append('imageUrl2', file2);
+
+    const res2 = await fetch(`${API_BASE}/upload2`, {
+      method: 'POST',
+      body: formData2,
+    });
+
+    const data2 = await res2.json();
+    setImageUrl2({ imageUrl2: data2.url });
   }
 
   const handleChangeFile3 = async (event) => {
+    const file3 = event.target.files?.[0];
+    if (!file3) return;
+
     const formData3 = new FormData();
-    const file3 = event.target.files[0];
     formData3.append('imageUrl3', file3);
-    const res3 = await fetch('https://api.ichor.by/upload3', {
+
+    const res3 = await fetch(`${API_BASE}/upload3`, {
       method: 'POST',
       body: formData3,
     });
+
     const data3 = await res3.json();
     setImageUrl3({ imageUrl3: data3.url });
-}
+  }
 
-const ihandleChangeFile = async (event) => {
-  const iformData = new FormData();
-  const ifile = event.target.files[0];
-  iformData.append('iconPost', ifile);
-  const ires = await fetch('https://api.ichor.by/upload4', {
-    method: 'POST',
-    body: iformData,
-  });
-  const idata = await ires.json();
-  setIconPost({ iconPost: idata.url });
-}
+  const ihandleChangeFile = async (event) => {
+    const ifile = event.target.files?.[0];
+    if (!ifile) return;
+
+    const iformData = new FormData();
+    iformData.append('iconPost', ifile);
+
+    const ires = await fetch(`${API_BASE}/upload4`, {
+      method: 'POST',
+      body: iformData,
+    });
+
+    const idata = await ires.json();
+    setIconPost({ iconPost: idata.url });
+  }
 
   return (
     <Wrapper>
@@ -209,7 +227,6 @@ const ihandleChangeFile = async (event) => {
               name="imageUrl"
               id="imageUrl"
               onChange={handleChangeFile}
-              value={value.props}
               />
 
             {imageUrl.imageUrl && (
@@ -314,7 +331,6 @@ const ihandleChangeFile = async (event) => {
               name="iconPost"
               id="iconPost"
               onChange={ihandleChangeFile}
-              value={value.props}
               />
 
             {iconPost.iconPost && (
@@ -380,7 +396,6 @@ const ihandleChangeFile = async (event) => {
               name="imageUrl2"
               id="imageUrl2"
               onChange={handleChangeFile2}
-              value={value.props}
               />
 
               {imageUrl2.imageUrl2 && (
@@ -424,7 +439,6 @@ const ihandleChangeFile = async (event) => {
               name="imageUrl3"
               id="imageUrl3"
               onChange={handleChangeFile3}
-              value={value.props}
               />
 
               {imageUrl3.imageUrl3 && (

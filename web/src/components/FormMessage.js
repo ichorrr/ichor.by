@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getApiBase } from '../utils/api';
 
 const EMOJIS = [
   { emoji: '😊', label: 'Happy' },
@@ -42,7 +43,7 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const API_BASE = process.env.API_URI.replace('/graphql', '');
+    const API_BASE = getApiBase();
 
     const handleSend = async () => {
         const text = (message || '').trim();
@@ -84,6 +85,17 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
         }
     };
 
+    const getFileKind = (file) => {
+        if (!file) return 'file';
+        if (file.type.startsWith('image/')) return 'image';
+        if (file.type.startsWith('video/')) return 'video';
+        if (file.type.startsWith('audio/')) return 'audio';
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        if (['mp4', 'webm', 'ogg', 'mov', 'avi', 'mkv'].includes(ext)) return 'video';
+        if (['mp3', 'wav', 'ogg', 'm4a', 'aac'].includes(ext)) return 'audio';
+        return 'file';
+    };
+
     const handleFileChange = (e) => {
         const newFiles = e.target.files ? Array.from(e.target.files) : [];
         
@@ -92,7 +104,7 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
         
         // Check total number of files
         if (files.length + newFiles.length > MAX_FILES) {
-            setError(`Maximum ${MAX_FILES} images allowed. You have ${files.length} already.`);
+            setError(`Maximum ${MAX_FILES} files allowed. You have ${files.length} already.`);
             return;
         }
         
@@ -193,43 +205,69 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
             {/* Image previews */}
             {previews.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                    {previews.map((preview, idx) => (
-                        <div key={idx} style={{ position: 'relative' }}>
-                            <img
-                                src={preview}
-                                alt={`preview-${idx}`}
-                                style={{
-                                    width: 56,
-                                    height: 56,
-                                    objectFit: 'cover',
-                                    borderRadius: 6
-                                }}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => removeFile(idx)}
-                                style={{
-                                    position: 'absolute',
-                                    top: -6,
-                                    right: -6,
-                                    background: '#d32f2f',
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: 20,
-                                    height: 20,
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '12px'
-                                }}
-                                title="Remove image"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ))}
+                    {previews.map((preview, idx) => {
+                        const file = files[idx];
+                        const kind = getFileKind(file);
+                        return (
+                            <div key={idx} style={{ position: 'relative', width: 120, minWidth: 120, borderRadius: 10, overflow: 'hidden', background: '#fbfbfb', border: '1px solid #e6e6e6' }}>
+                                {kind === 'image' ? (
+                                    <img
+                                        src={preview}
+                                        alt={`preview-${idx}`}
+                                        style={{
+                                            width: '100%',
+                                            height: 100,
+                                            objectFit: 'cover',
+                                        }}
+                                    />
+                                ) : kind === 'video' ? (
+                                    <div style={{ width: '100%', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
+                                        <span style={{ color: '#fff', fontSize: 14 }}>
+                                            🎬 Video
+                                        </span>
+                                    </div>
+                                ) : kind === 'audio' ? (
+                                    <div style={{ width: '100%', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+                                        <span style={{ color: '#444', fontSize: 14 }}>
+                                            🎧 Audio
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <div style={{ width: '100%', height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+                                        <span style={{ color: '#444', fontSize: 14 }}>
+                                            📄 File
+                                        </span>
+                                    </div>
+                                )}
+                                <div style={{ padding: 8, fontSize: 11, color: '#333', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {file.name}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => removeFile(idx)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: 6,
+                                        right: 6,
+                                        background: '#d32f2f',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        width: 20,
+                                        height: 20,
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '12px'
+                                    }}
+                                    title="Remove file"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
@@ -237,13 +275,13 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
                 <label style={{ cursor: 'pointer' }}>
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,audio/*,video/*"
                         multiple
                         style={{ display: 'none' }}
                         onChange={handleFileChange}
                     />
                     <span style={{ padding: '6px 10px', border: '1px solid #ddd', borderRadius: 6, cursor: 'pointer' }}>
-                        📎 Attach
+                        📎 Attach files
                     </span>
                 </label>
 

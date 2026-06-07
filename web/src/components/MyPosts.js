@@ -10,6 +10,17 @@ const MyPosts = ({ posts, userName }) => {
 
   const isAuthenticated = !!localStorage.getItem('token');
 
+  const getExternalSource = (post) => {
+    const sourceUrl = post.externalSource && typeof post.externalSource === 'string'
+      ? post.externalSource
+      : post.externalSource?.url;
+    const sourceIcon = post.externalSource && typeof post.externalSource === 'object'
+      ? post.externalSource.icon
+      : null;
+    const sourceHref = sourceUrl ? (sourceUrl.startsWith('http') ? sourceUrl : `https://${sourceUrl}`) : null;
+    return { sourceUrl, sourceIcon, sourceHref };
+  };
+
   return (
     <div className="cats_block">
       <div className="all-post-block">
@@ -32,11 +43,27 @@ const MyPosts = ({ posts, userName }) => {
                 <Link to={`/posts/${post._id}`}>
                   <h1>{post.title}</h1>
                 </Link>
+                {(() => {
+                  const { sourceHref, sourceUrl, sourceIcon } = getExternalSource(post);
+                  if (!sourceHref) return null;
+                  return (
+                    <div className="list-external-source">
+                      {sourceIcon ? (
+                        sourceIcon.startsWith('http') ? (
+                          <img src={sourceIcon} alt="source icon" />
+                        ) : (
+                          <span className="external-source-label">{sourceIcon}</span>
+                        )
+                      ) : null}
+                      <a href={sourceHref} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>{sourceUrl}</a>
+                    </div>
+                  );
+                })()}
                 <div className="css-plank-cat">
                   <Link to={`/cats/${post.category._id}`}>{post.category.catname}</Link>
                   <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                   <span>👁️ {post.viewsCount}</span>
-                  <span>{`Комментариев ${post.commentCount || 0}`}</span>
+                  <span className='icomments'> {post.commentCount || 0}</span>
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
                     <LikeDislike
                       targetId={post._id}

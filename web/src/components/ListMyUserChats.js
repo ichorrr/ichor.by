@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
 import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
 import UnreadBadge from './UnreadBadge';
+import { getApiBase } from '../utils/api';
 
 const styles = {
     container: {
@@ -181,7 +182,7 @@ const ListMyUserChats = () => {
     const { id: activeUserId } = useParams(); // Get current active chat user ID from URL
 
     
-    const API_BASE = process.env.API_URI.replace('/graphql', '');
+    const API_BASE = getApiBase();
 
     const { loading: loadingMessages, error: errorMessages, data: dataMessages, refetch } = useQuery(GET_MY_LIST_USERS_CHATS, {
         fetchPolicy: 'network-only',
@@ -336,9 +337,9 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                     const unreadCountValue = unreadCount || lastMessage?.unreadCount || 0;
 
                 return (
-                     <a
+                     <Link
                             key={_id}
-                            href={`/chat/${_id}`}
+                            to={`/chat/${_id}`}
                             style={activeUserId === _id ? { ...styles.chatItem, ...styles.chatItemActive } : styles.chatItem}
                             onContextMenu={(e) => handleContextMenu(e, _id)}
                         >
@@ -360,7 +361,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                                     <div style={styles.visitInfo}>{formatLastVisit(lastVisit)}</div>
                                 ) : null}
                             </div>
-                        </a>
+                        </Link>
                 );
                 })
             )}
