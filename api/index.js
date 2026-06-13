@@ -1318,10 +1318,8 @@ app.post('/uploadavatar', uploadAvatar.single('avatar'), (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
-    const host = req.get('host');
-    const protocol = req.protocol;
     const filename = encodeURIComponent(req.file.filename);
-    const avatarUrl = `${protocol}://${host}/avatars/${filename}`;
+    const avatarUrl = `https://api.ichor.by/avatars/${filename}`;
     
     console.log(`Avatar upload for user ${user.id}: ${filename}`);
     res.json({ url: avatarUrl });
@@ -1333,11 +1331,10 @@ app.post('/uploadavatar', uploadAvatar.single('avatar'), (req, res) => {
 
 app.post('/uploadmessage', uploadMessage.single('file'), (req, res) => {
   // return URL that matches the static route for message images
-  const host = req.get('host');
-  const protocol = req.protocol;
+
   const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `${protocol}://${host}/imgmessages/${filename}`,
+    url: `https://api.ichor.by/imgmessages/${filename}`,
   });
   console.log('uploaded message file', req.file);
 });
@@ -1345,7 +1342,7 @@ app.post('/uploadmessage', uploadMessage.single('file'), (req, res) => {
 app.post('/upload', upload.single('imageUrl'), (req, res) => {
   const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `${req.protocol}://${req.get('host')}/uploads/${filename}`,
+    url: `https://api.ichor.by/uploads/${filename}`,
   });
   console.log(req.file);
 });
@@ -1353,7 +1350,7 @@ app.post('/upload', upload.single('imageUrl'), (req, res) => {
 app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
   const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+    url: `https://api.ichor.by/imgposts/${filename}`,
   });
   console.log(req.file);
 });
@@ -1361,7 +1358,7 @@ app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
 app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
   const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+    url: `https://api.ichor.by/imgposts/${filename}`,
   });
   console.log(req.file);
 });
@@ -1369,7 +1366,7 @@ app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
 app.post('/upload4', upload4.single('iconPost'), (req, res) => {
   const filename = encodeURIComponent(req.file.filename || req.file.originalname);
   res.json({
-    url: `${req.protocol}://${req.get('host')}/imgposts/${filename}`,
+    url: `https://api.ichor.by/imgposts/${filename}`,
   });
   console.log(req.file);
 });

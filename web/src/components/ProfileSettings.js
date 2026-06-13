@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useApolloClient } from '@apollo/client';
 import { gql } from '@apollo/client';
+import { getApiBase } from '../utils/api';
 import '../css/ProfileSettings.css';
 
 const GET_CURRENT_USER = gql`
@@ -148,7 +149,7 @@ const ProfileSettings = () => {
             formData.append('avatar', file);
 
             const token = localStorage.getItem('token') || '';
-            const response = await fetch('http://localhost:4000/uploadavatar', {
+            const response = await fetch(`${getApiBase()}/uploadavatar`, {
                 method: 'POST',
                 headers: {
                     'Authorization': token,
