@@ -41,7 +41,7 @@ code {
 /* Modal component */
 
 .modal {
-  z-index: 99999999999999999999999999;
+  z-index: 9999999999999999999999999999999999;
   height: 100vh;
   width: 100vw;
   background-color: rgba(0, 0, 0, 0.6);
@@ -56,6 +56,7 @@ code {
 }
 
 .modal.active {
+    z-index: 9999999999999999999999999999999999;
   opacity: 1;
   pointer-events: all;
 }

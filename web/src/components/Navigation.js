@@ -49,7 +49,12 @@ const logout = () => {
 
 const { data, loading, error } = useQuery(GET_ME);
 if (loading) return <p>Загрузка...</p>;
+if (error) {
+  console.error('Error fetching user data:', error);
+  return <p>Ошибка при загрузке данных пользователя.</p>;
+}
 
+console.log('Navigation data:', data);
 return (
     <div id="ahead">
     <div className="top_head">

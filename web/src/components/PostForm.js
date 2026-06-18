@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import { GET_ME } from '../gql/query';
-import { getApiBase } from '../utils/api';
+import { getUploadBase } from '../utils/api';
 import Button from './Button';
 
 const Wrapper = styled.div`
@@ -76,7 +76,6 @@ const PostForm = props => {
 
   const { data } = useQuery(GET_ME);
   const isAdmin = data?.me?.isAdmin;
-  const API_BASE = getApiBase();
   const adminOnlyCategoryIds = [
     '6251ef28413373118838bbdd',
     '6251f1532f7a51343c8ed7df',
@@ -125,7 +124,7 @@ const PostForm = props => {
     const formData = new FormData();
     formData.append('imageUrl', file);
 
-    const res = await fetch(`${API_BASE}/upload`, {
+    const res = await fetch(`${getUploadBase()}/upload`, {
       method: 'POST',
       body: formData,
     });
@@ -141,7 +140,7 @@ const PostForm = props => {
     const formData2 = new FormData();
     formData2.append('imageUrl2', file2);
 
-    const res2 = await fetch(`${API_BASE}/upload2`, {
+    const res2 = await fetch(`${getUploadBase()}/upload2`, {
       method: 'POST',
       body: formData2,
     });
@@ -157,7 +156,7 @@ const PostForm = props => {
     const formData3 = new FormData();
     formData3.append('imageUrl3', file3);
 
-    const res3 = await fetch(`${API_BASE}/upload3`, {
+    const res3 = await fetch(`${getUploadBase()}/upload3`, {
       method: 'POST',
       body: formData3,
     });
@@ -173,7 +172,7 @@ const PostForm = props => {
     const iformData = new FormData();
     iformData.append('iconPost', ifile);
 
-    const ires = await fetch(`${API_BASE}/upload4`, {
+    const ires = await fetch(`${getUploadBase()}/upload4`, {
       method: 'POST',
       body: iformData,
     });

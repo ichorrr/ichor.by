@@ -10,26 +10,51 @@ const DeletePost = props => {
   const navigate = useNavigate();
   const [modal, setModal] = useState(false); 
 
-  const [deletePost] = useMutation(DELETE_POST, {
-    variables: {
-      id: props.postId
-    },
-    refetchQueries: [{query: GET_NOTES}, {query: GET_MY_POST}, {query: GET_CATS} ],
-    onCompleted: data => {
+  const [deletePostMutation] = useMutation(DELETE_POST, {
+    refetchQueries: [{query: GET_NOTES}, {query: GET_MY_POST}, {query: GET_CATS}],
+    awaitRefetchQueries: true,
+    onCompleted: () => {
       navigate('/myposts');
+    },
+    onError: mutationError => {
+      console.error('Delete post error:', mutationError);
+      alert('Ошибка при удалении записи: ' + mutationError.message);
     }
   });
 
+  const handleDelete = async () => {
+    await deletePostMutation({
+      variables: {
+        id: props.postId
+      }
+    });
+  };
+
   return (
     <>
-  
-  <Link onClick={() => setModal(true)} className="css-delete">Удалить запись</Link>
-    <Modal act={modal} setAct={setModal} >
-      <div className='tert'>
-        <p>Вы точно уверены, что хотите <Link onClick={deletePost} >удалить</Link> запись?</p>
-      </div>
-    </Modal>
-</>)
+      <Link
+        onClick={e => {
+          e.preventDefault();
+          e.stopPropagation();
+          setModal(true);
+        }}
+        className="css-delete"
+      >
+        Удалить запись
+      </Link>
+      <Modal act={modal} setAct={setModal} >
+        <div className='tert'>
+          <p>
+            Вы точно уверены, что хотите{' '}
+            <button type="button" onClick={handleDelete} className="css-delete">
+              удалить
+            </button>{' '}
+            запись?
+          </p>
+        </div>
+      </Modal>
+    </>
+  )
 };
 
 export default DeletePost;

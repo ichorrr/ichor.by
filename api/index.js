@@ -3,6 +3,7 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { GraphQLError } from 'graphql';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import cors from 'cors';
 import http from 'http';
 import path from 'path';
@@ -12,14 +13,21 @@ import depthLimit from 'graphql-depth-limit';
 import { createComplexityLimitRule } from 'graphql-validation-complexity';
 import { GraphQLScalarType, Kind } from 'graphql';
 import models from './models/index.js';
-import 'dotenv/config'
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import helmet from 'helmet';
 import multer from 'multer';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import mongoose from 'mongoose';
 import { update } from 'tar';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+process.chdir(__dirname);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const dateScalar = new GraphQLScalarType({
     name: 'Date',
@@ -380,55 +388,49 @@ const resolvers = {
       },
   
       deletePost: async (parent, { _id }, { models, user }) => {
-        
         // if not a user, throw an Authentication Error
         if (!user) {
-          throw new GraphQLError('You must be signed in to delete a note', { extensions: { code: 'UNAUTHENTICATED' } });
+          throw new GraphQLError('You must be signed in to delete a post', { extensions: { code: 'UNAUTHENTICATED' } });
         }
   
-        // find the note
-        const note = await models.Post.findById(_id);
-        
-        // if the note owner and current user don't match, throw a forbidden error
-        if (note && String(note.author) !== user.id) {
-
-          throw new GraphQLError("You don't have permissions to delete the note", {
+        // find the post
+        const post = await models.Post.findById(_id);
+        if (!post) {
+          throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+  
+        // if the post owner and current user don't match, throw a forbidden error
+        if (String(post.author) !== user.id) {
+          throw new GraphQLError("You don't have permissions to delete the post", {
             extensions: {
               code: 'FORBIDDEN',
-              myExtension: "foo",
             },
           });
         }
   
         try {
-          // if everything checks out, remove the note
-          
-          if (note.imageUrl) {
-            var name = note.imageUrl.split("/").pop();
-            var pth = "./uploads/" + name;
-            fs.unlinkSync(pth, 'Content_For_Writing');
-          }
-          if (note.imageUrl2) {
-          var name2 = note.imageUrl2.split("/").pop();
-          var pth2 = "./imgposts/" + name2;
-          fs.unlinkSync(pth2, 'Content_For_Writing');
-          }
-          if (note.imageUrl3) {
-          var name3 = note.imageUrl3.split("/").pop();
-          var pth3 = "./imgposts/" + name3;
-          fs.unlinkSync(pth3, 'Content_For_Writing');
-          }
-          if (note.iconPost) {
-            var iname = note.iconPost.split("/").pop();
-            var ipth = "./imgposts/" + iname;
-            fs.unlinkSync(ipth, 'Content_For_Writing');
+          // remove related uploaded files safely
+          const deleteFile = (url, uploadDir) => {
+            if (!url) return;
+            const filename = String(url).split('/').pop();
+            if (!filename) return;
+            const filePath = path.join(process.cwd(), uploadDir, filename);
+            if (fs.existsSync(filePath)) {
+              fs.unlinkSync(filePath);
             }
+          };
   
-          await note.deleteOne();
+          deleteFile(post.imageUrl, 'uploads');
+          deleteFile(post.imageUrl2, 'imgposts');
+          deleteFile(post.imageUrl3, 'imgposts');
+          deleteFile(post.iconPost, 'imgposts');
+  
+          await models.Comment.deleteMany({ post: post._id });
+          await post.deleteOne();
           return true;
         } catch (err) {
-          // if there's an error along the way, return false
-          return false;
+          console.error('deletePost error:', err);
+          throw new GraphQLError('Error deleting post', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
         }
       },
 
@@ -1192,7 +1194,12 @@ app.use(helmet({
 }));
 // CORS middleware
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 204,
+}));
 
 app.use(express.json());
 
@@ -1371,7 +1378,7 @@ app.post('/upload4', upload4.single('iconPost'), (req, res) => {
   console.log(req.file);
 });
 
-app.use(express.static("/"));
+// app.use(express.static("/"));
 
 // app.get("*", (req, res) => {
 //   res.sendFile(path.join(__dirname, "/", "index.html"));
@@ -1393,7 +1400,10 @@ app.use(express.static("/"));
     typeDefs,
     resolvers,
     validationRules: [depthLimit(5), createComplexityLimitRule(1000)],
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+    ],
   });
   
   await server.start();
@@ -1404,17 +1414,25 @@ app.use(express.static("/"));
     '/graphql',
     expressMiddleware(server, {
       context: async ({ req }) => {
-        // get the user token from the headers
         const token = req.headers.authorization || '';
-        // try to retrieve a user with the token
         const user = getUser(token);
-    
-        console.log(user);
- 
         return { models, user };
       },
     }),
   );
 
-  await new Promise((resolve) => httpServer.listen(PORT, resolve));
-  console.log(`🚀 Server ready at http://api.ichor.by/graphql on port ${PORT}`);
+  const clientBuildPath = path.resolve(__dirname, '../web/dist');
+  if (fs.existsSync(clientBuildPath)) {
+    app.use(express.static(clientBuildPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+  }
+
+  await new Promise((resolve, reject) => {
+    httpServer.listen(PORT, (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+  console.log(`🚀 Server ready at http://0.0.0.0:${PORT}/graphql`);

@@ -6,7 +6,6 @@ import FormMessage from './FormMessage';
 import InfoUserChat from './InfoUserChat';
 import ImageViewer from './ImageViewer';
 import LikeDislike from './LikeDislike';
-import { getApiBase } from '../utils/api';
 
 const styles = {
   deleteButton: {
@@ -186,8 +185,6 @@ const Messages = props => {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [chatMenuId, setChatMenuId] = useState(null);
   const chatMenuRef = useRef(null);
-
-  const API_BASE = getApiBase();
 
   // Image viewer state
   const [viewMedia, setViewMedia] = useState(null);
@@ -474,7 +471,7 @@ useEffect(() => {
               </Link>
               </li>
               <li>
-                <img src={chatUserData?.avatar || `${API_BASE}/avatars/default-avatar.png`} alt={chatUserData?.name} className='avatar-chat' />
+                <img src={chatUserData?.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={chatUserData?.name} className='avatar-chat' />
               </li>
               <li>
                 <h2>{props.nameChatId}</h2>

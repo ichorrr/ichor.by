@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getApiBase } from '../utils/api';
+import { getUploadBase } from '../utils/api';
 
 const EMOJIS = [
   { emoji: '😊', label: 'Happy' },
@@ -43,8 +43,6 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const API_BASE = getApiBase();
-
     const handleSend = async () => {
         const text = (message || '').trim();
         if (!text && files.length === 0) return;
@@ -59,7 +57,7 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
                 for (const file of files) {
                     const form = new FormData();
                     form.append('file', file);
-                    const res = await fetch(`${API_BASE}/uploadmessage`, {
+                    const res = await fetch(`${getUploadBase()}/uploadmessage`, {
                         method: 'POST',
                         body: form
                     });

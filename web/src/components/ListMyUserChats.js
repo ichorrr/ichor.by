@@ -4,7 +4,6 @@ import { useParams, Link } from 'react-router-dom';
 import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
 import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
 import UnreadBadge from './UnreadBadge';
-import { getApiBase } from '../utils/api';
 
 const styles = {
     container: {
@@ -181,9 +180,6 @@ const ListMyUserChats = () => {
     const [contextMenuUserId, setContextMenuUserId] = useState(null);
     const { id: activeUserId } = useParams(); // Get current active chat user ID from URL
 
-    
-    const API_BASE = getApiBase();
-
     const { loading: loadingMessages, error: errorMessages, data: dataMessages, refetch } = useQuery(GET_MY_LIST_USERS_CHATS, {
         fetchPolicy: 'network-only',
     });
@@ -313,7 +309,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                       const subtitle = user.email || user.telephone || '';
                       return (
                         <a key={id} href={`/chat/${id}`} style={styles.chatItem}>
-                          <img src={user.avatar || `${API_BASE}/avatars/default-avatar.png`} alt={user.name} style={styles.avatar} />
+                          <img src={user.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={user.name} style={styles.avatar} />
                           <div style={styles.chatInfo}>
                               <div style={styles.name}>{user.name}</div>
                               <div style={{ ...styles.lastMessagePreview, fontSize: 13, color: '#888' }}>{subtitle}</div>
@@ -344,7 +340,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                             onContextMenu={(e) => handleContextMenu(e, _id)}
                         >
                             <img
-                                src={avatar || `${API_BASE}/avatars/default-avatar.png`}
+                                src={avatar || `https://api.ichor.by/avatars/default-avatar.png`}
                                 alt={name}
                                 style={styles.avatar}
                             />
