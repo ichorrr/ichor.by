@@ -6,16 +6,12 @@ import CatsPage from '../pages/cats';
 import UnreadMessagesIndicator from './UnreadMessagesIndicator';
 
 
- const tkn = {
-   isLoggedIn: !!localStorage.getItem('token')
- };
-
- 
 const Navigation = () => {
 const navigate = useNavigate();
 const [isAct, setAct] = useState(false);
 const [isMenuOpen, setIsMenuOpen] = useState(false);
 const rootEl = useRef(null);
+const isLoggedIn = !!localStorage.getItem('token');
 
   // close popup when clicking outside
   useEffect(() => {
@@ -47,9 +43,9 @@ const logout = () => {
   window.location.replace('/');
 };
 
-const { data, loading, error } = useQuery(GET_ME);
-if (loading) return <p>Загрузка...</p>;
-if (error) {
+const { data, loading, error } = useQuery(GET_ME, { skip: !isLoggedIn });
+if (isLoggedIn && loading) return <p>Загрузка...</p>;
+if (isLoggedIn && error) {
   console.error('Error fetching user data:', error);
   return <p>Ошибка при загрузке данных пользователя.</p>;
 }
@@ -78,7 +74,7 @@ return (
 
                 })}>О себе</NavLink>
           </li>
-          {tkn.isLoggedIn && (
+          {isLoggedIn && (
             <>
             <li>
               <NavLink to="/myposts" style={({ isActive }) => ({
@@ -100,7 +96,7 @@ return (
               </ul>
               </span>
           </li>
-           {tkn.isLoggedIn ? (
+           {isLoggedIn ? (
            <>
                     <li className="log-out" ref={rootEl}  onClick={() => { setIsMenuOpen(!isMenuOpen); }} style={{ background: isMenuOpen ? '#159dc3' : 'transparent', border: isMenuOpen ? 'none' : '' }} >
                            <div className="user-info">
@@ -153,7 +149,7 @@ return (
                     <ul className={`dropdown-content ${isAct ? "show" : "hide"}`} id="nav">
                         <li onClick={handleToggle}><NavLink to="/about" title="О проекте"
                         style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >О себе</NavLink></li>
-                        {tkn.isLoggedIn && (
+                        {isLoggedIn && (
                           <>
                         <li onClick={handleToggle}><NavLink to="/myposts" title="Мои публикации"
                         style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Мои записи</NavLink></li>
@@ -165,7 +161,7 @@ return (
                               <CatsPage />
                           </ul>
                         </li>
-                        {tkn.isLoggedIn ? (
+                        {isLoggedIn ? (
                         <li className="log-out-mb"
                         onClick={event => {
                           event.preventDefault();
