@@ -7,88 +7,6 @@ import InfoUserChat from './InfoUserChat';
 import ImageViewer from './ImageViewer';
 import LikeDislike from './LikeDislike';
 
-const styles = {
-  deleteButton: {
-    marginLeft: 8,
-    background: 'transparent',
-    border: '1px solid rgba(211,47,47,0.12)',
-    color: '#d32f2f',
-    cursor: 'pointer',
-    fontSize: 12,
-    padding: '6px 10px',
-    borderRadius: 6,
-    transition: 'background 0.12s, transform 0.06s',
-  },
-  deleteButtonHover: {
-    background: 'rgba(211,47,47,0.06)',
-    transform: 'translateY(-1px)'
-  },
-  menuButton: {
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 18,
-    padding: '4px 8px',
-    color: '#666'
-  },
-
-  menuButtonHover: {
-    background: 'rgba(0,0,0,0.04)',
-    color: '#d41313'
-  },
-
-  menuContainer: {
-    position: 'absolute',
-    background: '#fff',
-    border: '1px solid rgba(0,0,0,0.08)',
-    borderRadius: 8,
-    boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
-    zIndex: 50,
-    minWidth: 140,
-    overflow: 'hidden'
-  },
-  menuItem: {
-    padding: '8px 12px',
-    cursor: 'pointer',
-    fontSize: 13,
-    color: '#222',
-    borderBottom: '1px solid rgba(0,0,0,0.03)',
-    background: 'transparent'
-  },
-  menuItemDanger: {
-    color: '#d32f2f'
-  },
-  editInput: {
-    width: '100%',
-    padding: '8px',
-    borderRadius: 6,
-    border: '1px solid #e5e7eb',
-    fontSize: 14,
-    boxSizing: 'border-box'
-  },
-  editActions: {
-    display: 'flex',
-    gap: 8,
-    marginTop: 8,
-  },
-  saveBtn: {
-    background: '#1890ff',
-    color: '#fff',
-    border: 'none',
-    padding: '6px 10px',
-    borderRadius: 6,
-    cursor: 'pointer'
-  },
-  cancelBtn: {
-    background: 'transparent',
-    color: '#666',
-    border: '1px solid rgba(0,0,0,0.08)',
-    padding: '6px 10px',
-    borderRadius: 6,
-    cursor: 'pointer'
-  }
-};
-
 const getFileAttachments = (file) => {
   if (!file) return [];
   return file.split('|').filter(Boolean);
@@ -155,6 +73,178 @@ const CLEAR_CHAT = gql`
   }
 `;
 
+
+const MessageBubble = ({ message, mine, props, contextMenuId, setContextMenuPos, setContextMenuId, openMenuId, menuPos, setOpenMenuId, menuRef, openMenuNearButton, startEdit, saveEdit, cancelEdit, editingMessageId, editText, setEditText, onDelete, copyMessage, onImageContextMenu, imageMenuId, imageMenuPos, imageMenuRef, setViewMedia, onDeleteImage, contextMenuPos, contextMenuRef, likesCount, dislikesCount, userLike }) => {
+  const { _id, text, file, read, createdAt, author } = message;
+
+  return (
+    <div
+      key={_id}
+      id={_id}
+      className={`message-block ${mine ? 'mine' : 'their'}`}
+      style={{ position: 'relative' }}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const left = e.clientX;
+        const top = e.clientY;
+        setContextMenuPos({ left, top });
+        setContextMenuId(_id);
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span className='author-message'>{author?.name ?? 'Unknown'}</span>
+        <span style={{ color: '#888', fontSize: 12 }}>{createdAt ? new Date(createdAt).toLocaleString() : ''}</span>
+        {mine && typeof read === 'boolean' && (
+          <span style={{ marginLeft: 6, color: read ? '#4caf50' : '#999', fontSize: 12 }} title={read ? 'Read' : 'Unread'}>
+            {read ? '✓' : '⌛'}
+          </span>
+        )}
+
+        {author?._id === props.myId && (
+          <div style={{ marginLeft: 'auto', marginTop: '-.5em' }}>
+            <button
+              title="Message menu"
+              className="lc-messages-menu-button"
+              onClick={(e) => { e.stopPropagation(); openMenuNearButton(e, _id); }}
+            >
+              ⋯
+            </button>
+
+            {openMenuId === _id && (
+              <div
+                ref={menuRef}
+                className="lc-messages-menu-container"
+                style={{ right: '2em', top: `${menuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                role="menu"
+                aria-label="message menu"
+              >
+                <div className="lc-messages-menu-item" onClick={() => startEdit({ _id, text })} role="menuitem">Edit</div>
+                <div className="lc-messages-menu-item lc-messages-menu-item-danger" onClick={() => onDelete(_id)} role="menuitem">Delete</div>
+                <div className="lc-messages-menu-item" onClick={() => setOpenMenuId(null)} role="menuitem">Cancel</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {editingMessageId === _id ? (
+        <div style={{ marginTop: 8 }}>
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            className="lc-messages-edit-input"
+            rows={3}
+          />
+          <div className="lc-messages-edit-actions">
+            <button className="lc-messages-save-btn" onClick={saveEdit}>Save</button>
+            <button className="lc-messages-cancel-btn" onClick={cancelEdit}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ marginTop: 8 }}>
+          {text && <p>{text}</p>}
+          {file && (
+            <div style={{ marginTop: 12 }}>
+              {(() => {
+                const attachments = getFileAttachments(file);
+                return (
+                  <div className="message-attachments">
+                    {attachments.map((attachmentUrl, idx) => {
+                      const type = getAttachmentType(attachmentUrl);
+                      const name = getAttachmentName(attachmentUrl);
+                      const openViewerAt = () => setViewMedia({ urls: attachments, startIndex: idx });
+                      const attachmentKey = `${_id}-${idx}`;
+
+                      return (
+                        <div
+                          key={attachmentKey}
+                          className="message-attachment"
+                          style={{ position: 'relative', minWidth: 120, maxWidth: 240, cursor: 'pointer' }}
+                          onClick={openViewerAt}
+                        >
+                          {type === 'image' ? (
+                            <img
+                              src={attachmentUrl}
+                              alt={name}
+                              style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
+                              onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}
+                            />
+                          ) : type === 'video' ? (
+                            <div style={{ width: '100%', height: 160, borderRadius: 8, overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                              <span>🎬 {name}</span>
+                            </div>
+                          ) : type === 'audio' ? (
+                            <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
+                              <span>🎧 {name}</span>
+                            </div>
+                          ) : (
+                            <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
+                              <span>📄 {name}</span>
+                            </div>
+                          )}
+
+                          {type === 'image' && imageMenuId === attachmentKey && mine && (
+                            <div
+                              ref={imageMenuRef}
+                              className="lc-messages-menu-container"
+                              style={{ left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+                              role="menu"
+                              aria-label="image menu"
+                            >
+                              <div className="lc-messages-menu-item lc-messages-menu-item-danger" onClick={() => onDeleteImage(_id, idx)} role="menuitem">
+                                Удалить изображение
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {contextMenuId === _id && (
+            <div
+              ref={contextMenuRef}
+              className="lc-messages-menu-container"
+              style={{ left: `${contextMenuPos.left}px`, top: `${contextMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
+              role="menu"
+              aria-label="context menu"
+            >
+              <div className="lc-messages-menu-item" onClick={() => copyMessage(text)} role="menuitem">
+                Скопировать сообщение
+              </div>
+              {mine && (
+                <>
+                  <div className="lc-messages-menu-item" onClick={() => { setContextMenuId(null); startEdit({ _id, text }); }} role="menuitem">
+                    Edit
+                  </div>
+                  <div className="lc-messages-menu-item lc-messages-menu-item-danger" onClick={() => { setContextMenuId(null); onDelete(_id); }} role="menuitem">
+                    Delete
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div style={{ marginTop: 12 }}>
+            <LikeDislike
+              targetId={_id}
+              type="message"
+              initialLikes={likesCount}
+              initialDislikes={dislikesCount}
+              initialUserLike={userLike}
+              isAuthenticated={!!props.myId}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Messages = props => {
   const navigate = useNavigate();
@@ -463,12 +553,20 @@ useEffect(() => {
     <>
       <div className='head-chat-name'> 
             <ul style={{alignItems: 'center', display: 'inline', float: 'left', width: '100%'}}>
-              <li style={{ transform: 'translateY(25%)' }}>
-                <Link to='/myposts'  className="css-back-chat">
-                <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
-                  <path className="xcls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
-                </svg>
-              </Link>
+              <li>
+                {props.onBack ? (
+                  <button type="button" className="css-back-chat" onClick={props.onBack} style={{ background: 'transparent', border: 'none', padding: 0 }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
+                      <path className="xcls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
+                    </svg>
+                  </button>
+                ) : (
+                  <Link to='/myposts' className="css-back-chat">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
+                      <path className="xcls-2" d="M31.96,29.476l-2.594,2.347-6.052-5.476L17.619,31.5l-2.594-2.347L20.72,24l-5.694-5.152L17.619,16.5l5.694,5.152,6.052-5.476,2.594,2.347L25.908,24Z"/>
+                    </svg>
+                  </Link>
+                )}
               </li>
               <li>
                 <img src={chatUserData?.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={chatUserData?.name} className='avatar-chat' />
@@ -483,7 +581,7 @@ useEffect(() => {
               <li className='rButMenu'>
                 <button
                   title="Chat menu"
-                  style={styles.menuButton}
+                  className="lc-messages-menu-button"
                   onClick={openChatMenu}
                 >
                   ⋯
@@ -492,14 +590,15 @@ useEffect(() => {
                 {chatMenuId && (
                   <div
                     ref={chatMenuRef}
-                    style={{ ...styles.menuContainer, position: 'absolute', right: 0, top: '100%', marginTop: 6, zIndex: 100 }}
+                    className="lc-messages-menu-container"
+                    style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, zIndex: 100 }}
                     role="menu"
                     aria-label="chat menu"
                   >
-                    <div style={styles.menuItem} onClick={() => { setShowInfoPanel(true); setChatMenuId(null); }} role="menuitem">
+                    <div className="lc-messages-menu-item" onClick={() => { setShowInfoPanel(true); setChatMenuId(null); }} role="menuitem">
                       Информация о собеседнике
                     </div>
-                    <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={onClearChat} role="menuitem">
+                    <div className="lc-messages-menu-item lc-messages-menu-item-danger" onClick={onClearChat} role="menuitem">
                       Очистить чат
                     </div>
                   </div>
@@ -507,185 +606,52 @@ useEffect(() => {
               </li>
               </ul>
           </div>
+        
       <div className='messages-block'>
         
           <div className='all-messages-block'>
-            {messages.map(({ _id, text, file, read, createdAt, author, likesCount = 0, dislikesCount = 0, userLike = null }) => {
-              const mine = author?._id === props.myId;
+            {messages.map((message) => {
+              const mine = message.author?._id === props.myId;
               return (
-              <div
-                key={_id}
-                id={_id}
-                className={`message-block ${mine ? 'mine' : 'their'}`}
-                style={{ position: 'relative' }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const left = e.clientX;
-                  const top = e.clientY;
-                  setContextMenuPos({ left, top });
-                  setContextMenuId(_id);
-                }}
-              >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className='author-message'>{author?.name ?? 'Unknown'}</span>
-              <span style={{ color: '#888', fontSize: 12 }}>{createdAt ? new Date(createdAt).toLocaleString() : ''}</span>
-              {mine && typeof read === 'boolean' && (
-                <span style={{ marginLeft: 6, color: read ? '#4caf50' : '#999', fontSize: 12 }} title={read ? 'Read' : 'Unread'}>
-                  {read ? '✓' : '⌛'}
-                </span>
-              )}
-
-              {author?._id === props.myId && (
-                <div style={{ marginLeft: 'auto', marginTop: '-.5em' }}>
-                  <button 
-                    title="Message menu"
-                    style={styles.menuButton}
-                    onClick={(e) => { e.stopPropagation(); openMenuNearButton(e, _id);  }}
-                  >
-                    ⋯
-                  </button>
-
-                  {openMenuId === _id && (
-                    <div
-                      ref={menuRef}
-                      style={{ ...styles.menuContainer, right: `2em`, top: `${menuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
-                      role="menu"
-                      aria-label="message menu"
-                    >
-                      <div style={styles.menuItem} onClick={() => startEdit({ _id, text })} role="menuitem">Edit</div>
-                      <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDelete(_id)} role="menuitem">Delete</div>
-                      <div style={styles.menuItem} onClick={() => setOpenMenuId(null)} role="menuitem">Cancel</div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* message content or inline editor */}
-            {editingMessageId === _id ? (
-              <div style={{ marginTop: 8 }}>
-                <textarea
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  style={styles.editInput}
-                  rows={3}
+                <MessageBubble
+                  key={message._id}
+                  message={message}
+                  mine={mine}
+                  props={props}
+                  contextMenuId={contextMenuId}
+                  setContextMenuPos={setContextMenuPos}
+                  setContextMenuId={setContextMenuId}
+                  openMenuId={openMenuId}
+                  menuPos={menuPos}
+                  setOpenMenuId={setOpenMenuId}
+                  menuRef={menuRef}
+                  openMenuNearButton={openMenuNearButton}
+                  startEdit={startEdit}
+                  saveEdit={saveEdit}
+                  cancelEdit={cancelEdit}
+                  editingMessageId={editingMessageId}
+                  editText={editText}
+                  setEditText={setEditText}
+                  onDelete={onDelete}
+                  copyMessage={copyMessage}
+                  onImageContextMenu={onImageContextMenu}
+                  imageMenuId={imageMenuId}
+                  imageMenuPos={imageMenuPos}
+                  imageMenuRef={imageMenuRef}
+                  setViewMedia={setViewMedia}
+                  onDeleteImage={onDeleteImage}
+                  contextMenuPos={contextMenuPos}
+                  contextMenuRef={contextMenuRef}
+                  likesCount={message.likesCount ?? 0}
+                  dislikesCount={message.dislikesCount ?? 0}
+                  userLike={message.userLike ?? null}
                 />
-                <div style={styles.editActions}>
-                  <button style={styles.saveBtn} onClick={saveEdit}>Save</button>
-                  <button style={styles.cancelBtn} onClick={cancelEdit}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ marginTop: 8 }}>
-                {text && <p>{text}</p>}
-                        {file && (
-                  <div style={{ marginTop: 12 }}>
-                    {(() => {
-                      const attachments = getFileAttachments(file);
-                      return (
-                        <div className="message-attachments">
-                          {attachments.map((attachmentUrl, idx) => {
-                            const type = getAttachmentType(attachmentUrl);
-                            const name = getAttachmentName(attachmentUrl);
-                            const openViewerAt = () => setViewMedia({ urls: attachments, startIndex: idx });
-                            const attachmentKey = `${_id}-${idx}`;
-
-                            return (
-                              <div
-                                key={attachmentKey}
-                                className="message-attachment"
-                                style={{ position: 'relative', minWidth: 120, maxWidth: 240, cursor: 'pointer' }}
-                                onClick={openViewerAt}
-                              >
-                                {type === 'image' ? (
-                                  <img
-                                    src={attachmentUrl}
-                                    alt={name}
-                                    style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
-                                    onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}
-                                  />
-                                ) : type === 'video' ? (
-                                  <div style={{ width: '100%', height: 160, borderRadius: 8, overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                                    <span>🎬 {name}</span>
-                                  </div>
-                                ) : type === 'audio' ? (
-                                  <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
-                                    <span>🎧 {name}</span>
-                                  </div>
-                                ) : (
-                                  <div style={{ width: '100%', borderRadius: 8, overflow: 'hidden', background: '#f5f5f5', padding: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#222' }}>
-                                    <span>📄 {name}</span>
-                                  </div>
-                                )}
-
-                                {type === 'image' && imageMenuId === attachmentKey && mine && (
-                                  <div
-                                    ref={imageMenuRef}
-                                    style={{ ...styles.menuContainer, left: `${imageMenuPos.left}px`, top: `${imageMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
-                                    role="menu"
-                                    aria-label="image menu"
-                                  >
-                                    <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => onDeleteImage(_id, idx)} role="menuitem">
-                                      Удалить изображение
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-                
-                {/* Context menu for right-click */}
-                {contextMenuId === _id && (
-                  <div
-                    ref={contextMenuRef}
-                    style={{ ...styles.menuContainer, left: `${contextMenuPos.left}px`, top: `${contextMenuPos.top}px`, position: 'fixed', zIndex: 9999999 }}
-                    role="menu"
-                    aria-label="context menu"
-                  >
-                    <div style={styles.menuItem} onClick={() => copyMessage(text)} role="menuitem">
-                      Скопировать сообщение
-                    </div>
-                    {mine && (
-                      <>
-                        <div style={styles.menuItem} onClick={() => { setContextMenuId(null); startEdit({ _id, text }); }} role="menuitem">
-                          Edit
-                        </div>
-                        <div style={{ ...styles.menuItem, ...styles.menuItemDanger }} onClick={() => { setContextMenuId(null); onDelete(_id); }} role="menuitem">
-                          Delete
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-                
-                {/* Like/Dislike component */}
-                <div style={{ marginTop: 12 }}>
-                  <LikeDislike
-                    targetId={_id}
-                    type="message"
-                    initialLikes={likesCount}
-                    initialDislikes={dislikesCount}
-                    initialUserLike={userLike}
-                    isAuthenticated={!!props.myId}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
               );
             })}
       </div>
-      <div>
-        <FormMessage onSend={handleSendMessage} />
-      </div>
-      </div>
 
+      </div>
+            <FormMessage onSend={handleSendMessage} />
       {showInfoPanel && (
         <InfoUserChat 
           userData={chatUserData} 

@@ -62,7 +62,7 @@ const NewPost = props => {
       <div className="top-new-post">
       <h1><span className='bold-class'>Новая запись</span></h1><p className='p-newpost'>Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
       </div>
-      <PostForm action={data} />
+      <PostForm action={data} requireRequiredTag={true} />
     </>
   );
 };

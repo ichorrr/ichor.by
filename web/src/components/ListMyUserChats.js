@@ -5,156 +5,6 @@ import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
 import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
 import UnreadBadge from './UnreadBadge';
 
-const styles = {
-    container: {
-        maxWidth: '420px',
-        margin: '20px auto',
-        background: '#fff',
-        borderRadius: '10px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-        overflow: 'hidden',
-        fontFamily: 'Segoe UI, Arial, sans-serif',
-    },
-    header: {
-        padding: '12px 14px',
-        borderBottom: '1px solid #f0f0f0',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-    },
-    searchForm: {
-        display: 'flex',
-        alignItems: 'center',
-        flex: 1,
-        gap: 8,
-    },
-    searchInput: {
-        flex: 1,
-        padding: '8px 10px',
-        borderRadius: 8,
-        border: '1px solid #e5e7eb',
-        outline: 'none',
-        fontSize: 14,
-        background: '#fafafa'
-    },
-    clearButton: {
-        background: 'transparent',
-        border: 'none',
-        cursor: 'pointer',
-        color: '#666',
-        fontSize: 16,
-        padding: '4px 6px'
-    },
-    chatItem: {
-        display: 'flex',
-        alignItems: 'center',
-        padding: '12px 14px',
-        borderBottom: '1px solid #f0f0f0',
-        cursor: 'pointer',
-        transition: 'background 0.15s',
-        textDecoration: 'none',
-        color: 'inherit'
-    },
-    chatItemActive: {
-        background: '#e3f2fd',
-        borderLeft: '4px solid #2196F3',
-    },
-    chatItemHover: {
-        background: '#fafafa',
-    },
-    avatar: {
-        width: '48px',
-        height: '48px',
-        borderRadius: '50%',
-        marginRight: '12px',
-        objectFit: 'cover',
-        flexShrink: 0,
-    },
-    chatInfo: {
-        flex: 1,
-        minWidth: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px'
-    },
-    name: {
-        fontWeight: 600,
-        fontSize: '1rem',
-        color: '#222',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-    },
-    lastMessageRow: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '12px'
-    },
-    lastMessagePreview: {
-        fontSize: '0.95rem',
-        color: '#666',
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        flex: 1,
-        marginRight: '8px'
-    },
-    right: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        minWidth: '72px',
-        gap: '6px',
-    },
-    time: {
-        fontSize: '0.78rem',
-        color: '#9aa0a6',
-    },
-    visitInfo: {
-        fontSize: '0.78rem',
-        color: '#9aa0a6',
-    },
-    unreadBadge: {
-        background: '#ff4d4f',
-        color: '#fff',
-        borderRadius: '12px',
-        padding: '2px 8px',
-        fontSize: '0.78rem',
-        fontWeight: 700,
-        minWidth: '20px',
-        textAlign: 'center',
-    },
-    emptyState: {
-        padding: '20px',
-        textAlign: 'center',
-        color: '#777'
-    },
-    contextMenu: {
-        position: 'fixed',
-        background: '#fff',
-        border: '1px solid #ddd',
-        borderRadius: '6px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        zIndex: 1000,
-        minWidth: '180px',
-    },
-    contextMenuItem: {
-        padding: '8px 16px',
-        cursor: 'pointer',
-        transition: 'background 0.15s',
-        fontSize: '14px',
-        color: '#222',
-        border: 'none',
-        width: '100%',
-        textAlign: 'left',
-        background: 'transparent',
-    },
-    contextMenuItemDelete: {
-        color: '#ff4d4f',
-    },
-};
-
 const truncate = (text, n = 15) => (text && text.length > n ? text.slice(0, n) + '...' : text || '');
 
 const formatLastVisit = (date) => {
@@ -173,15 +23,17 @@ const formatLastVisit = (date) => {
     }) + ' ' + visitDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const ListMyUserChats = () => {
+const ListMyUserChats = ({ onSelectChat, compactMode = false, activeUserIdOverride }) => {
     // hooks
     const [query, setQuery] = useState('');
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuUserId, setContextMenuUserId] = useState(null);
-    const { id: activeUserId } = useParams(); // Get current active chat user ID from URL
+    const { id: routeActiveUserId } = useParams();
+    const activeUserId = activeUserIdOverride ?? routeActiveUserId;
 
     const { loading: loadingMessages, error: errorMessages, data: dataMessages, refetch } = useQuery(GET_MY_LIST_USERS_CHATS, {
-        fetchPolicy: 'network-only',
+        fetchPolicy: 'cache-and-network',
+        nextFetchPolicy: 'cache-first',
     });
 
     const [deleteUserFromChats] = useMutation(DELETE_USER_FROM_CHATS, {
@@ -235,7 +87,9 @@ const ListMyUserChats = () => {
 const shouldSearchAll = (query || '').trim().length >= 2;
     const { loading: loadingAllUsers, error: errorAllUsers, data: dataAllUsers } = useQuery(GET_USERS, {
         skip: !shouldSearchAll,
-        fetchPolicy: 'network-only',
+        fetchPolicy: 'cache-and-network',
+        nextFetchPolicy: 'cache-first',
+        notifyOnNetworkStatusChange: false,
     });
 
     const chats = useMemo(() => {
@@ -243,16 +97,17 @@ const shouldSearchAll = (query || '').trim().length >= 2;
         return dataMessages.getMyListUsersChats;
     }, [dataMessages?.getMyListUsersChats]);
 
-    // filtered list by search query (name or last message text) for chats
-    const filteredChats = useMemo(() => {
-        const q = (query || '').trim().toLowerCase();
-        if (!q) return chats;
+    const visibleChats = useMemo(() => {
+        if (!query.trim()) return chats;
+        const q = query.trim().toLowerCase();
         return chats.filter(item => {
             const name = (item.name || '').toLowerCase();
             const lastText = (item.lastMessage?.text || '').toLowerCase();
             return name.includes(q) || lastText.includes(q);
         });
     }, [chats, query]);
+
+    const filteredChats = visibleChats;
 
     // when searching globally, filter all users from DB
     const searchResults = useMemo(() => {
@@ -268,29 +123,28 @@ const shouldSearchAll = (query || '').trim().length >= 2;
             .slice(0, 50); // limit results
     }, [dataAllUsers?.getUsers, query, shouldSearchAll]);
 
-    if (loadingMessages) return <p style={styles.emptyState}>Loading chats...</p>;
-    if (errorMessages) return <p style={styles.emptyState}>Error loading chats: {errorMessages.message}</p>;
-   
+    if (loadingMessages && !dataMessages) return <p className="lc-chat-list-empty-state">Loading chats...</p>;
+    if (errorMessages) return <p className="lc-chat-list-empty-state">Error loading chats: {errorMessages.message}</p>;
 
     const showGlobal = shouldSearchAll;
 
     return (
-        <div style={styles.container}>
-            <div style={styles.header}>
-                <form style={styles.searchForm} onSubmit={(e) => e.preventDefault()}>
+        <div className="lc-chat-list-container">
+            <div className="lc-chat-list-header">
+                <form className="lc-chat-list-search-form" onSubmit={(e) => e.preventDefault()}>
                     <input
                         aria-label="Search users"
                         placeholder="Search users (type 2+ chars) or messages..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        style={styles.searchInput}
+                        className="lc-chat-list-search-input"
                     />
                     {query ? (
                         <button
                             type="button"
                             onClick={() => setQuery('')}
                             aria-label="Clear search"
-                            style={styles.clearButton}
+                            className="lc-chat-list-clear-button"
                         >
                             ×
                         </button>
@@ -298,28 +152,39 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                 </form>
             </div>
 
-{showGlobal ? (
-                // global search results
+            {showGlobal ? (
                 <>
-                  {loadingAllUsers && <div style={styles.emptyState}>Searching users...</div>}
-                  {errorAllUsers && <div style={styles.emptyState}>Search error: {errorAllUsers.message}</div>}
-                  {!loadingAllUsers && searchResults.length === 0 && <div style={styles.emptyState}>No users found</div>}
-                  {searchResults.map(user => {
-                      const id = user._id;
-                      const subtitle = user.email || user.telephone || '';
-                      return (
-                        <a key={id} href={`/chat/${id}`} style={styles.chatItem}>
-                          <img src={user.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={user.name} style={styles.avatar} />
-                          <div style={styles.chatInfo}>
-                              <div style={styles.name}>{user.name}</div>
-                              <div style={{ ...styles.lastMessagePreview, fontSize: 13, color: '#888' }}>{subtitle}</div>
-                          </div>
-                        </a>
-                      );
-                  })}
+                    {loadingAllUsers && <div className="lc-chat-list-empty-state">Searching users...</div>}
+                    {errorAllUsers && <div className="lc-chat-list-empty-state">Search error: {errorAllUsers.message}</div>}
+                    {!loadingAllUsers && searchResults.length === 0 && <div className="lc-chat-list-empty-state">No users found</div>}
+                    {searchResults.map(user => {
+                        const id = user._id;
+                        const subtitle = user.email || user.telephone || '';
+                        const handleClick = () => {
+                            if (typeof onSelectChat === 'function') {
+                                onSelectChat(id);
+                            }
+                        };
+                        return compactMode ? (
+                            <button key={id} type="button" onClick={handleClick} className="lc-chat-list-item lc-chat-list-item-compact">
+                                <img src={user.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={user.name} className="lc-chat-list-avatar" />
+                                <div className="lc-chat-list-info">
+                                    <div className="lc-chat-list-name">{user.name}</div>
+                                    <div className="lc-chat-list-last-message-preview lc-chat-list-search-subtitle">{subtitle}</div>
+                                </div>
+                            </button>
+                        ) : (
+                            <a key={id} href={`/chat/${id}`} className="lc-chat-list-item">
+                                <img src={user.avatar || `https://api.ichor.by/avatars/default-avatar.png`} alt={user.name} className="lc-chat-list-avatar" />
+                                <div className="lc-chat-list-info">
+                                    <div className="lc-chat-list-name">{user.name}</div>
+                                    <div className="lc-chat-list-last-message-preview lc-chat-list-search-subtitle">{subtitle}</div>
+                                </div>
+                            </a>
+                        );
+                    })}
                 </>
             ) : (
-                // chats list (filtered by query if any)
                 filteredChats.map(({ _id, name, avatar, lastMessage, lastVisit, unreadCount }) => {
                     let preview;
                     if (lastMessage?.text) {
@@ -331,41 +196,74 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                     }
                     const timeStr = lastMessage?.createdAt ? `${new Date(lastMessage.createdAt).toLocaleDateString()} ${new Date(lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
                     const unreadCountValue = unreadCount || lastMessage?.unreadCount || 0;
+                    const itemClassName = activeUserId === _id ? 'lc-chat-list-item lc-chat-list-item-active' : 'lc-chat-list-item';
+                    const handleClick = () => {
+                        if (typeof onSelectChat === 'function') {
+                            onSelectChat(_id);
+                        }
+                    };
 
-                return (
-                     <Link
+                    return compactMode ? (
+                        <button
                             key={_id}
-                            to={`/chat/${_id}`}
-                            style={activeUserId === _id ? { ...styles.chatItem, ...styles.chatItemActive } : styles.chatItem}
+                            type="button"
+                            className={`lc-chat-list-item lc-chat-list-item-compact ${activeUserId === _id ? 'lc-chat-list-item-active' : ''}`}
+                            onClick={handleClick}
                             onContextMenu={(e) => handleContextMenu(e, _id)}
                         >
                             <img
                                 src={avatar || `https://api.ichor.by/avatars/default-avatar.png`}
                                 alt={name}
-                                style={styles.avatar}
+                                className="lc-chat-list-avatar"
                             />
-                            <div style={styles.chatInfo}>
-                                <div style={styles.name}>{name}</div>
-                                <div style={styles.lastMessageRow}>
-                                    <div style={styles.lastMessagePreview}>{preview}</div>
-                                    <div style={styles.right}>
-                                        <div style={styles.time}>{timeStr}</div>
+                            <div className="lc-chat-list-info">
+                                <div className="lc-chat-list-name">{name}</div>
+                                <div className="lc-chat-list-last-message-row">
+                                    <div className="lc-chat-list-last-message-preview">{preview}</div>
+                                    <div className="lc-chat-list-right">
+                                        <div className="lc-chat-list-time">{timeStr}</div>
                                         <UnreadBadge count={unreadCountValue} />
                                     </div>
                                 </div>
                                 {lastVisit ? (
-                                    <div style={styles.visitInfo}>{formatLastVisit(lastVisit)}</div>
+                                    <div className="lc-chat-list-visit-info">{formatLastVisit(lastVisit)}</div>
+                                ) : null}
+                            </div>
+                        </button>
+                    ) : (
+                        <Link
+                            key={_id}
+                            to={`/chat/${_id}`}
+                            className={itemClassName}
+                            onContextMenu={(e) => handleContextMenu(e, _id)}
+                        >
+                            <img
+                                src={avatar || `https://api.ichor.by/avatars/default-avatar.png`}
+                                alt={name}
+                                className="lc-chat-list-avatar"
+                            />
+                            <div className="lc-chat-list-info">
+                                <div className="lc-chat-list-name">{name}</div>
+                                <div className="lc-chat-list-last-message-row">
+                                    <div className="lc-chat-list-last-message-preview">{preview}</div>
+                                    <div className="lc-chat-list-right">
+                                        <div className="lc-chat-list-time">{timeStr}</div>
+                                        <UnreadBadge count={unreadCountValue} />
+                                    </div>
+                                </div>
+                                {lastVisit ? (
+                                    <div className="lc-chat-list-visit-info">{formatLastVisit(lastVisit)}</div>
                                 ) : null}
                             </div>
                         </Link>
-                );
+                    );
                 })
             )}
 
             {contextMenu && (
-                <div style={{ ...styles.contextMenu, top: contextMenu.y, left: contextMenu.x }}>
+                <div className="lc-chat-list-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
                     <button
-                        style={{ ...styles.contextMenuItem, ...styles.contextMenuItemDelete }}
+                        className="lc-chat-list-context-menu-item lc-chat-list-context-menu-item-delete"
                         onClick={handleDeleteUser}
                     >
                         Delete from chats

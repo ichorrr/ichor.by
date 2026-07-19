@@ -63,6 +63,10 @@ const Post = model(
           ref: 'Comment'
         }
       ],
+      commentCount: {
+        type: Number,
+        default: 0
+      },
       likesCount: {
         type: Number,
         default: 0

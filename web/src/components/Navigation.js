@@ -74,20 +74,6 @@ return (
 
                 })}>О себе</NavLink>
           </li>
-          {isLoggedIn && (
-            <>
-            <li>
-              <NavLink to="/myposts" style={({ isActive }) => ({
-
-                  })}>Мои записи</NavLink>
-            </li>
-            <li>
-              <NavLink to="/new" style={({ isActive }) => ({
-
-                  })}>Создать +</NavLink>
-            </li>
-            </>
-          )}
           <li className="hvsubmenu">
             <Link className="actv" to="#" >Разделы</Link>
             <span>
@@ -109,6 +95,11 @@ return (
                                   <li>
                                     <NavLink to="/myprofile" onClick={() => setIsMenuOpen(false)} className="popup-link">
                                       Профиль
+                                    </NavLink>
+                                  </li>
+                                  <li>
+                                    <NavLink to="/new" onClick={() => setIsMenuOpen(false)} className="popup-link">
+                                      Создать&nbsp;+
                                     </NavLink>
                                   </li>
                                   <li>
@@ -149,13 +140,6 @@ return (
                     <ul className={`dropdown-content ${isAct ? "show" : "hide"}`} id="nav">
                         <li onClick={handleToggle}><NavLink to="/about" title="О проекте"
                         style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >О себе</NavLink></li>
-                        {isLoggedIn && (
-                          <>
-                        <li onClick={handleToggle}><NavLink to="/myposts" title="Мои публикации"
-                        style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Мои записи</NavLink></li>
-                        <li onClick={handleToggle}><NavLink to="/new" title="Создать"
-                        style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Создать +</NavLink></li>
-                        </>)}
                         <li id="cats"><NavLink to="#" title="categories" >Разделы</NavLink>
                           <ul className="sub-mobile-menu" onClick={handleToggle}>
                               <CatsPage />

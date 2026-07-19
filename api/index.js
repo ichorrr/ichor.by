@@ -63,14 +63,6 @@ const resolvers = {
     Message: {
       unreadCount: (parent) => parent.unreadCount || 0
     },
-    Post: {
-      commentCount: async (parent, args, { models }) => {
-        if (Array.isArray(parent.comments)) {
-          return parent.comments.length;
-        }
-        return await models.Comment.countDocuments({ post: parent._id });
-      }
-    },
 
     Query: {
       async getUsers() {
@@ -443,10 +435,12 @@ const resolvers = {
   
         // find the note
         const comm = await models.Comment.findById(_id);
+        if (!comm) {
+          return false;
+        }
         
         // if the note owner and current user don't match, throw a forbidden error
-        if (comm && String(comm.author) !== user.id) {
-
+        if (String(comm.author) !== user.id) {
           throw new GraphQLError("You don't have permissions to delete the note", {
             extensions: {
               code: 'FORBIDDEN',
@@ -456,8 +450,26 @@ const resolvers = {
         }
   
         try {
-          // if everything checks out, remove the note
+          // remove the comment document
           await comm.deleteOne();
+
+          // remove the comment reference from the post
+          const post = await models.Post.findById(comm.post);
+          if (post) {
+            post.comments = post.comments.filter(commentId => String(commentId) !== String(_id));
+            if (typeof post.commentCount === 'number') {
+              post.commentCount = Math.max(0, post.commentCount - 1);
+            }
+            await post.save();
+          }
+
+          // remove the comment reference from the author
+          const author = await models.User.findById(comm.author);
+          if (author) {
+            author.comments = author.comments.filter(commentId => String(commentId) !== String(_id));
+            await author.save();
+          }
+
           return true;
         } catch (err) {
           // if there's an error along the way, return false
@@ -1155,6 +1167,12 @@ const resolvers = {
       },
       async comments(parent) {
         return await models.Comment.find({ post: parent._id }).sort({createdAt: -1, updatedAt: -1});
+      },
+      async commentCount(parent, args, { models }) {
+        if (Array.isArray(parent.comments)) {
+          return parent.comments.length;
+        }
+        return await models.Comment.countDocuments({ post: parent._id });
       }
     },
   

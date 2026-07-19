@@ -21,6 +21,8 @@ const MyPosts = ({ posts, userName }) => {
     return { sourceUrl, sourceIcon, sourceHref };
   };
 
+
+  console.log("sdjfhskdf", posts[1]?. commentCount);
   return (
     <div className="cats_block">
       <div className="all-post-block">

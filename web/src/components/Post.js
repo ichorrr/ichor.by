@@ -60,6 +60,24 @@ const Post = ({ post }) => {
       <div id={post._id} ></div>
       <h2>{post.title}</h2>
     
+      {(sourceHref ) && (
+        <div className="post-details-row">
+          {sourceHref && (
+            <div className="post-external-source">
+              {sourceIcon ? (
+                sourceIcon.startsWith('http') ? (
+                  <img className="external-source-icon" src={sourceIcon} alt="source icon" />
+                ) : (
+                  <span className="external-source-icon-text">{sourceIcon}</span>
+                )
+              ) : null}
+              <a href={sourceHref} target="_blank" rel="noreferrer">{sourceUrl}</a>
+            </div>
+          )}
+          </div>
+      )}
+      
+
       <div className="all-post-block">
         <div className="css-plank">
         <ul>
@@ -95,18 +113,7 @@ const Post = ({ post }) => {
 
       {(sourceHref || (post.tags && post.tags.length > 0)) && (
         <div className="post-details-row">
-          {sourceHref && (
-            <div className="post-external-source">
-              {sourceIcon ? (
-                sourceIcon.startsWith('http') ? (
-                  <img className="external-source-icon" src={sourceIcon} alt="source icon" />
-                ) : (
-                  <span className="external-source-icon-text">{sourceIcon}</span>
-                )
-              ) : null}
-              <a href={sourceHref} target="_blank" rel="noreferrer">{sourceUrl}</a>
-            </div>
-          )}
+
           {post.tags && post.tags.length > 0 && (
             <div className="post-tags">
               {post.tags.filter(Boolean).map(tag => (

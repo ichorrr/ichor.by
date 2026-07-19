@@ -186,12 +186,13 @@ const GET_NOTES = gql`
         body3
         likesCount
         dislikesCount
+        commentCount
         comments {
           _id
           text
           likesCount
           dislikesCount
-}
+        }
         author {
           _id
           name
@@ -216,6 +217,7 @@ const GET_MY_POST = gql`
         imageUrl3
         createdAt
         viewsCount
+        commentCount
         category {
           _id
           catname
@@ -380,6 +382,7 @@ const GET_POSTS = gql`
         name
         email
       }
+      commentCount
     }
   }
 `;

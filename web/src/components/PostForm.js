@@ -51,7 +51,20 @@ const PostForm = props => {
       ? props.externalSource
       : ''
   );
+  const requiredTags = ['Технологии', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
   const [tags, setTags] = useState({tags: Array.isArray(props.tags) ? props.tags.join(', ') : (props.tags || '')});
+  const [selectedRequiredTags, setSelectedRequiredTags] = useState(() => {
+    const existingTags = Array.isArray(props.tags)
+      ? props.tags
+      : typeof props.tags === 'string'
+      ? props.tags.split(',')
+      : [];
+
+    return existingTags
+      .map(tag => (tag || '').trim().replace(/^#/, ''))
+      .filter(Boolean)
+      .filter(tag => requiredTags.includes(tag));
+  });
   const [value, setValue] = useState( { category: props.category, title: props.title || ''} );
 
   // update the state when a user types in the form
@@ -76,6 +89,7 @@ const PostForm = props => {
 
   const { data } = useQuery(GET_ME);
   const isAdmin = data?.me?.isAdmin;
+  const requireRequiredTagSelection = Boolean(props.requireRequiredTag) && Boolean(data?.me) && !isAdmin;
   const adminOnlyCategoryIds = [
     '6251ef28413373118838bbdd',
     '6251f1532f7a51343c8ed7df',
@@ -95,6 +109,12 @@ const PostForm = props => {
     let scriptUrl = event.target.checked;
 
     setScriptUrl({scriptUrl});
+  };
+
+  const toggleRequiredTag = (tag) => {
+    setSelectedRequiredTags(prev =>
+      prev.includes(tag) ? prev.filter(item => item !== tag) : [...prev, tag]
+    );
   };
 
   const onClickRemoveImage =  async (imageUrl) => {
@@ -186,7 +206,14 @@ const PostForm = props => {
       <Form
         onSubmit={event => {
           event.preventDefault();
-          const tagsArray = tags.tags ? tags.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+          const customTagsArray = tags.tags ? tags.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+          const normalizedSelectedRequiredTags = selectedRequiredTags.map(tag => tag.trim()).filter(Boolean);
+          const tagsArray = Array.from(new Set([...normalizedSelectedRequiredTags, ...customTagsArray]));
+
+          if (requireRequiredTagSelection && normalizedSelectedRequiredTags.length === 0) {
+            alert('Пожалуйста, выберите хотя бы один основной тег.');
+            return;
+          }
 
           if (!isAdmin && adminOnlyCategoryIds.includes(value.category)) {
             alert('Только администратор может выбрать категорию Новости или Статьи.');
@@ -301,7 +328,39 @@ const PostForm = props => {
 
       <div className="empty-div"></div>
 
-      <label htmlFor="tags">Теги (через запятую)</label>
+      <label>Основные теги</label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+        {requiredTags.map(tag => {
+          const isSelected = selectedRequiredTags.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => toggleRequiredTag(tag)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 999,
+                border: isSelected ? '1px solid #0f766e' : '1px solid #cbd5e1',
+                background: isSelected ? '#ccfbf1' : '#fff',
+                color: isSelected ? '#115e59' : '#334155',
+                cursor: 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {tag}
+            </button>
+          );
+        })}
+      </div>
+      {requireRequiredTagSelection ? (
+        <p style={{ marginTop: 8, fontSize: 12, color: '#b45309' }}>
+          Выберите хотя бы один основной тег для новой записи.
+        </p>
+      ) : null}
+
+      <div className="empty-div"></div>
+
+      <label htmlFor="tags">Дополнительные теги (через запятую)</label>
       <input
         type="text"
         name="tags"
