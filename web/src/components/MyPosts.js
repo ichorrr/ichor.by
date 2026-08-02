@@ -26,9 +26,7 @@ const MyPosts = ({ posts, userName }) => {
   return (
     <div className="cats_block">
       <div className="all-post-block">
-        <div className="all_post">
-          Всего {posts.length} записей <span className="uname_weight">{userName}</span>
-        </div>
+
       </div>
       <div className="cat-post-li">
         <ul>

@@ -116,9 +116,15 @@ const Post = ({ post }) => {
 
           {post.tags && post.tags.length > 0 && (
             <div className="post-tags">
-              {post.tags.filter(Boolean).map(tag => (
-                <span key={tag} className="tag">{tag.startsWith('#') ? tag : `#${tag}`}</span>
-              ))}
+              {post.tags.filter(Boolean).map(tag => {
+                const normalizedTag = `${tag}`.trim();
+                const hrefTag = encodeURIComponent(normalizedTag.replace(/^#/, ''));
+                return (
+                  <Link key={tag} to={`/tag/${hrefTag}`} className="tag">
+                    {normalizedTag.startsWith('#') ? normalizedTag : `#${normalizedTag}`}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

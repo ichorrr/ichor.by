@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, gql } from '@apollo/client';
 
@@ -42,6 +42,7 @@ const NEW_POST = gql`
 const NewPost = props => {
 
   const navigate = useNavigate();
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     document.title = 'Новая запись - ICHOR.BY';
@@ -49,16 +50,32 @@ const NewPost = props => {
 
   const [ data, { loading, error } ] = useMutation(NEW_POST, {
     refetchQueries: [{ query: GET_MY_POST }, { query: GET_NOTES }],
-    onCompleted: data => {
-      console.log(data.createPost)
-      navigate(`/posts/${data.createPost._id}`);
+    onCompleted: response => {
+      const createdPost = response?.createPost;
+      if (createdPost?._id) {
+        setSubmitted(true);
+      }
+    },
+    onError: () => {
+      setSubmitted(false);
     }
   });
+
+  if (submitted) {
+    return (
+      <div className="top-new-post" style={{ maxWidth: 780, margin: '2rem auto', padding: '0 1rem' }}>
+        <h1><span className='bold-class'>Запись отправлена на модерацию</span></h1>
+        <p className='p-newpost'>Спасибо! Ваша запись получена и направлена на проверку администратором. После одобрения она станет доступна всем читателям.</p>
+        <p>Администратор также отправит вам уведомление в Чат о решении по публикации.</p>
+        <button onClick={() => navigate('/myprofile')} style={{ marginTop: '1rem' }}>Перейти в профиль</button>
+      </div>
+    );
+  }
 
   return (
     <>
       {loading && <p> loading...</p>}
-      {error && <p>Error saving the note</p>}
+      {error && <p>Не удалось сохранить запись. Попробуйте ещё раз.</p>}
       <div className="top-new-post">
       <h1><span className='bold-class'>Новая запись</span></h1><p className='p-newpost'>Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
       </div>

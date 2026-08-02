@@ -20,6 +20,8 @@ import EditPost from './edit';
 import ArtPost from './arts';
 import About from './about';
 import ChatPage from './chat';
+import TagPage from './tag';
+import AdminPage from './admin';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
@@ -48,6 +50,8 @@ let dnss = data.getPosts[1]._id;
         <Route path="/myprofile" element={<MyProf />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/about" element={<About />} />
+        <Route path="/tag/:tag" element={<TagPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/edit/:id" element={ < EditPost /> } />
       </Routes>
       </Layout>

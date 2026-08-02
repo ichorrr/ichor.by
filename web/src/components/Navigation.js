@@ -102,6 +102,13 @@ return (
                                       Создать&nbsp;+
                                     </NavLink>
                                   </li>
+                                  {data?.me?.isAdmin && (
+                                    <li>
+                                      <NavLink to="/admin" onClick={() => setIsMenuOpen(false)} className="popup-link">
+                                        Админка
+                                      </NavLink>
+                                    </li>
+                                  )}
                                   <li>
                                     <Link to="#" onClick={() => { logout(); setIsMenuOpen(false); }} className="popup-link">
                                       Выйти

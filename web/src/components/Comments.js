@@ -23,7 +23,7 @@ const Comments = props =>  {
 
       console.log(tkn);
       console.log(props.post);
-      const postcom = props.post.comments;
+      const postcom = props.post?.comments || [];
       console.log(postcom);
 
 return (

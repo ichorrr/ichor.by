@@ -52,6 +52,8 @@ type Post {
   updatedAt: Date!
   category: Cat
   viewsCount: Int
+  status: String
+  moderationNote: String
   body: String!
   body2: String
   body3: String
@@ -115,6 +117,7 @@ type Mutation {
   signUp(name: String!, email: String!, password: String!): String!
   createCat(catname: String!): Cat!
   createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String!, body: String!, body2: String, body3: String): Post!
+  moderatePost(postId: String!, decision: String!, reason: String): Post
   deletePost(_id: String!): Boolean!
   updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String, body: String!, body2: String, body3: String): Post!
   createComment(text: String!, post: String!): Comment!
@@ -141,6 +144,7 @@ type Query {
   getPost(_id: ID!): Post!
   getCat(_id: ID!): Cat!
   postFeed(cursor: String, limit: Int, qualifier: String): postFeed
+  getPendingPosts: [Post!]!
   postFirst: Post!
   getMessages: [Message!]!
   getMessage(_id: ID!): Message

@@ -82,12 +82,16 @@ const resolvers = {
         return cats;
       },
   
-      async getPosts() {
-        return await models.Post.find()
+      async getPosts(parent, args, { models, user }) {
+        const isAdmin = Boolean(user && (await models.User.findById(user.id))?.isAdmin);
+        const query = isAdmin ? {} : { status: { $ne: 'pending' } };
+
+        return await models.Post.find(query)
           .limit(100)
           .sort({ createdAt: -1, updatedAt: -1 })
           .populate('category')
-          .populate('author');
+          .populate('author')
+          .populate({ path: 'comments', populate: { path: 'author', select: '_id name' } });
       },
       async getMessages(parent, args, { models }) {
         const messages = await models.Message.find({}).sort({createdAt: -1, updatedAt: -1});
@@ -260,19 +264,41 @@ const resolvers = {
         }
         return await models.Message.countDocuments({ addressee: String(user.id), read: false });
       },
-      async getPost(parent, args, { models }) {
+      async getPost(parent, args, { models, user }) {
+        const currentUser = user ? await models.User.findById(user.id) : null;
+        const isAdmin = Boolean(currentUser?.isAdmin);
+        const query = isAdmin ? { _id: args._id } : { _id: args._id, status: { $ne: 'pending' } };
+
         const post = await models.Post.findOneAndUpdate(
-          {
-            _id: args._id
-          },
+          query,
           { $inc: { viewsCount: 1 } },
           { returnDocument: 'true' }
-        );
+        )
+          .populate('category')
+          .populate('author')
+          .populate({ path: 'comments', populate: { path: 'author', select: '_id name' } });
         return post;
       },
       async getCat(parent, args, { models }) {
         const cat = await models.Cat.findById(args._id);
         return cat;
+      },
+
+      async getPendingPosts(parent, args, { models, user }) {
+        if (!user) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+
+        const currentUser = await models.User.findById(user.id);
+        if (!currentUser?.isAdmin) {
+          throw new GraphQLError('Only administrators can view pending posts', { extensions: { code: 'FORBIDDEN' } });
+        }
+
+        return await models.Post.find({ status: 'pending' })
+          .sort({ createdAt: -1 })
+          .populate('category')
+          .populate('author')
+          .populate({ path: 'comments', populate: { path: 'author', select: '_id name' } });
       },
   
       postFirst: async () => {
@@ -280,21 +306,25 @@ const resolvers = {
               return pos;
           },
   
-      postFeed: async (parent, { qualifier, limit, cursor }, { models}) => {
+      postFeed: async (parent, { qualifier, limit, cursor }, { models, user }) => {
+
+        const currentUser = user ? await models.User.findById(user.id) : null;
+        const isAdmin = Boolean(currentUser?.isAdmin);
+        const visiblePostQuery = isAdmin ? {} : { status: { $ne: 'pending' } };
 
         let hasNextPage = false;
-        let totalQuery = {}
+        let totalQuery = visiblePostQuery;
 
-        if (cursor, qualifier) {
-          totalQuery = { $or: [{author: qualifier}, {category: qualifier}], _id: { $lt: cursor } };
+        if (cursor && qualifier) {
+          totalQuery = { ...visiblePostQuery, $or: [{author: qualifier}, {category: qualifier}], _id: { $lt: cursor } };
         }
 
         if(cursor && !qualifier){
-          totalQuery = { _id: { $lt: cursor } };
+          totalQuery = { ...visiblePostQuery, _id: { $lt: cursor } };
         }
         
         if (!cursor && qualifier) {
-          totalQuery = { $or: [{author: qualifier}, {category: qualifier}] };
+          totalQuery = { ...visiblePostQuery, $or: [{author: qualifier}, {category: qualifier}] };
         }
 
         let posts = await models.Post.find(totalQuery)
@@ -685,7 +715,8 @@ const resolvers = {
           body2: args.body2,
           body3: args.body3,
           category: new mongoose.Types.ObjectId(args.category),
-          author: new mongoose.Types.ObjectId(user.id)
+          author: new mongoose.Types.ObjectId(user.id),
+          status: currentUser?.isAdmin ? 'approved' : 'pending'
         });
 
         const createPost = await newPost.save();
@@ -704,6 +735,61 @@ const resolvers = {
         await cat.save();
 
         return createPost;
+      },
+
+      moderatePost: async (_, { postId, decision, reason }, { models, user }) => {
+        if (!user) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+
+        const currentUser = await models.User.findById(user.id);
+        if (!currentUser?.isAdmin) {
+          throw new GraphQLError('Only administrators can moderate posts', { extensions: { code: 'FORBIDDEN' } });
+        }
+
+        const post = await models.Post.findById(postId).populate('author');
+        if (!post) {
+          throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+
+        const normalizedDecision = `${decision || ''}`.trim().toLowerCase();
+        const allowedDecisions = ['approve', 'reject'];
+        if (!allowedDecisions.includes(normalizedDecision)) {
+          throw new GraphQLError('Decision must be approve or reject', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+
+        post.status = normalizedDecision === 'approve' ? 'approved' : 'rejected';
+        post.moderationNote = reason || null;
+        await post.save();
+
+        if (post.author) {
+          const recipientId = String(post.author._id || post.author);
+          const adminName = currentUser.name || 'Администратор';
+          const template = normalizedDecision === 'approve'
+            ? `Здравствуйте! Ваша запись «${post.title}» прошла модерацию и опубликована.`
+            : `Здравствуйте! Ваша запись «${post.title}» не прошла модерацию. ${reason ? `Причина: ${reason}` : 'Пожалуйста, проверьте требования к публикации и попробуйте ещё раз.'}`;
+
+          await models.Message.create({
+            text: template,
+            addressee: recipientId,
+            user: currentUser._id,
+            read: false
+          });
+
+          const recipient = await models.User.findById(recipientId);
+          if (recipient) {
+            if (!recipient.family.some(id => String(id) === String(currentUser._id))) {
+              recipient.family.push(currentUser._id);
+              await recipient.save();
+            }
+            if (!currentUser.family.some(id => String(id) === recipientId)) {
+              currentUser.family.push(post.author._id);
+              await currentUser.save();
+            }
+          }
+        }
+
+        return post;
       },
   
       createComment: async (_, args, { models, user }) => {

@@ -16,7 +16,7 @@ const containerStyle = {
 };
 const leftStyle = { width: 340, top: 90, position: 'sticky' };
 const centerStyle = { paddingTop: 72 };
-const rightStyle = { width: 320, top: 90, position: 'sticky' };
+const rightStyle = { width: '50%', top: 80, position: 'sticky' };
 const card = { background: '#fff', borderRadius: 8, padding: 12, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' };
 const tabs = [
   { id: 'chat', label: 'Чат' },
@@ -196,7 +196,7 @@ const MyProf = () => {
                   </div>
                   {categories.length > 0 && (
                     <div className="my-categories" style={{ marginBottom: 12 }}>
-                      <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                      <ul>
                         {categories.map(c => (
                           <li
                             key={c.id}

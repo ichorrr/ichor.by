@@ -363,11 +363,17 @@ label.style-select {
   margin: 1.5rem 0;
 }
 
+.search-input {
+  padding: 0.5rem .5rem;
+}
+.sort-select {
+  padding: 0.5rem .5rem;
+}
+
 .search-input,
 .sort-select {
   border: 1px solid #c9d5dd;
   border-radius: 0.5rem;
-  padding: 0.6rem .4rem;
   font-size: .8rem;
   color: #2f3a45;
   background-color: #fff;
@@ -388,8 +394,6 @@ label.style-select {
 }
 
 .sort-select {
-  flex: 0 0 180px;
-  min-width: 140px;
   background-position: right 1rem center;
   background-repeat: no-repeat;
 }
@@ -500,7 +504,7 @@ label.style-select {
 }
 
 .lc-chat-list-container {
-  margin: 20px auto;
+  margin: 10px auto 20px 0;
   background: #fff;
   border-radius: 10px;
   overflow: hidden;
@@ -683,12 +687,11 @@ label.style-select {
 
   .search-input,
   .sort-select {
-    width: 100%;
     min-width: 0;
   }
 }
 
-@media (max-width: 920px) {
+@media (min-width: 576px) and (max-width: 920px) {
   .chat-mobile-shell {
     min-height: auto;
   }
@@ -1232,7 +1235,7 @@ h3.comment-name {
 
 .my-categories li {
   display: inline-block;
-  margin: 1em .8em 0 0;
+  margin: 0 .5em .5em 0;
   padding: .7em 1em;
   font-size: .9em;
   border: 1px solid #dadada;
@@ -1564,10 +1567,6 @@ padding-right: 1em;}
 
 /* start cat list news */
 
-.cats_block {
-  padding-top: 3em;
-}
-
 .cats_block li {
   display: block;
   font-weight: bold;
@@ -1788,6 +1787,18 @@ padding-right: 1em;}
   padding: 0.4rem 0.7rem;
   border-radius: 999px;
   font-size: 0.88rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.post-tags .tag:hover {
+  background: #1b5b82;
+  color: #fff;
+}
+
+.list-post-tags {
+  margin-top: 0.6rem;
+  margin-bottom: 0.6rem;
 }
 
 span.uname_weight {
@@ -2322,7 +2333,7 @@ input[type="text"], #password {
 
 .top-block h2 {
   padding: 1em 0 0 0;
-  font-size: 4em;
+  font-size: 3.2em;
   line-height: 1em;
   font-weight: bold;
 }
@@ -2330,7 +2341,7 @@ input[type="text"], #password {
 .css-txt {
   display:block;
   padding: 0 0 2em 0;
-  font-size: 1em;
+  font-size: 1.1em;
   line-height: 1.6em;
 }
 
@@ -2434,6 +2445,11 @@ input[type="text"], #password {
     min-width: auto;
   }
 
+  .profile-tab {
+    margin: 2% 2% 2% 0;
+    border-radius: 8px;
+  }
+
   .comments-block {
     margin-top: -7em;
     display:inline-block;
@@ -2501,13 +2517,13 @@ input[type="text"], #password {
   }
 
   .post-cont {
-    margin-left: 90px;
+    margin-left: 50px;
   }
 
   .iconPost {
-    min-width: 70px;
-    max-width: 70px;
-    height: 70px;
+    min-width: 40px;
+    max-width: 40px;
+    height: 40px;
     margin-top: .3em;
   }
 
@@ -2529,23 +2545,48 @@ input[type="text"], #password {
   padding: 2em 1em 2em 0;
 }
 
+.search-input {
+  flex:auto;
+  font-size: 0.8em;
+  margin-right: 1em;
+}
+
+.search-input {
+  width: calc(100% - 1.5em);
+  border: 1px solid #ccc;
+}
+
+.top-block {
+  padding: 65px .5% 0 0;
+}
+
+.post-external-source {
+  padding: 0;
+  margin-top: 1em;
+  font-size: 0.9em;
+}
+
+.post-details-row {
+  margin: 1rem 0;
+}
+
 .top-block h2 {
-  padding: 1.6em 0 0 0;
-  font-size: 2em;
+  padding: 2em 0 0 0;
+  font-size: 1.2em;
   line-height: 1.2em;
   font-weight: bold;
 }
 
 .css-txt p {
-  font-size: .5em;
-  line-height: 1.4em;
+  font-size: .8em;
+  line-height: 1.7em;
 }
 
 .css-txt {
   display:block;
   padding: 0 0 2em 0;
-  font-size: 2em;
-  line-height: 1.3em;
+  font-size: 1em;
+  line-height: 1.7em;
 }
 
 .img-post {
@@ -2559,6 +2600,7 @@ input[type="text"], #password {
 
 .css-plank {
   font-size: .9em;
+  margin: 0;
 }
 
 .dxnv {
@@ -2571,11 +2613,11 @@ input[type="text"], #password {
 
 .cats_block li h1 {
   padding: .2em 0;
-  font-size: 1.4em;
+  font-size: 1em;
 }
 
 .cats_block li {
-  padding: 1.2em 5% 4.3em 5%;
+  padding: 1.2em 1% 2.3em 1%;
 }
 
 .top-new-post h1 {
@@ -2605,9 +2647,6 @@ label {
   font-size: 1.2em;
 }
 
-input[type="text"], #password {
-  font-size: 1em;
-}
 
 .css-userform button {
   width: 100%;
@@ -2686,15 +2725,15 @@ input[type="text"], #password {
   }
 
   .post-cont {
-    margin-left: 160px;
+    margin-left: 120px;
   }
 
   .iconPost {
-    margin-top: 1em;
-    min-width: 130px;
-    max-width: 130px;
-    height: 130px;
-    margin-top: 1em;
+    margin-top: .5em;
+    min-width: 100px;
+    max-width: 100px;
+    height: 100px;
+    margin-top: .5em;
   }
 
   .myposts-li-block li {
@@ -2707,14 +2746,14 @@ input[type="text"], #password {
 
 .top-block h2 {
   padding: .8em 0 0 0;
-  font-size: 6em;
-  line-height: 1em;
+  font-size: 3.5em;
+  line-height: 1.1em;
 }
 
 .css-txt {
   display:block;
   margin-top: 2em;
-  font-size: 1.4em;
+  font-size: 1.3em;
   line-height: 1.6em;
 }
 
@@ -2729,11 +2768,12 @@ input[type="text"], #password {
 
 .cats_block li h1 {
   padding: .2em 0;
-  font-size: 4em;
+  font-size: 1.2em;
+  line-height: 1.4em;
 }
 
 .cats_block li {
-  padding: 1.5em 5% 6.5em 5%;
+  padding: 1.5em 5% 6.5em 1%;
 }
 
 .top-new-post h1 {
@@ -2861,15 +2901,15 @@ input[type="text"], #password {
 
   .top-block h2 {
     padding: .8em 0 0 0;
-    font-size: 7em;
-    line-height: .9em;
+    font-size:4.5em;
+    line-height: 1em;
   }
 
   .css-txt {
     display:block;
     padding: 0 0 2em 0;
-    font-size: 1.8em;
-    line-height: 1.3em;
+    font-size: 1.5em;
+    line-height: 1.5em;
   }
 
   .img-post {
@@ -2883,7 +2923,7 @@ input[type="text"], #password {
 
   .cats_block li h1 {
     padding: .2em 0;
-    font-size: 3em;
+    font-size: 2em;
   }
 
   .cats_block li {
@@ -3046,7 +3086,7 @@ input[type="text"], #password {
 
 .css-txt {
   display:block;
-  font-size: 1.8em;
+  font-size: 1.5em;
   line-height: 1.5em;
 }
 
@@ -3061,7 +3101,7 @@ input[type="text"], #password {
 
 .cats_block li h1 {
   padding: .3em 0;
-  font-size: 4em;
+  font-size: 2em;
 }
 
 .cats_block li {
@@ -3137,6 +3177,10 @@ bottom: -4em;
     display: inline-block;
   }
   
+input.search-input {
+  width: 30%;
+}
+
   /* FIRST PAGE */
   .txtfPOst h1 {
     font-size: 7em;
@@ -3216,7 +3260,7 @@ bottom: -4em;
 
   .cats_block li h1 {
     padding: .4em 0;
-    font-size: 4em;
+    font-size: 2em;
   }
 
   .cats_block li {

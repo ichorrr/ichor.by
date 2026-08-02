@@ -377,6 +377,7 @@ const GET_POSTS = gql`
       body
       body2
       body3
+      tags
       author {
         _id
         name

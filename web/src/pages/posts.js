@@ -13,7 +13,15 @@ const PostPage = () => {
   const { loading: relatedLoading, error: relatedError, data: relatedData } = useQuery(GET_POSTS);
 
   if (loading) return <p>loading...</p>;
-  if (error) return <p>error...</p>;
+  if (error || !data?.getPost) {
+    return (
+      <div style={{ maxWidth: 760, margin: '2rem auto', padding: '0 1rem' }}>
+        <h1>Запись недоступна</h1>
+        <p>Эта запись ещё не опубликована или была удалена. Если запись только что отправлена на модерацию, она появится после одобрения администратора.</p>
+        <Link to="/" className="css-back">Вернуться на главную</Link>
+      </div>
+    );
+  }
 
   const relatedPosts = relatedData?.getPosts?.filter(post => post._id !== id).slice(0, 5) || [];
 

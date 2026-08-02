@@ -118,15 +118,15 @@ const CatPosts = ({ posts }) => {
                         <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                         <span>👁️ {post.viewsCount}</span>
                         <span>{`Комментариев ${post.commentCount || 0}`}</span>
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
-                          <LikeDislike
-                            targetId={post._id}
-                            type="post"
-                            initialLikes={post.likesCount || 0}
-                            initialDislikes={post.dislikesCount || 0}
-                            isAuthenticated={isAuthenticated}
-                          />
-                        </div>
+                      </div>
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+                        <LikeDislike
+                          targetId={post._id}
+                          type="post"
+                          initialLikes={post.likesCount || 0}
+                          initialDislikes={post.dislikesCount || 0}
+                          isAuthenticated={isAuthenticated}
+                        />
                       </div>
                     </>
                   );

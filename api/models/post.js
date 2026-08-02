@@ -42,6 +42,14 @@ const Post = model(
         type: Number,
         default: 0
       },
+      status: {
+        type: String,
+        default: 'approved'
+      },
+      moderationNote: {
+        type: String,
+        default: null
+      },
       body: {
         type: String,
         required: true
