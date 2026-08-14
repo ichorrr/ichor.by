@@ -6,10 +6,15 @@ import styled from 'styled-components';
 import Fpost from '../components/FirstPost';
 
 import { GET_NOTES } from '../gql/query';
+import RequiredTagNewsSection from '../components/RequiredTagNewsSection';
 
 const PostParagraph = styled.div`
+    position: relative;
     width: 100%;
+    min-height: 760px;
     display: block;
+    overflow: hidden;
+    margin-bottom: 2rem;
 `;
 
 const Home = () => {
@@ -23,14 +28,15 @@ const Home = () => {
   if (loading) return <p>loading...</p>
 
   return (
-  <div>
+  <>
     <PostParagraph>
       <Fpost />
       <div className="rt-lenta-post">
         <TitleList posts={data.postFeed.posts} />
       </div>
     </PostParagraph>
-  </div>
+    <RequiredTagNewsSection posts={data.postFeed.posts} />
+  </>
   )};
 
 export default Home;

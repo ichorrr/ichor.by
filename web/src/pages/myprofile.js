@@ -11,7 +11,7 @@ const containerStyle = {
   display: 'flex',
   gap: 20,
   alignItems: 'flex-start',
-  padding: '18px',
+  padding: '1rem',
   boxSizing: 'border-box'
 };
 const leftStyle = { width: 340, top: 90, position: 'sticky' };
@@ -133,7 +133,7 @@ const MyProf = () => {
 
   return (
     <div
-      style={isCompactView ? { ...containerStyle, display: 'block', padding: '12px' } : containerStyle}
+      style={isCompactView ? { ...containerStyle, display: 'block' } : containerStyle}
       onTouchStart={isCompactView ? handleTouchStart : undefined}
       onTouchEnd={isCompactView ? handleTouchEnd : undefined}
     >

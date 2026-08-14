@@ -1,0 +1,76 @@
+#ahead {
+    top: 0;
+}
+
+ul.pending-posts-list {
+    margin: 3rem 0;
+}
+
+.pending-posts-list li {
+margin-bottom: 1.2rem;
+border: 1px solid #ddd;
+padding: 1rem;
+border-radius: 8px;
+}
+
+.pending-posts-list li h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.4rem;
+}
+
+.admin-page {
+    flex: 1;
+    flex-direction: column;
+    flex-wrap: wrap;
+  max-width: 900px;
+  margin: 0 auto 0 auto;
+  padding: 0 1rem;
+}
+
+.admin-page h1 {
+    margin: 110px 0 1rem 0;
+    font-size: 2rem;
+    font-weight: normal;
+}
+
+.admin-page p {
+    margin: 1rem 0;
+    color: #666;
+}
+
+.admin-post-info {
+    margin: 1rem 0;
+    color: #777;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.admin-post-info div {
+    float: left;
+    margin-bottom: 0.3rem;
+}
+
+.admin-buttons {
+    margin-top: 0.8rem;
+}
+
+.admin-buttons button {
+    margin-right: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    background-color: #1d6fa5;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.admin-buttons button:hover {
+    background-color: #155d8b;
+}
+
+.admin-body {
+    margin-top: 1rem;
+    color: #333;
+    line-height: 1.6;
+}

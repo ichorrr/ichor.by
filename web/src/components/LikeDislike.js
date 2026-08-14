@@ -64,22 +64,17 @@ const LikeDislike = ({
   };
 
   const styles = {
-    container: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    },
     button: {
       background: 'transparent',
       border: 'none',
       cursor: isAuthenticated ? 'pointer' : 'not-allowed',
       fontSize: '18px',
-      padding: '4px 8px',
+      padding: '4px 10px 4px 0',
+      
       transition: 'all 0.2s',
       opacity: isAuthenticated ? 1 : 0.5,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px'
+      display: 'inline',
+
     },
     likeButton: {
       color: userLike === 'like' ? '#4caf50' : '#999'
@@ -102,7 +97,7 @@ const LikeDislike = ({
   const rating = likes - dislikes;
 
   return (
-    <div style={styles.container}>
+    <span className="like-dislike-container">
       <button
         style={{ ...styles.button, ...styles.likeButton }}
         onClick={() => handleLike('like')}
@@ -124,7 +119,7 @@ const LikeDislike = ({
       <span style={styles.rating}>
         {rating > 0 ? '+' : ''}{rating}
       </span>
-    </div>
+    </span>
   );
 };
 

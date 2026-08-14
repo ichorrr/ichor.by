@@ -64,7 +64,7 @@ const MyPosts = ({ posts, userName }) => {
                   <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
                   <span>👁️ {post.viewsCount}</span>
                   <span className='icomments'> {post.commentCount || 0}</span>
-                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
+                  
                     <LikeDislike
                       targetId={post._id}
                       type="post"
@@ -72,7 +72,7 @@ const MyPosts = ({ posts, userName }) => {
                       initialDislikes={post.dislikesCount || 0}
                       isAuthenticated={isAuthenticated}
                     />
-                  </div>
+                  
                 </div>
               </div>
             </li>

@@ -187,6 +187,11 @@ const GET_NOTES = gql`
         likesCount
         dislikesCount
         commentCount
+        tags
+        externalSource {
+          icon
+          url
+        }
         comments {
           _id
           text

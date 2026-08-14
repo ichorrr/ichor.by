@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { GET_ME } from '../gql/query';
 import Post from '../components/Post';
+import '../css/admin.css';
 
 const GET_PENDING_POSTS = gql`
   query getPendingPosts {
@@ -70,21 +71,23 @@ const AdminPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: '2rem auto', padding: '0 1rem' }}>
+    <div className="admin-page">
       <h1>Панель модерации</h1>
       <p>Здесь администратор может одобрить или отклонить новые записи пользователей.</p>
       {pendingPosts.length === 0 ? (
         <p>Нет заявок на публикацию.</p>
       ) : (
-        <ul>
+        <ul className="pending-posts-list">
           {pendingPosts.map(post => (
-            <li key={post._id} style={{ marginBottom: '1.2rem', listStyle: 'none', border: '1px solid #ddd', padding: '1rem', borderRadius: 8 }}>
-              <strong>{post.title}</strong>
+            <li key={post._id} className="pending-post-item">
+              <h1>{post.title}</h1>
+              <div className="admin-post-info">
               <div>Автор: {post.author?.name || 'Неизвестно'}</div>
               <div>Раздел: {post.category?.catname || '—'}</div>
               <div>Дата: {new Date(post.createdAt).toLocaleString()}</div>
-              <div style={{ marginTop: '0.5rem' }}>{post.body?.slice(0, 220)}{post.body?.length > 220 ? '…' : ''}</div>
-              <div style={{ marginTop: '0.8rem' }}>
+              </div>
+              <div className='admin-body'>{post.body?.slice(0, 220)}{post.body?.length > 220 ? '…' : ''}</div>
+              <div className="admin-buttons" >
                 <button onClick={() => setPreviewPostId(previewPostId === post._id ? null : post._id)} style={{ marginRight: '0.6rem' }}>
                   {previewPostId === post._id ? 'Скрыть предпросмотр' : 'Показать предпросмотр'}
                 </button>

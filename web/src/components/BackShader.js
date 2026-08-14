@@ -4,7 +4,7 @@ import { Vector2 } from "three";
 
 import vertexShader from '../shaders/backshader/vertexShader';
 import fragmentShader from '../shaders/backshader/backShader';
-import useWindowSize from "./UseWindowSize";
+import useWindowSize from "./UseWindowSize.js";
 
 const CLoader = () => {
 
