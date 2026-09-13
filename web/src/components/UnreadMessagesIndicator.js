@@ -8,7 +8,9 @@ const UnreadMessagesIndicator = () => {
     fetchPolicy: 'network-only'
   });
   if (loading || error) return null;
-  const count = data?.getUnreadMessagesCount || 0;
+  const count = Number.isFinite(data?.getUnreadMessagesCount)
+    ? data.getUnreadMessagesCount
+    : 0;
   return <UnreadBadge count={count} />;
 };
 

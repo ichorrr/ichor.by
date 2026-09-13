@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useMutation, InMemoryCache, writeQuery, useQuery, useApolloClient, NetworkStatus, gql } from '@apollo/client';
 
 import UserForm from '../components/UserForm';
@@ -39,6 +39,7 @@ const SignIn = props => {
       <span>incorrect email or password</span>
     </div>
       <UserForm action={signIn} formType="signIn" />
+      <div className="css-userform"><Link to="/forgot-password">Забыли пароль?</Link></div>
     </div>
     <BgShader />
     </>
@@ -47,6 +48,7 @@ const SignIn = props => {
     <>
     <div className="css-userform">
       <UserForm action={signIn} formType="signIn" />
+      <div className="css-userform"><Link to="/forgot-password">Забыли пароль?</Link></div>
     </div>
     <BgShader />
     </>

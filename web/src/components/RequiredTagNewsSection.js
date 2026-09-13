@@ -36,7 +36,7 @@ const RequiredTagNewsSection = ({ posts }) => {
       {REQUIRED_TAGS.map(tag => {
         const filteredPosts = allPosts
           .filter(post => (post.tags || []).some(candidate => normalizeTag(candidate) === normalizeTag(tag.name)))
-          .slice(0, 6);
+          .slice(0, 7);
 
         if (filteredPosts.length === 0) return null;
 
@@ -54,7 +54,7 @@ const RequiredTagNewsSection = ({ posts }) => {
                   <article key={post._id} className="required-tag-news-card">
                     {mediaSrc ? (
                       <div className="required-tag-news-card__media">
-                        <img src={mediaSrc} alt={post.title} />
+                        <img src={mediaSrc} alt={post.title} loading="lazy" decoding="async" />
                       </div>
                     ) : null}
                     <div className="required-tag-news-card__content">

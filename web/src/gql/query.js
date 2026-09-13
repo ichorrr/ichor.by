@@ -207,6 +207,33 @@ const GET_NOTES = gql`
   }
 `;
 
+const GET_HOME_NOTES = gql`
+  fragment HomePostFields on postFeed {
+    posts {
+      _id
+      title
+      iconPost
+      imageUrl
+      imageUrl2
+      imageUrl3
+      scriptUrl
+      createdAt
+      tags
+      externalSource { url }
+      author { name }
+    }
+  }
+  query homePostFeed {
+    technology: postFeed(tag: "Технологии", limit: 7) { ...HomePostFields }
+    events: postFeed(tag: "События", limit: 7) { ...HomePostFields }
+    economy: postFeed(tag: "Экономика", limit: 7) { ...HomePostFields }
+    people: postFeed(tag: "Люди", limit: 7) { ...HomePostFields }
+    incidents: postFeed(tag: "Происшествия", limit: 7) { ...HomePostFields }
+    realEstate: postFeed(tag: "Недвижимость", limit: 7) { ...HomePostFields }
+    design: postFeed(tag: "Дизайн", limit: 7) { ...HomePostFields }
+  }
+`;
+
 const GET_MY_POST = gql`
   query me {
     me {
@@ -415,6 +442,7 @@ export {
   GET_CATS,
   GET_CAT,
   GET_NOTES,
+  GET_HOME_NOTES,
   GET_USER,
   GET_POSTS,
   GET_POST,

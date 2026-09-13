@@ -80,7 +80,7 @@ const Fpost = ({post}) => {
         </div>
           <UniBlock post={data.postFirst._id}/>
           <div className='bg-canvas'>
-          <img src={`${data.postFirst.imageUrl}`}></img>
+          <img src={`${data.postFirst.imageUrl}`} loading="lazy" decoding="async"></img>
           </div>
       </div>
     </article>

@@ -73,6 +73,7 @@ const UserForm = props => {
           placeholder="E-mail"
           onChange={onChange}
         />
+        {props.formType === 'signUp' && <small>10–128 символов: прописная и строчная буквы, цифра и специальный символ.</small>}
         <label htmlFor="password">Пароль</label>
         <input
           required

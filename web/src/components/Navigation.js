@@ -75,9 +75,8 @@ return (
                 })}>О себе</NavLink>
           </li>
           <li className="hvsubmenu">
-            <Link className="actv" to="#" >Разделы</Link>
             <span>
-              <ul className="submenu">
+              <ul>
                   <CatsPage />
               </ul>
               </span>

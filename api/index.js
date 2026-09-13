@@ -19,6 +19,8 @@ import helmet from 'helmet';
 import multer from 'multer';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 
 import mongoose from 'mongoose';
 import { update } from 'tar';
@@ -28,6 +30,32 @@ const __dirname = path.dirname(__filename);
 process.chdir(__dirname);
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+const PASSWORD_RULE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d\s]).{10,128}$/;
+const PASSWORD_RULE_MESSAGE = 'Пароль должен содержать 10–128 символов, прописную и строчную буквы, цифру и специальный символ.';
+const escapeRegex = value => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const mailTransport = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: String(process.env.SMTP_SECURE).toLowerCase() === 'true',
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+    })
+  : null;
+const hashResetToken = token => crypto.createHash('sha256').update(token).digest('hex');
+const sendEmail = async ({ to, subject, text, html }) => {
+  if (!mailTransport) {
+    console.warn('Email is not configured. Set SMTP_HOST, SMTP_USER and SMTP_PASSWORD in api/.env.');
+    return false;
+  }
+  try {
+    await mailTransport.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text, html });
+    return true;
+  } catch (error) {
+    console.error('Email delivery failed:', error.message);
+    return false;
+  }
+};
 
 const dateScalar = new GraphQLScalarType({
     name: 'Date',
@@ -65,8 +93,12 @@ const resolvers = {
     },
 
     Query: {
-      async getUsers() {
-        const users = await models.User.find({});
+      async getUsers(parent, args, { models, user }) {
+        if (!user) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        const currentUser = await models.User.findById(user.id).select('isAdmin');
+        const users = await models.User.find(currentUser?.isAdmin ? {} : { isDeleted: { $ne: true } });
         return users;
       },
       async getUser(parent, args, { models }) {
@@ -306,7 +338,7 @@ const resolvers = {
               return pos;
           },
   
-      postFeed: async (parent, { qualifier, limit, cursor }, { models, user }) => {
+      postFeed: async (parent, { qualifier, tag, limit = 100, cursor }, { models, user }) => {
 
         const currentUser = user ? await models.User.findById(user.id) : null;
         const isAdmin = Boolean(currentUser?.isAdmin);
@@ -315,28 +347,35 @@ const resolvers = {
         let hasNextPage = false;
         let totalQuery = visiblePostQuery;
 
-        if (cursor && qualifier) {
-          totalQuery = { ...visiblePostQuery, $or: [{author: qualifier}, {category: qualifier}], _id: { $lt: cursor } };
+        const tagQuery = tag
+          ? { tags: { $regex: `^#?${escapeRegex(tag)}$`, $options: 'i' } }
+          : null;
+        const qualifierQuery = qualifier ? { $or: [{author: qualifier}, {category: qualifier}] } : null;
+        const feedFilter = tagQuery || qualifierQuery;
+
+        if (cursor && feedFilter) {
+          totalQuery = { ...visiblePostQuery, ...feedFilter, _id: { $lt: cursor } };
         }
 
-        if(cursor && !qualifier){
+        if(cursor && !feedFilter){
           totalQuery = { ...visiblePostQuery, _id: { $lt: cursor } };
         }
         
-        if (!cursor && qualifier) {
-          totalQuery = { ...visiblePostQuery, $or: [{author: qualifier}, {category: qualifier}] };
+        if (!cursor && feedFilter) {
+          totalQuery = { ...visiblePostQuery, ...feedFilter };
         }
 
+        const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 100);
         let posts = await models.Post.find(totalQuery)
           .sort({ _id: -1 })
-          .limit(limit + 1);
+          .limit(safeLimit + 1);
   
-        if (posts.length > limit) {
+        if (posts.length > safeLimit) {
           hasNextPage = true;
           posts = posts.slice(0, -1);
         }
   
-        const newCursor = posts[posts.length - 1]._id;
+        const newCursor = posts.length ? posts[posts.length - 1]._id : '';
   
         return {
           posts,
@@ -347,9 +386,113 @@ const resolvers = {
   },
 
     Mutation: {
+      deleteUsers: async (_, { userIds, mode }, { models, user }) => {
+        if (!user) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        const currentUser = await models.User.findById(user.id).select('isAdmin');
+        if (!currentUser?.isAdmin) {
+          throw new GraphQLError('Only administrators can delete users', { extensions: { code: 'FORBIDDEN' } });
+        }
+
+        const ids = [...new Set((userIds || []).map(String))].filter(id => id !== String(user.id));
+        if (!ids.length) return 0;
+
+        const users = await models.User.find({ _id: { $in: ids } }).select('_id avatar isDeleted');
+        const objectIds = users.map(item => item._id);
+
+        if (mode === 'USER_DATA') {
+          await models.Post.updateMany({}, {
+            $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+          });
+          await models.Comment.updateMany({}, {
+            $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+          });
+          await models.Message.updateMany({}, {
+            $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+          });
+          await models.User.updateMany({}, { $pull: { family: { $in: objectIds } } });
+          await models.Chat.updateMany({}, { $pull: { participants: { $in: objectIds } } });
+
+          for (const deletedUser of users) {
+            deletedUser.name = 'Пользователь удален';
+            deletedUser.email = `deleted-${deletedUser._id}@invalid.local`;
+            deletedUser.password = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+            deletedUser.passwordResetTokenHash = undefined;
+            deletedUser.passwordResetExpires = undefined;
+            deletedUser.telephone = undefined;
+            deletedUser.avatar = undefined;
+            deletedUser.bio = undefined;
+            deletedUser.family = [];
+            deletedUser.messages = [];
+            deletedUser.posts = [];
+            deletedUser.comments = [];
+            deletedUser.isAdmin = false;
+            deletedUser.isDeleted = true;
+            await deletedUser.save();
+            const userFolder = path.join(process.cwd(), 'uploads', 'users', String(deletedUser._id));
+            fs.rmSync(userFolder, { recursive: true, force: true });
+          }
+          return users.length;
+        }
+
+        const posts = await models.Post.find({ author: { $in: objectIds } }).select('_id imageUrl imageUrl2 imageUrl3 iconPost');
+        const postIds = posts.map(post => post._id);
+
+        await models.Post.updateMany({}, {
+          $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+        });
+        await models.Comment.updateMany({}, {
+          $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+        });
+        await models.Message.updateMany({}, {
+          $pull: { likes: { user: { $in: objectIds } }, dislikes: { user: { $in: objectIds } } }
+        });
+        await models.User.updateMany({}, { $pull: { family: { $in: objectIds } } });
+        await models.Chat.deleteMany({ participants: { $in: objectIds } });
+
+        await models.Comment.deleteMany({ $or: [
+          { author: { $in: objectIds } },
+          { post: { $in: postIds } }
+        ] });
+        await models.Post.deleteMany({ _id: { $in: postIds } });
+        await models.Cat.updateMany({}, { $pull: { posts: { $in: postIds } } });
+        const messages = await models.Message.find({ $or: [
+          { user: { $in: objectIds } },
+          { addressee: { $in: ids } }
+        ] }).select('file');
+        await models.Message.deleteMany({ _id: { $in: messages.map(message => message._id) } });
+        const result = await models.User.deleteMany({ _id: { $in: objectIds } });
+
+        const removeUploadedFile = fileUrl => {
+          if (!fileUrl) return;
+          const fileName = decodeURIComponent(String(fileUrl).split('/').pop());
+          ['uploads', 'imgposts', 'imgmessages'].forEach(folder => {
+            fs.rmSync(path.join(process.cwd(), folder, fileName), { force: true });
+          });
+        };
+        posts.forEach(post => [post.imageUrl, post.imageUrl2, post.imageUrl3, post.iconPost].forEach(removeUploadedFile));
+        messages.forEach(message => String(message.file || '').split('|').forEach(removeUploadedFile));
+
+        for (const deletedUser of users) {
+          const userFolder = path.join(process.cwd(), 'uploads', 'users', String(deletedUser._id));
+          fs.rmSync(userFolder, { recursive: true, force: true });
+          if (deletedUser.avatar) {
+            const avatarName = decodeURIComponent(String(deletedUser.avatar).split('/').pop());
+            fs.rmSync(path.join(process.cwd(), 'avatars', avatarName), { force: true });
+          }
+        }
+        return result.deletedCount || 0;
+      },
       signUp: async (parent, { name, email, password }, { models }) => {
         // normalize email address
         email = email.trim().toLowerCase();
+        if (!PASSWORD_RULE.test(password)) {
+          throw new GraphQLError(PASSWORD_RULE_MESSAGE, { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        if (!name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new GraphQLError('Укажите корректное имя и адрес электронной почты.', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
         // hash the password
         const hashed = await bcrypt.hash(password, 10);
 
@@ -371,13 +514,88 @@ const resolvers = {
           subfolders.forEach(folder => {
             fs.mkdirSync(path.join(userFolder, folder), { recursive: true });
           });
+
+          const resetUrl = `${process.env.FRONTEND_URL || 'https://ichor.by'}/reset-password`;
+          const emailSent = await sendEmail({
+            to: email,
+            subject: 'Добро пожаловать на ICHOR.BY',
+            text: `Здравствуйте, ${name}!\n\nПоздравляем с регистрацией на сайте ICHOR.BY.\n\nЛогин: ${name}\nПароль: ${password}\n\nДля смены пароля используйте страницу: ${resetUrl}. Если пароль утрачен, запросите там одноразовую ссылку.\n\nБазовые правила:\n1. Уважайте других пользователей и не публикуйте оскорбления, спам и незаконный контент.\n2. Публикуйте только материалы, на которые у вас есть права.\n3. Не передавайте пароль третьим лицам.\n4. Не размещайте персональные данные и подозрительные ссылки.\n5. Администрация может скрыть материалы, нарушающие правила сайта.\n\nС уважением, команда ICHOR.BY`,
+            html: `<p>Здравствуйте, <strong>${name}</strong>!</p><p>Поздравляем с регистрацией на сайте ICHOR.BY.</p><p><strong>Логин:</strong> ${name}<br><strong>Пароль:</strong> ${password}</p><p>Для смены пароля откройте <a href="${resetUrl}">страницу восстановления пароля</a> и запросите одноразовую ссылку.</p><p><strong>Базовые правила:</strong></p><ol><li>Уважайте других пользователей; не публикуйте оскорбления и спам.</li><li>Публикуйте только материалы, на которые у вас есть права.</li><li>Не передавайте пароль третьим лицам.</li><li>Не размещайте персональные данные и подозрительные ссылки.</li><li>Администрация может скрыть материалы, нарушающие правила.</li></ol><p>С уважением, команда ICHOR.BY</p>`
+          });
+          if (!emailSent) {
+            await models.User.deleteOne({ _id: username._id });
+            fs.rmSync(userFolder, { recursive: true, force: true });
+            throw new GraphQLError('Регистрация временно недоступна: письмо не удалось отправить. Попробуйте позже.', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+          }
   
           // create and return the json web token
           return jwt.sign({ id: username._id }, process.env.JWT_SECRET);
         } catch (err) {
+          if (err instanceof GraphQLError) throw err;
+          if (err?.code === 11000) {
+            throw new GraphQLError('Пользователь с таким именем или email уже зарегистрирован.', { extensions: { code: 'BAD_USER_INPUT' } });
+          }
           // if there's a problem creating the account, throw an error
           throw new Error('Error creating account');
         }
+      },
+
+      requestPasswordReset: async (_, { email }, { models }) => {
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await models.User.findOne({ email: normalizedEmail }).select('+passwordResetTokenHash +passwordResetExpires');
+        // одинаковый ответ не раскрывает наличие аккаунта по адресу
+        if (!user) return 'Если аккаунт существует, письмо со ссылкой отправлено.';
+
+        const token = crypto.randomBytes(32).toString('hex');
+        user.passwordResetTokenHash = hashResetToken(token);
+        user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+        await user.save();
+        const resetUrl = `${process.env.FRONTEND_URL || 'https://ichor.by'}/reset-password?token=${token}`;
+        const emailSent = await sendEmail({
+          to: user.email,
+          subject: 'Восстановление пароля ICHOR.BY',
+          text: `Здравствуйте, ${user.name}!\n\nЧтобы задать новый пароль, перейдите по ссылке (она действует 1 час): ${resetUrl}\n\nЕсли вы не запрашивали восстановление, просто проигнорируйте это письмо.`,
+          html: `<p>Здравствуйте, <strong>${user.name}</strong>!</p><p>Чтобы задать новый пароль, перейдите по ссылке. Она действует 1 час:</p><p><a href="${resetUrl}">Восстановить пароль</a></p><p>Если вы не запрашивали восстановление, просто проигнорируйте это письмо.</p>`
+        });
+        if (!emailSent) {
+          user.passwordResetTokenHash = undefined;
+          user.passwordResetExpires = undefined;
+          await user.save();
+          throw new GraphQLError('Сервис отправки писем временно недоступен. Попробуйте позже.', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+        }
+        return 'Если аккаунт существует, письмо со ссылкой отправлено.';
+      },
+
+      resetPassword: async (_, { token, password }, { models }) => {
+        if (!PASSWORD_RULE.test(password)) {
+          throw new GraphQLError(PASSWORD_RULE_MESSAGE, { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const user = await models.User.findOne({
+          passwordResetTokenHash: hashResetToken(token),
+          passwordResetExpires: { $gt: new Date() }
+        }).select('+passwordResetTokenHash +passwordResetExpires');
+        if (!user) {
+          throw new GraphQLError('Ссылка восстановления недействительна или истекла.', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        user.password = await bcrypt.hash(password, 12);
+        user.passwordResetTokenHash = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        return jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+      },
+
+      changePassword: async (_, { currentPassword, newPassword }, { models, user }) => {
+        if (!user) throw new GraphQLError('Необходимо войти в аккаунт.', { extensions: { code: 'UNAUTHENTICATED' } });
+        if (!PASSWORD_RULE.test(newPassword)) {
+          throw new GraphQLError(PASSWORD_RULE_MESSAGE, { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const currentUser = await models.User.findById(user.id);
+        if (!currentUser || !(await bcrypt.compare(currentPassword, currentUser.password))) {
+          throw new GraphQLError('Текущий пароль указан неверно.', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        currentUser.password = await bcrypt.hash(newPassword, 12);
+        await currentUser.save();
+        return true;
       },
   
       signIn: async (parent, { name, email, password }, { models }) => {
@@ -386,7 +604,10 @@ const resolvers = {
           email = email.trim().toLowerCase();
         }
         const username = await models.User.findOne({
-          $or: [{ email }, { name }]
+          $and: [
+            { isDeleted: { $ne: true } },
+            { $or: [{ email }, { name }] }
+          ]
         });
         // if no user is found, throw an authentication error
         if (!username) {
@@ -650,6 +871,12 @@ const resolvers = {
           externalSource: externalSourceValue,
           tags,
         };
+
+        // Администраторские записи всегда остаются опубликованными и не попадают в модерацию.
+        if (currentUser?.isAdmin) {
+          updateFields.status = 'approved';
+          updateFields.moderationNote = null;
+        }
 
         if (category) {
           updateFields.category = new mongoose.Types.ObjectId(category);
@@ -1281,6 +1508,14 @@ const resolvers = {
 const DB_HOST = process.env.DB_HOST;
 
 mongoose.connect(DB_HOST);
+mongoose.connection.once('open', async () => {
+  // Older installations may still have the former unique name index.
+  try {
+    await models.User.collection.dropIndex('name_1');
+  } catch (error) {
+    if (error.codeName !== 'IndexNotFound') console.warn('Could not remove legacy user name index:', error.message);
+  }
+});
 const app = express();
 
 const httpServer = http.createServer(app);
@@ -1503,7 +1738,7 @@ app.post('/upload4', upload4.single('iconPost'), (req, res) => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    validationRules: [depthLimit(5), createComplexityLimitRule(1000)],
+    validationRules: [depthLimit(5), createComplexityLimitRule(3000)],
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
@@ -1519,7 +1754,9 @@ app.post('/upload4', upload4.single('iconPost'), (req, res) => {
     expressMiddleware(server, {
       context: async ({ req }) => {
         const token = req.headers.authorization || '';
-        const user = getUser(token);
+        const tokenUser = getUser(token);
+        const account = tokenUser ? await models.User.findById(tokenUser.id).select('isDeleted') : null;
+        const user = account && !account.isDeleted ? tokenUser : null;
         return { models, user };
       },
     }),

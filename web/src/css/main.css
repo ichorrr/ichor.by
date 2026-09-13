@@ -439,10 +439,6 @@ label.style-select {
   font-size: 1rem;
 }
 
-.required-tags-mobile {
-  margin-bottom: 1rem;
-}
-
 .required-tags-toggle {
   border: none;
   background: #159dc3;
@@ -499,7 +495,7 @@ label.style-select {
 @media (max-width: 960px) {
   .category-page-shell {
     flex-direction: column;
-    top: 80px;
+
   }
 
   .required-tags-sidebar {
@@ -520,9 +516,9 @@ label.style-select {
 }
 
 .profile-mobile-tabs {
-  margin-top: 70px;
+  margin-top: 90px;
   display: flex;
-  margin-bottom: 4px;
+  margin: 90px 1rem 0 1rem;
 }
 
 .profile-tab {
@@ -534,6 +530,11 @@ label.style-select {
   font-size: 0.9rem;
   text-align: left;
   cursor: pointer;
+}
+
+.profile-tab-label {
+  display: block;
+
 }
 
 .profile-tab.active {
@@ -1060,6 +1061,8 @@ a.delete-comm:hover {
   border-radius: 1rem;
   padding: 1rem 1.1rem 1.2rem;
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+  content-visibility: auto;
+  contain-intrinsic-size: 0 420px;
 }
 
 .required-tag-news-block__header {
@@ -2415,11 +2418,12 @@ input.script-url {
 
 .cats_block li h1 {
   padding: .2em 0;
-  font-size: 1.5em;
+  font-size: 1.1em;
+  font-weight: normal;
 }
 
 .cats_block li {
-  padding: 1.2em 5% 5em 5%;
+  padding: 1.2em 0 5em 0;
 }
 
 .top-new-post h1 {
@@ -2599,7 +2603,8 @@ input[type="text"], #password {
 
 .cats_block li h1 {
   padding: .2em 0;
-  font-size: 3em;
+  font-size: 1.8em;
+  font-weight: normal;
 }
 
 .cats_block li {
@@ -3427,7 +3432,8 @@ input.search-input {
 
   /* FIRST PAGE */
   .txtfPOst h1 {
-    font-size: 7em;
+    font-size: 6em;
+    line-height: .9em;
   }
   .rt-lenta-post {
     display: block;
@@ -3454,14 +3460,16 @@ input.search-input {
   }
 
   .post-cont {
-    margin-left: 230px;
+    margin-left: 180px;
   }
 
   .iconPost {
-    min-width: 180px;
-    max-width: 180px;
-    height: 180px;
-    margin-top: 1.5em;
+    min-width: 150px;
+    max-width: 150px;
+    height: 150px;
+    margin: 0;
+    padding: 0;
+
   }
 
   .css-plank-cat {
@@ -3512,12 +3520,12 @@ input.search-input {
   }
 
   .cats_block li h1 {
-    padding: .4em 0;
+    padding: 0 0 .4em 0;
     font-size: 2em;
   }
 
   .cats_block li {
-    padding: 2.5em 5% 8em 5%;
+    padding: 2em 5% 8em 2%;
   }
 
 .top-new-post h1 {

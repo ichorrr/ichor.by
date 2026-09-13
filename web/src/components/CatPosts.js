@@ -177,11 +177,6 @@ const CatPosts = ({ posts }) => {
           )}
 
           <div className="category-content">
-            <div className="all-post-block">
-              <div className={posts.catname === 'Новости' ? 'all_post news-cat' : 'all_post'}>
-                <span className="uname_weight">{posts.catname}</span> Всего {posts.posts.length} записей
-              </div>
-            </div>
             <div className="search-sort-controls">
               <input
                 type="text"

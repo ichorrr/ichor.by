@@ -10,6 +10,7 @@ type User {
   bio: String
   telephone: String
   lastVisit: Date
+  createdAt: Date
   family: [User]
   chatUsers: [User!]!
   messages: [Message]
@@ -20,6 +21,7 @@ type User {
   lastMessage: Message
   unreadCount: Int      # number of unread messages in the chat; computed server-side
   isAdmin: Boolean
+  isDeleted: Boolean
 }
 
 type Chat {
@@ -36,6 +38,11 @@ type ExternalSource {
 input ExternalSourceInput {
   icon: String
   url: String
+}
+
+enum UserDeletionMode {
+  CONTENT
+  USER_DATA
 }
 
 type Post {
@@ -115,6 +122,10 @@ type LikeResponse {
 type Mutation {
   signIn(email: String!, password: String!): String!
   signUp(name: String!, email: String!, password: String!): String!
+  deleteUsers(userIds: [ID!]!, mode: UserDeletionMode!): Int!
+  requestPasswordReset(email: String!): String!
+  resetPassword(token: String!, password: String!): String!
+  changePassword(currentPassword: String!, newPassword: String!): Boolean!
   createCat(catname: String!): Cat!
   createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String!, body: String!, body2: String, body3: String): Post!
   moderatePost(postId: String!, decision: String!, reason: String): Post
@@ -143,7 +154,7 @@ type Query {
   getComments(post: String!): [Comment!]!
   getPost(_id: ID!): Post!
   getCat(_id: ID!): Cat!
-  postFeed(cursor: String, limit: Int, qualifier: String): postFeed
+  postFeed(cursor: String, limit: Int, qualifier: String, tag: String): postFeed
   getPendingPosts: [Post!]!
   postFirst: Post!
   getMessages: [Message!]!

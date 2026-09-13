@@ -74,3 +74,78 @@ border-radius: 8px;
     color: #333;
     line-height: 1.6;
 }
+
+.admin-users-section {
+    margin: 2rem 0 3rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.admin-users-section h2 {
+    margin: 0 0 1rem;
+    font-size: 1.35rem;
+    font-weight: normal;
+}
+
+.admin-users-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-users-toolbar input,
+.admin-users-table input {
+    width: auto;
+    margin-right: .4rem;
+}
+
+.admin-delete-button {
+    padding: .5rem .8rem;
+    border: 0;
+    border-radius: 4px;
+    background: #a52b2b;
+    color: #fff;
+    cursor: pointer;
+}
+
+.admin-delete-button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.admin-users-table-wrap {
+    overflow-x: auto;
+}
+
+.admin-users-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+    padding: .65rem .45rem;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.admin-users-table th:first-child,
+.admin-users-table td:first-child {
+    width: 2rem;
+}
+
+.admin-delete-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .5rem;
+}
+
+.admin-delete-data-button {
+    background-color: #876c20;
+}

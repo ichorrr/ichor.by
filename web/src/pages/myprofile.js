@@ -11,7 +11,6 @@ const containerStyle = {
   display: 'flex',
   gap: 20,
   alignItems: 'flex-start',
-  padding: '1rem',
   boxSizing: 'border-box'
 };
 const leftStyle = { width: 340, top: 90, position: 'sticky' };
@@ -141,14 +140,16 @@ const MyProf = () => {
         <div className="profile-mobile-shell">
           <div className="profile-mobile-tabs">
             {tabs.map(tab => (
+              <>
               <button
                 key={tab.id}
                 type="button"
                 className={`profile-tab ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => handleTabChange(tab.id)}
               >
-                {tab.label}
               </button>
+              <div className="profile-tab-label">{tab.label}</div>
+              </>
             ))}
           </div>
 

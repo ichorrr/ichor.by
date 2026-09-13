@@ -22,13 +22,13 @@ import About from './about';
 import ChatPage from './chat';
 import TagPage from './tag';
 import AdminPage from './admin';
+import ForgotPassword from './forgot-password';
+import ResetPassword from './reset-password';
 
 const Pages = () => {
   const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
   if (loading) return <div><Loader  /></div>;
   if (error) return <p>error...</p>;
-
-let dnss = data.getPosts[1]._id;
 
   return (
     <BrowserRouter>
@@ -46,6 +46,8 @@ let dnss = data.getPosts[1]._id;
         <Route path="/users/:uname/post/:id" element={< PostPage />} />
         <Route path="/signup" element={< SignUp />} />
         <Route path="/signin" element={< SignIn type="signin"/>} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/new" element={<NewPost />} />
         <Route path="/myprofile" element={<MyProf />} />
         <Route path="/settings" element={<Settings />} />

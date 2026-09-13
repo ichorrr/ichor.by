@@ -29,6 +29,7 @@ const onChange = event => {
 
     refetchQueries: [{query: GET_USER}, {query: GET_ME}],
     onCompleted: data => {
+      window.alert('Регистрация завершена. На указанную электронную почту выслано письмо с логином, паролем, правилами сайта и инструкцией по смене пароля.');
       localStorage.setItem('token', data.signUp);
       window.location.replace('/');
     }

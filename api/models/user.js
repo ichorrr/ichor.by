@@ -7,8 +7,7 @@ const User = model(
     {
       name: {
         type: String,
-        required: true,
-        index: { unique: true }
+        required: true
       },
 
       email: {
@@ -19,6 +18,14 @@ const User = model(
       password: {
         type: String,
         required: true
+      },
+      passwordResetTokenHash: {
+        type: String,
+        select: false
+      },
+      passwordResetExpires: {
+        type: Date,
+        select: false
       },
       telephone: {
         type: String
@@ -60,6 +67,11 @@ const User = model(
       isAdmin: {
         type: Boolean,
         default: false
+      },
+      isDeleted: {
+        type: Boolean,
+        default: false,
+        index: true
       },
       posts: [
         {
