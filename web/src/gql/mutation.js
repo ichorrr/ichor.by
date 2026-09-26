@@ -7,6 +7,7 @@ const EDIT_POST = gql`
       $imageUrl: String, 
       $imageUrl2: String, 
       $imageUrl3: String,
+      $imageUrl4: String,
       $scriptUrl: Boolean, 
       $externalSource: ExternalSourceInput,
       $tags: [String],
@@ -14,7 +15,8 @@ const EDIT_POST = gql`
       $title: String!, 
       $body: String!, 
       $body2: String, 
-      $body3: String
+      $body3: String,
+      $body4: String
     ) {
     updatePost(
         _id: $id,
@@ -22,6 +24,7 @@ const EDIT_POST = gql`
         imageUrl: $imageUrl, 
         imageUrl2: $imageUrl2, 
         imageUrl3: $imageUrl3, 
+        imageUrl4: $imageUrl4,
         scriptUrl: $scriptUrl, 
         externalSource: $externalSource,
         tags: $tags,
@@ -29,7 +32,8 @@ const EDIT_POST = gql`
         title: $title, 
         body: $body, 
         body2: $body2, 
-        body3: $body3
+        body3: $body3,
+        body4: $body4
       ) {
       _id
         title
@@ -37,6 +41,7 @@ const EDIT_POST = gql`
         imageUrl
         imageUrl2
         imageUrl3
+        imageUrl4
         scriptUrl
         externalSource {
           icon
@@ -51,6 +56,7 @@ const EDIT_POST = gql`
         body
         body2
         body3
+        body4
         author {
           _id
           name

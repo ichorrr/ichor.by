@@ -6,6 +6,7 @@ import FormMessage from './FormMessage';
 import InfoUserChat from './InfoUserChat';
 import ImageViewer from './ImageViewer';
 import LikeDislike from './LikeDislike';
+import { getThumbnailUrl } from '../utils/media';
 
 const getFileAttachments = (file) => {
   if (!file) return [];
@@ -22,6 +23,33 @@ const getAttachmentType = (url) => {
 };
 
 const getAttachmentName = (url) => decodeURIComponent(url.split('/').pop().split('?')[0]);
+
+const PrivateChatImage = ({ url, name, style }) => {
+  const [source, setSource] = useState('');
+
+  useEffect(() => {
+    let objectUrl = null;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const token = localStorage.getItem('token') || '';
+        const response = await fetch(url, { headers: { Authorization: token } });
+        if (!response.ok) throw new Error('Не удалось загрузить вложение чата.');
+        objectUrl = URL.createObjectURL(await response.blob());
+        if (!cancelled) setSource(objectUrl);
+      } catch (error) {
+        if (!cancelled) setSource('');
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url]);
+
+  return source ? <img src={source} alt={name} style={style} /> : <span style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: '#222' }}>Загрузка…</span>;
+};
 
 const CREATE_MESSAGE = gql`
 mutation createMessage($text: String, $file: String, $addressee: String!) {
@@ -164,12 +192,13 @@ const MessageBubble = ({ message, mine, props, contextMenuId, setContextMenuPos,
                           onClick={openViewerAt}
                         >
                           {type === 'image' ? (
-                            <img
-                              src={attachmentUrl}
-                              alt={name}
-                              style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
-                              onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}
-                            />
+                            <div onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}>
+                              <PrivateChatImage
+                                url={getThumbnailUrl(attachmentUrl) || attachmentUrl}
+                                name={name}
+                                style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
+                              />
+                            </div>
                           ) : type === 'video' ? (
                             <div style={{ width: '100%', height: 160, borderRadius: 8, overflow: 'hidden', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                               <span>🎬 {name}</span>
@@ -250,7 +279,8 @@ const Messages = props => {
   const navigate = useNavigate();
 
   const { loading, error, data } = useQuery(GET_USER_MESSAGES, {
-    variables: { addressee: [`${props.mem}`, `${props.myId}`] }
+    variables: { addressee: [`${props.mem}`, `${props.myId}`] },
+    fetchPolicy: 'network-only',
   });
 
   const [messages, setMessages] = useState([]);
@@ -651,7 +681,7 @@ useEffect(() => {
       </div>
 
       </div>
-            <FormMessage onSend={handleSendMessage} />
+            <FormMessage onSend={handleSendMessage} addressee={props.mem} />
       {showInfoPanel && (
         <InfoUserChat 
           userData={chatUserData} 

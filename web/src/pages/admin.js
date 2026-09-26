@@ -22,7 +22,13 @@ const GET_PENDING_POSTS = gql`
         name
       }
       body
+      body2
+      body3
+      body4
       imageUrl
+      imageUrl2
+      imageUrl3
+      imageUrl4
       externalSource {
         icon
         url

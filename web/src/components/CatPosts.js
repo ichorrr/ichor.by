@@ -6,6 +6,7 @@ import LikeDislike from './LikeDislike';
 import useWindowSize from './UseWindowSize.js';
 
 const REQUIRED_TAGS = [
+  { name: 'Главное', icon: '📰' },
   { name: 'Технологии', icon: '💻' },
   { name: 'События', icon: '📅' },
   { name: 'Экономика', icon: '💰' },

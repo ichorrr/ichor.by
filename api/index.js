@@ -21,6 +21,10 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { spawn } from 'child_process';
+import sharp from 'sharp';
+import ffmpegPath from 'ffmpeg-static';
+import { fileTypeFromFile } from 'file-type';
 
 import mongoose from 'mongoose';
 import { update } from 'tar';
@@ -28,6 +32,222 @@ import { update } from 'tar';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 process.chdir(__dirname);
+
+const userStorageRoot = userId => path.join(__dirname, 'uploads', 'users', String(userId));
+const USER_STORAGE_LIMIT_BYTES = Math.max(1, Number(process.env.USER_STORAGE_LIMIT_MB) || 500) * 1024 * 1024;
+const TEMP_UPLOAD_TTL_MS = Math.max(1, Number(process.env.TEMP_UPLOAD_TTL_HOURS) || 24) * 60 * 60 * 1000;
+const SAFE_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/tiff']);
+const SAFE_VIDEO_MIMES = new Set(['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska', 'video/3gpp']);
+const SAFE_AUDIO_MIMES = new Set(['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/mp4', 'audio/aac', 'audio/flac']);
+const SAFE_CHAT_MIMES = new Set([...SAFE_IMAGE_MIMES, ...SAFE_VIDEO_MIMES, ...SAFE_AUDIO_MIMES, 'application/pdf']);
+const ensureUserStorage = userId => {
+  const root = userStorageRoot(userId);
+  ['posts', 'chats', 'user'].forEach(folder => fs.mkdirSync(path.join(root, folder), { recursive: true }));
+  return root;
+};
+const getDirectorySize = directory => {
+  if (!fs.existsSync(directory)) return 0;
+  let total = 0;
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isSymbolicLink()) continue;
+    if (entry.isDirectory()) total += getDirectorySize(entryPath);
+    else if (entry.isFile()) total += fs.statSync(entryPath).size;
+  }
+  return total;
+};
+const getUserStorageSize = userId => getDirectorySize(userStorageRoot(userId));
+const exceedsUserStorageQuota = (userId, additionalBytes = 0) => getUserStorageSize(userId) + additionalBytes > USER_STORAGE_LIMIT_BYTES;
+const cleanupAbandonedUploads = () => {
+  const usersDirectory = path.join(__dirname, 'uploads', 'users');
+  if (!fs.existsSync(usersDirectory)) return;
+  const cutoff = Date.now() - TEMP_UPLOAD_TTL_MS;
+  for (const userEntry of fs.readdirSync(usersDirectory, { withFileTypes: true })) {
+    if (!userEntry.isDirectory()) continue;
+    const temporaryDirectory = path.join(usersDirectory, userEntry.name, 'posts', '.tmp');
+    if (!fs.existsSync(temporaryDirectory)) continue;
+    for (const fileEntry of fs.readdirSync(temporaryDirectory, { withFileTypes: true })) {
+      const filePath = path.join(temporaryDirectory, fileEntry.name);
+      try {
+        const stats = fs.lstatSync(filePath);
+        if (stats.isSymbolicLink()) {
+          fs.unlinkSync(filePath);
+        } else if (stats.isDirectory()) {
+          if (stats.mtimeMs < cutoff) fs.rmSync(filePath, { recursive: true, force: true });
+        } else if (stats.mtimeMs < cutoff) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (error) {
+        console.warn(`Could not clean abandoned upload ${filePath}:`, error.message);
+      }
+    }
+  }
+};
+const safeStoredName = name => `${Date.now()}-${crypto.randomBytes(8).toString('hex')}-${path.basename(name).replace(/[^\w.\-]/g, '_')}`;
+const thumbnailPathFor = filePath => path.join(path.dirname(filePath), `${path.basename(filePath, path.extname(filePath))}.thumb.webp`);
+const createMediaThumbnail = async (filePath, mimetype = '') => {
+  const thumbnailPath = thumbnailPathFor(filePath);
+  try {
+    if (mimetype.startsWith('image/')) {
+      await sharp(filePath, { animated: false, limitInputPixels: 40_000_000 })
+        .rotate()
+        .resize({ width: 640, height: 480, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 78 })
+        .toFile(thumbnailPath);
+      return thumbnailPath;
+    }
+    if (mimetype.startsWith('video/') && ffmpegPath) {
+      await new Promise((resolve, reject) => {
+        const ffmpeg = spawn(ffmpegPath, [
+          '-hide_banner', '-loglevel', 'error', '-y', '-ss', '1', '-i', filePath,
+          '-frames:v', '1', '-vf', 'scale=640:-2', '-f', 'webp', thumbnailPath,
+        ], { windowsHide: true });
+        let stderr = '';
+        ffmpeg.stderr.on('data', chunk => { stderr += chunk.toString(); });
+        ffmpeg.on('error', reject);
+        ffmpeg.on('close', code => code === 0 ? resolve() : reject(new Error(stderr || `ffmpeg exited ${code}`)));
+      });
+      return thumbnailPath;
+    }
+  } catch (error) {
+    fs.rmSync(thumbnailPath, { force: true });
+    console.warn(`Thumbnail generation failed for ${path.basename(filePath)}:`, error.message);
+  }
+  return null;
+};
+const thumbnailUrlFor = url => {
+  try {
+    const parsed = new URL(String(url));
+    const originalName = path.posix.basename(parsed.pathname);
+    const thumbnailName = `${path.posix.basename(originalName, path.posix.extname(originalName))}.thumb.webp`;
+    parsed.pathname = `${path.posix.dirname(parsed.pathname)}/${encodeURIComponent(thumbnailName)}`;
+    return parsed.toString();
+  } catch (error) {
+    return '';
+  }
+};
+const publicUploadUrl = (req, relativePath) => `${req.get('x-forwarded-proto') || req.protocol}://${req.get('host')}${relativePath}`;
+const CHAT_MEDIA_URL_TTL_SECONDS = 15 * 60;
+const signChatMediaToken = ({ userId, ownerId, partnerId, fileName, legacy = false }) => {
+  const payload = Buffer.from(JSON.stringify({
+    userId: String(userId),
+    ownerId: String(ownerId || ''),
+    partnerId: String(partnerId || ''),
+    fileName: String(fileName),
+    legacy,
+    expiresAt: Math.floor(Date.now() / 1000) + CHAT_MEDIA_URL_TTL_SECONDS,
+  })).toString('base64url');
+  const signature = crypto.createHmac('sha256', process.env.JWT_SECRET).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+};
+const verifyChatMediaToken = token => {
+  try {
+    const [payload, signature] = String(token || '').split('.');
+    if (!payload || !signature) return null;
+    const expected = crypto.createHmac('sha256', process.env.JWT_SECRET).update(payload).digest();
+    const actual = Buffer.from(signature, 'base64url');
+    if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return null;
+    const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!decoded.userId || decoded.expiresAt < Math.floor(Date.now() / 1000)) return null;
+    return decoded;
+  } catch (error) {
+    return null;
+  }
+};
+const signChatFileUrl = (fileUrl, userId) => {
+  if (!fileUrl) return fileUrl;
+  return String(fileUrl).split('|').map(url => {
+    try {
+      const parsed = new URL(url);
+      const legacyMatch = parsed.pathname.match(/^\/imgmessages\/([^/]+)$/);
+      const privateMatch = parsed.pathname.match(/^\/uploads\/users\/([^/]+)\/chats\/([^/]+)\/([^/]+)$/);
+      if (!legacyMatch && !privateMatch) return url;
+      if (!userId) return '';
+      const decodedFileName = decodeURIComponent((legacyMatch || privateMatch)[legacyMatch ? 1 : 3]);
+      const token = signChatMediaToken({
+        userId,
+        ownerId: privateMatch?.[1],
+        partnerId: privateMatch?.[2],
+        fileName: decodedFileName,
+        legacy: Boolean(legacyMatch),
+      });
+      parsed.searchParams.set('access_token', token);
+      return parsed.toString();
+    } catch (error) {
+      return url;
+    }
+  }).join('|');
+};
+const storedPathFromUrl = url => {
+  try {
+    const pathname = decodeURIComponent(new URL(String(url), 'http://localhost').pathname).replace(/^\/+/, '');
+    const absolutePath = path.resolve(__dirname, pathname);
+    const allowedRoots = ['uploads', 'imgposts', 'imgmessages', 'avatars'].map(folder => path.resolve(__dirname, folder));
+    return allowedRoots.some(root => absolutePath.startsWith(`${root}${path.sep}`)) ? absolutePath : null;
+  } catch (error) {
+    return null;
+  }
+};
+const removeUploadedUrl = url => {
+  if (!url) return;
+  const filePath = storedPathFromUrl(url);
+  if (filePath) {
+    fs.rmSync(filePath, { force: true });
+    fs.rmSync(thumbnailPathFor(filePath), { force: true });
+  }
+};
+const validatePostMedia = fields => {
+  for (const [field, value] of Object.entries(fields)) {
+    const urls = String(value || '').split('|').filter(Boolean);
+    if (!urls.length) continue;
+    const videos = urls.filter(url => /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url.split('#')[0]));
+    if (videos.length && (videos.length !== 1 || urls.length !== 1)) {
+      throw new GraphQLError(`В блоке ${field} можно загрузить либо изображения, либо одно видео.`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (field === 'imageUrl' && urls.length > 1) {
+      throw new GraphQLError('В главном блоке можно загрузить только один файл.', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (field === 'iconPost' && videos.length) {
+      throw new GraphQLError('Для иконки записи разрешены только изображения.', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+  }
+};
+const removeChatFileCopies = (url, userId, addresseeId) => {
+  removeUploadedUrl(url);
+  if (!url || !userId || !addresseeId) return;
+  const filePath = storedPathFromUrl(url);
+  if (!filePath) return;
+  const filename = path.basename(filePath);
+  for (const [ownerId, partnerId] of [[userId, addresseeId], [addresseeId, userId]]) {
+    const counterpartPath = path.join(userStorageRoot(ownerId), 'chats', String(partnerId), filename);
+    fs.rmSync(counterpartPath, { force: true });
+    fs.rmSync(thumbnailPathFor(counterpartPath), { force: true });
+  }
+};
+const moveTempPostFiles = async post => {
+  const postFolder = path.join(userStorageRoot(post.author), 'posts', String(post._id));
+  fs.mkdirSync(postFolder, { recursive: true });
+  let changed = false;
+  for (const field of ['imageUrl', 'imageUrl2', 'imageUrl3', 'imageUrl4', 'iconPost']) {
+    const urls = String(post[field] || '').split('|').filter(Boolean);
+    const movedUrls = urls.map(url => {
+      const sourcePath = storedPathFromUrl(url);
+      if (!sourcePath || !sourcePath.includes(`${path.sep}.tmp${path.sep}`)) return url;
+      const filename = path.basename(sourcePath);
+      const destinationPath = path.join(postFolder, filename);
+      fs.renameSync(sourcePath, destinationPath);
+      const temporaryThumbnailPath = thumbnailPathFor(sourcePath);
+      if (fs.existsSync(temporaryThumbnailPath)) {
+        fs.renameSync(temporaryThumbnailPath, thumbnailPathFor(destinationPath));
+      }
+      changed = true;
+      const origin = new URL(url, 'https://api.ichor.by').origin;
+      return `${origin}/uploads/users/${post.author}/posts/${post._id}/${encodeURIComponent(filename)}`;
+    });
+    if (movedUrls.length) post[field] = movedUrls.join('|');
+  }
+  if (changed) await post.save();
+};
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
@@ -91,7 +311,6 @@ const resolvers = {
     Message: {
       unreadCount: (parent) => parent.unreadCount || 0
     },
-
     Query: {
       async getUsers(parent, args, { models, user }) {
         if (!user) {
@@ -110,14 +329,12 @@ const resolvers = {
       },
 
       async getCats() {
-        const cats = await models.Cat.find({});
-        return cats;
+        return await models.Cat.find({});
       },
-  
+
       async getPosts(parent, args, { models, user }) {
         const isAdmin = Boolean(user && (await models.User.findById(user.id))?.isAdmin);
         const query = isAdmin ? {} : { status: { $ne: 'pending' } };
-
         return await models.Post.find(query)
           .limit(100)
           .sort({ createdAt: -1, updatedAt: -1 })
@@ -125,8 +342,14 @@ const resolvers = {
           .populate('author')
           .populate({ path: 'comments', populate: { path: 'author', select: '_id name' } });
       },
-      async getMessages(parent, args, { models }) {
-        const messages = await models.Message.find({}).sort({createdAt: -1, updatedAt: -1});
+      async getMessages(parent, args, { models, user }) {
+        if (!user?.id) throw new GraphQLError('You must be signed in to read chat messages', { extensions: { code: 'UNAUTHENTICATED' } });
+        const messages = await models.Message.find({
+          $or: [
+            { user: new mongoose.Types.ObjectId(user.id) },
+            { addressee: String(user.id) },
+          ],
+        }).sort({ createdAt: -1, updatedAt: -1 });
         return messages;
       },
       async getMyListUsersChats(parent, args, { models, user }) {
@@ -185,6 +408,8 @@ const resolvers = {
                 _id: lastMessageDoc._id,
                 text: lastMessageDoc.text,
                 file: lastMessageDoc.file || null,
+                user: lastMessageDoc.user?._id || lastMessageDoc.user,
+                addressee: lastMessageDoc.addressee,
                 createdAt: lastMessageDoc.createdAt,
                 author: lastMessageDoc.user ? { _id: lastMessageDoc.user._id, name: lastMessageDoc.user.name, avatar: lastMessageDoc.user.avatar || null } : null,
                 unreadCount
@@ -225,6 +450,9 @@ const resolvers = {
 
 
         async getUserMessages(parent, args, { models, user }) {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in to read chat messages', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
     if (!args.addressee || !Array.isArray(args.addressee) || args.addressee.length < 2) {
         throw new GraphQLError('Addressee must be an array of two user IDs', {
             extensions: { code: 'BAD_USER_INPUT' },
@@ -232,6 +460,10 @@ const resolvers = {
     }
     
     // Convert both IDs to ObjectId for user field comparison
+    const requestedIds = args.addressee.map(String);
+    if (!requestedIds.includes(String(user.id)) || new Set(requestedIds).size !== 2 || requestedIds.some(id => !mongoose.Types.ObjectId.isValid(id))) {
+      throw new GraphQLError('You can only read a chat you participate in', { extensions: { code: 'FORBIDDEN' } });
+    }
     const [userAId, userBId] = args.addressee.map(id => new mongoose.Types.ObjectId(id));
     const [userAStr, userBStr] = args.addressee.map(id => String(id)); // Keep as strings for addressee field
     
@@ -269,7 +501,8 @@ const resolvers = {
     
     return messages;
 },
-      async getMessage(parent, args, { models }) {
+      async getMessage(parent, args, { models, user }) {
+        if (!user?.id) throw new GraphQLError('You must be signed in to read a chat message', { extensions: { code: 'UNAUTHENTICATED' } });
         const message = await models.Message.findById(args._id);
         if (!message) {
           throw new GraphQLError('Message not found', {
@@ -277,9 +510,11 @@ const resolvers = {
               code: 'NOT_FOUND',
             },
           });
-        } else {
-          return message; 
         }
+        if (String(message.user) !== String(user.id) && String(message.addressee) !== String(user.id)) {
+          throw new GraphQLError('You can only read a chat message addressed to you or sent by you', { extensions: { code: 'FORBIDDEN' } });
+        }
+        return message;
       },
       async getComments(parent, args, { models }) {
         const postcom = new mongoose.Types.ObjectId(args.post);
@@ -430,13 +665,11 @@ const resolvers = {
             deletedUser.isAdmin = false;
             deletedUser.isDeleted = true;
             await deletedUser.save();
-            const userFolder = path.join(process.cwd(), 'uploads', 'users', String(deletedUser._id));
-            fs.rmSync(userFolder, { recursive: true, force: true });
           }
           return users.length;
         }
 
-        const posts = await models.Post.find({ author: { $in: objectIds } }).select('_id imageUrl imageUrl2 imageUrl3 iconPost');
+        const posts = await models.Post.find({ author: { $in: objectIds } }).select('_id imageUrl imageUrl2 imageUrl3 imageUrl4 iconPost');
         const postIds = posts.map(post => post._id);
 
         await models.Post.updateMany({}, {
@@ -460,29 +693,47 @@ const resolvers = {
         const messages = await models.Message.find({ $or: [
           { user: { $in: objectIds } },
           { addressee: { $in: ids } }
-        ] }).select('file');
+        ] }).select('file user addressee');
+        for (const message of messages) {
+          String(message.file || '').split('|').filter(Boolean).forEach(url => removeChatFileCopies(url, message.user, message.addressee));
+        }
+        for (const post of posts) {
+          [post.imageUrl, post.imageUrl2, post.imageUrl3, post.imageUrl4, post.iconPost]
+            .flatMap(value => String(value || '').split('|'))
+            .forEach(removeUploadedUrl);
+        }
         await models.Message.deleteMany({ _id: { $in: messages.map(message => message._id) } });
         const result = await models.User.deleteMany({ _id: { $in: objectIds } });
 
-        const removeUploadedFile = fileUrl => {
-          if (!fileUrl) return;
-          const fileName = decodeURIComponent(String(fileUrl).split('/').pop());
-          ['uploads', 'imgposts', 'imgmessages'].forEach(folder => {
-            fs.rmSync(path.join(process.cwd(), folder, fileName), { force: true });
-          });
-        };
-        posts.forEach(post => [post.imageUrl, post.imageUrl2, post.imageUrl3, post.iconPost].forEach(removeUploadedFile));
-        messages.forEach(message => String(message.file || '').split('|').forEach(removeUploadedFile));
-
         for (const deletedUser of users) {
-          const userFolder = path.join(process.cwd(), 'uploads', 'users', String(deletedUser._id));
-          fs.rmSync(userFolder, { recursive: true, force: true });
-          if (deletedUser.avatar) {
-            const avatarName = decodeURIComponent(String(deletedUser.avatar).split('/').pop());
-            fs.rmSync(path.join(process.cwd(), 'avatars', avatarName), { force: true });
-          }
+          removeUploadedUrl(deletedUser.avatar);
+          fs.rmSync(userStorageRoot(deletedUser._id), { recursive: true, force: true });
         }
         return result.deletedCount || 0;
+      },
+      deleteMyAccount: async (_, __, { models, user }) => {
+        if (!user) throw new GraphQLError('Необходимо войти в аккаунт.', { extensions: { code: 'UNAUTHENTICATED' } });
+        const account = await models.User.findById(user.id);
+        if (!account || account.isDeleted) return true;
+        const accountId = account._id;
+        await models.Post.updateMany({}, { $pull: { likes: { user: accountId }, dislikes: { user: accountId } } });
+        await models.Comment.updateMany({}, { $pull: { likes: { user: accountId }, dislikes: { user: accountId } } });
+        await models.Message.updateMany({}, { $pull: { likes: { user: accountId }, dislikes: { user: accountId } } });
+        await models.User.updateMany({}, { $pull: { family: accountId } });
+        await models.Chat.updateMany({}, { $pull: { participants: accountId } });
+        account.name = 'Пользователь удален';
+        account.email = `deleted-${accountId}@invalid.local`;
+        account.password = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+        account.passwordResetTokenHash = undefined;
+        account.passwordResetExpires = undefined;
+        account.telephone = undefined;
+        account.avatar = undefined;
+        account.bio = undefined;
+        account.family = [];
+        account.isAdmin = false;
+        account.isDeleted = true;
+        await account.save();
+        return true;
       },
       signUp: async (parent, { name, email, password }, { models }) => {
         // normalize email address
@@ -504,16 +755,7 @@ const resolvers = {
           });
 
           // Create user folders
-          const userFolder = path.join(process.cwd(), 'api', 'uploads', 'users', String(username._id));
-          const subfolders = ['avatars', 'imgmessages', 'imgposts', 'arts'];
-          
-          // Create main user folder
-          fs.mkdirSync(userFolder, { recursive: true });
-          
-          // Create subfolders
-          subfolders.forEach(folder => {
-            fs.mkdirSync(path.join(userFolder, folder), { recursive: true });
-          });
+          const userFolder = ensureUserStorage(username._id);
 
           const resetUrl = `${process.env.FRONTEND_URL || 'https://ichor.by'}/reset-password`;
           const emailSent = await sendEmail({
@@ -652,21 +894,10 @@ const resolvers = {
         }
   
         try {
-          // remove related uploaded files safely
-          const deleteFile = (url, uploadDir) => {
-            if (!url) return;
-            const filename = String(url).split('/').pop();
-            if (!filename) return;
-            const filePath = path.join(process.cwd(), uploadDir, filename);
-            if (fs.existsSync(filePath)) {
-              fs.unlinkSync(filePath);
-            }
-          };
-  
-          deleteFile(post.imageUrl, 'uploads');
-          deleteFile(post.imageUrl2, 'imgposts');
-          deleteFile(post.imageUrl3, 'imgposts');
-          deleteFile(post.iconPost, 'imgposts');
+          fs.rmSync(path.join(userStorageRoot(post.author), 'posts', String(post._id)), { recursive: true, force: true });
+          [post.imageUrl, post.imageUrl2, post.imageUrl3, post.imageUrl4, post.iconPost]
+            .flatMap(value => String(value || '').split('|'))
+            .forEach(removeUploadedUrl);
   
           await models.Comment.deleteMany({ post: post._id });
           await post.deleteOne();
@@ -745,11 +976,8 @@ const resolvers = {
         }
         try {
           // if everything checks out, remove the message
-          if (message.file) {
-            var name = message.file.split("/").pop();
-            var pth = "./imgmessages/" + name;
-            fs.unlinkSync(pth, 'Content_For_Writing');
-          }
+          if (message?.file) String(message.file).split('|').filter(Boolean)
+            .forEach(url => removeChatFileCopies(url, message.user, message.addressee));
           await message.deleteOne();
           return true;
         } catch (err) {
@@ -782,15 +1010,7 @@ const resolvers = {
             // If imageIndex is provided, delete only that image
             if (imageIndex !== undefined && imageIndex !== null && imageIndex >= 0 && imageIndex < fileUrls.length) {
               const urlToDelete = fileUrls[imageIndex];
-              const name = urlToDelete.split("/").pop();
-              const pth = "./imgmessages/" + name;
-              try {
-                if (fs.existsSync(pth)) {
-                  fs.unlinkSync(pth);
-                }
-              } catch (fileErr) {
-                console.error('Error deleting file:', fileErr);
-              }
+              removeChatFileCopies(urlToDelete, message.user, message.addressee);
               
               // Remove the deleted image from the array
               fileUrls.splice(imageIndex, 1);
@@ -805,15 +1025,7 @@ const resolvers = {
             } else {
               // If no index or invalid index, delete all images (old behavior)
               for (const url of fileUrls) {
-                const name = url.split("/").pop();
-                const pth = "./imgmessages/" + name;
-                try {
-                  if (fs.existsSync(pth)) {
-                    fs.unlinkSync(pth);
-                  }
-                } catch (fileErr) {
-                  console.error('Error deleting file:', fileErr);
-                }
+                removeChatFileCopies(url, message.user, message.addressee);
               }
               const updatedMessage = await models.Message.findByIdAndUpdate(
                 _id,
@@ -830,7 +1042,7 @@ const resolvers = {
         }
       },
   
-      updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, scriptUrl, externalSource, tags, title, body, body2, body3, category, _id }, { models, user }) => {
+      updatePost: async (parent, { iconPost, imageUrl, imageUrl2, imageUrl3, imageUrl4, scriptUrl, externalSource, tags, title, body, body2, body3, body4, category, _id }, { models, user }) => {
         // if not a user, throw an Authentication Error
         if (!user) {
           throw new GraphQLError('You must be signed in to update a note', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -854,6 +1066,7 @@ const resolvers = {
             "You don't have permissions to update the note"
           , { extensions: { code: 'FORBIDDEN' } });
         }
+        validatePostMedia({ imageUrl, imageUrl2, imageUrl3, imageUrl4, iconPost });
         const externalSourceValue = externalSource && typeof externalSource === 'object'
           ? externalSource
           : { url: externalSource };
@@ -863,10 +1076,12 @@ const resolvers = {
           body,
           body2,
           body3,
+          body4,
           iconPost,
           imageUrl,
           imageUrl2,
           imageUrl3,
+          imageUrl4,
           scriptUrl,
           externalSource: externalSourceValue,
           tags,
@@ -926,6 +1141,7 @@ const resolvers = {
         if (!currentUser?.isAdmin && restrictedCategoryIds.includes(args.category)) {
           throw new GraphQLError('Only administrators can select category Новости or Статьи.', { extensions: { code: 'FORBIDDEN' } });
         }
+        validatePostMedia(args);
   
         const newPost = await models.Post({
           title: args.title,
@@ -933,6 +1149,7 @@ const resolvers = {
           imageUrl: args.imageUrl,
           imageUrl2: args.imageUrl2,
           imageUrl3: args.imageUrl3,
+          imageUrl4: args.imageUrl4,
           scriptUrl: args.scriptUrl,
           externalSource: args.externalSource && typeof args.externalSource === 'object'
             ? args.externalSource
@@ -941,12 +1158,14 @@ const resolvers = {
           body: args.body,
           body2: args.body2,
           body3: args.body3,
+          body4: args.body4,
           category: new mongoose.Types.ObjectId(args.category),
           author: new mongoose.Types.ObjectId(user.id),
           status: currentUser?.isAdmin ? 'approved' : 'pending'
         });
 
         const createPost = await newPost.save();
+        await moveTempPostFiles(createPost);
 
         const cat = await models.Cat.findById(
           new mongoose.Types.ObjectId(args.category)
@@ -1087,6 +1306,11 @@ const resolvers = {
             extensions: { code: 'NOT_FOUND' },
         });
        }
+
+         ensureUserStorage(author._id);
+         ensureUserStorage(recipient._id);
+         fs.mkdirSync(path.join(userStorageRoot(author._id), 'chats', String(recipient._id)), { recursive: true });
+         fs.mkdirSync(path.join(userStorageRoot(recipient._id), 'chats', String(author._id)), { recursive: true });
        
        const senderIdObj = new mongoose.Types.ObjectId(user.id);
        if (!recipient.family.some(id => id.equals(senderIdObj))) {
@@ -1112,6 +1336,8 @@ const resolvers = {
           throw new GraphQLError('User ID not found in authentication context', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
         }
 
+        const previousUser = avatar ? await models.User.findById(currentUserId).select('avatar') : null;
+
         const updated = await models.User.findOneAndUpdate(
           { _id: new mongoose.Types.ObjectId(currentUserId) },
           { 
@@ -1128,6 +1354,10 @@ const resolvers = {
 
         if (!updated) {
           throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+
+        if (previousUser?.avatar && previousUser.avatar !== updated.avatar) {
+          removeUploadedUrl(previousUser.avatar);
         }
 
         console.log(`User ${currentUserId} updated`, { name, email, telephone, avatar: avatar ? 'yes' : 'no', bio });
@@ -1190,15 +1420,8 @@ const resolvers = {
         // Delete image files if they exist
         for (const message of messages) {
           if (message.file) {
-            try {
-              const name = message.file.split("/").pop();
-              const pth = "./imgmessages/" + name;
-              if (fs.existsSync(pth)) {
-                fs.unlinkSync(pth);
-              }
-            } catch (fileErr) {
-              console.error('Error deleting message file:', fileErr);
-            }
+            String(message.file).split('|').filter(Boolean)
+              .forEach(url => removeChatFileCopies(url, message.user, message.addressee));
           }
         }
         
@@ -1386,14 +1609,8 @@ const resolvers = {
         const userDoc = await models.User.findById(currentUserId);
 
         if (userDoc && userDoc.avatar) {
-          const filename = userDoc.avatar.split('/').pop();
-          const filePath = path.join('./avatars', filename);
-
           try {
-            if (fs.existsSync(filePath)) {
-              fs.unlinkSync(filePath);
-              console.log(`Deleted avatar file for user ${currentUserId}: ${filename}`);
-            }
+            removeUploadedUrl(userDoc.avatar);
           } catch (fileErr) {
             console.error(`Failed to delete avatar file for user ${currentUserId}:`, fileErr);
           }
@@ -1451,17 +1668,28 @@ const resolvers = {
       async comments(parent) {
         return await models.Comment.find({ author: parent._id }).sort({createdAt: -1, updatedAt: -1});
       },
-      async messages(parent, args, { models }) {
-        return await models.Message.find({ user: parent._id }).sort({createdAt: -1, updatedAt: -1});
+      async messages(parent, args, { models, user }) {
+        if (!user?.id || String(parent._id) !== String(user.id)) return [];
+        return await models.Message.find({ user: parent._id }).sort({ createdAt: -1, updatedAt: -1 });
       },
       family: async (parent, args, { models }) => {
         // parent.family is an array of user IDs
         if (!parent.family || parent.family.length === 0) return [];
         return await models.User.find({ _id: { $in: parent.family } });
       },
-      lastMessage: async (parent, args, { models }) => {
+      lastMessage: async (parent, args, { models, user }) => {
+        if (!user?.id) return null;
+        if (parent.lastMessage && typeof parent.lastMessage === 'object' && parent.lastMessage._id) {
+          const message = parent.lastMessage;
+          return String(message.user) === String(user.id) || String(message.addressee) === String(user.id)
+            ? message
+            : null;
+        }
+        if (String(parent._id) !== String(user.id)) return null;
         if (!parent.lastMessage) return null;
-        return await models.Message.findById(parent.lastMessage);
+        const message = await models.Message.findById(parent.lastMessage);
+        if (!message || (String(message.user) !== String(user.id) && String(message.addressee) !== String(user.id))) return null;
+        return message;
       },
     },
   
@@ -1499,10 +1727,15 @@ const resolvers = {
       }
     },
     Message: {
-      author: async (parent, args, { models }) => {
-        // parent.user is the ObjectId reference to the user
-        return await models.User.findById(parent.user);
-      }
+      unreadCount: parent => parent.unreadCount || 0,
+      file: (parent, args, { user }) => {
+        const isChatMedia = String(parent.file || '').split('|').some(url => /\/imgmessages\/|\/uploads\/users\/[^/]+\/chats\//.test(url));
+        if (isChatMedia && (!user?.id || (String(parent.user?._id || parent.user) !== String(user.id) && String(parent.addressee) !== String(user.id)))) {
+          return null;
+        }
+        return signChatFileUrl(parent.file, user?.id);
+      },
+      author: async (parent, args, { models }) => await models.User.findById(parent.user)
     },
   };
 const DB_HOST = process.env.DB_HOST;
@@ -1556,6 +1789,20 @@ const ensureDir = (dir) => {
 
 // create all expected storage dirs
 ['uploads', 'imgposts', 'imgmessages', 'avatars'].forEach(ensureDir);
+
+const abandonedUploadCleanupTimer = setInterval(() => {
+  try {
+    cleanupAbandonedUploads();
+  } catch (error) {
+    console.error('Abandoned upload cleanup failed:', error);
+  }
+}, 60 * 60 * 1000);
+abandonedUploadCleanupTimer.unref();
+try {
+  cleanupAbandonedUploads();
+} catch (error) {
+  console.error('Initial abandoned upload cleanup failed:', error);
+}
 
 const storageMessage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -1642,79 +1889,320 @@ const uploadAvatar = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
-app.use('/uploads', express.static('uploads'));
+const setUploadedAssetSecurityHeaders = (res, filePath) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  if (/\.(svg|svgz|html?|xhtml|xml)$/i.test(filePath)) {
+    res.setHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    res.setHeader('Content-Disposition', 'attachment');
+  }
+};
 
-app.use('/imgposts', express.static('imgposts'));
+app.use('/imgposts', express.static('imgposts', { setHeaders: setUploadedAssetSecurityHeaders }));
 
-app.use('/imgmessages', express.static('imgmessages'));
-
-app.use('/avatars', express.static('avatars'));
-
-// Upload avatar endpoint - requires authentication
-app.post('/uploadavatar', uploadAvatar.single('avatar'), (req, res) => {
+const sendAuthorizedChatMedia = async (req, res, next) => {
+  const token = verifyChatMediaToken(req.query.access_token);
+  if (!token) return res.status(401).json({ error: 'Ссылка на вложение истекла или недействительна.' });
+  let session;
   try {
-    const token = req.headers.authorization || '';
-    const user = getUser(token);
-    
-    if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    session = getUser(req.headers.authorization || '');
+  } catch (error) {
+    return res.status(401).json({ error: 'Требуется действующая авторизация.' });
+  }
+  if (!session?.id || String(session.id) !== token.userId) {
+    return res.status(403).json({ error: 'Ссылка на вложение выписана для другого пользователя.' });
+  }
 
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
+  const requestedFileName = path.basename(req.params.fileName || '');
+  const isThumbnail = requestedFileName.endsWith('.thumb.webp');
+  const expectedFileName = isThumbnail
+    ? `${path.basename(token.fileName, path.extname(token.fileName))}.thumb.webp`
+    : token.fileName;
+  if (requestedFileName !== expectedFileName || path.basename(token.fileName) !== token.fileName || /[\\/]/.test(token.fileName)) {
+    return res.status(403).json({ error: 'Нет доступа к файлу.' });
+  }
 
-    const filename = encodeURIComponent(req.file.filename);
-    const avatarUrl = `https://api.ichor.by/avatars/${filename}`;
-    
-    console.log(`Avatar upload for user ${user.id}: ${filename}`);
-    res.json({ url: avatarUrl });
-  } catch (err) {
-    console.error('Avatar upload error:', err);
-    res.status(401).json({ error: 'Invalid token' });
+  const account = await models.User.findById(token.userId).select('_id isDeleted');
+  if (!account || account.isDeleted) return res.status(401).json({ error: 'Аккаунт недоступен.' });
+
+  let originalPath;
+  if (token.legacy) {
+    if (!req.path.startsWith('/imgmessages/') || req.params.fileName !== token.fileName) {
+      return res.status(403).json({ error: 'Нет доступа к файлу.' });
+    }
+    const legacyPath = `/imgmessages/${encodeURIComponent(token.fileName)}`;
+    const message = await models.Message.findOne({
+      file: { $regex: `${escapeRegex(legacyPath)}(?:\\||$)` },
+      $or: [
+        { user: account._id },
+        { addressee: String(account._id) },
+      ],
+    }).select('_id');
+    if (!message) return res.status(403).json({ error: 'Нет доступа к файлу.' });
+    originalPath = path.resolve(__dirname, 'imgmessages', token.fileName);
+  } else {
+    if (!req.path.startsWith('/uploads/users/') || token.ownerId !== req.params.ownerId || token.partnerId !== req.params.partnerId) {
+      return res.status(403).json({ error: 'Нет доступа к файлу.' });
+    }
+    if (String(account._id) !== token.ownerId && String(account._id) !== token.partnerId) {
+      return res.status(403).json({ error: 'Только участники переписки могут открыть вложение.' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(token.ownerId) || !mongoose.Types.ObjectId.isValid(token.partnerId)) {
+      return res.status(404).json({ error: 'Файл не найден.' });
+    }
+    const attachmentPath = `/uploads/users/${token.ownerId}/chats/${token.partnerId}/${encodeURIComponent(token.fileName)}`;
+    const message = await models.Message.findOne({
+      file: { $regex: `${escapeRegex(attachmentPath)}(?:\\||$)` },
+      $or: [
+        { user: new mongoose.Types.ObjectId(token.ownerId), addressee: token.partnerId },
+        { user: new mongoose.Types.ObjectId(token.partnerId), addressee: token.ownerId },
+      ],
+    }).select('_id');
+    if (!message) return res.status(404).json({ error: 'Вложение не найдено в переписке.' });
+    originalPath = path.resolve(userStorageRoot(token.ownerId), 'chats', token.partnerId, token.fileName);
+  }
+
+  const targetPath = isThumbnail ? thumbnailPathFor(originalPath) : originalPath;
+  const expectedDirectory = path.dirname(originalPath);
+  if (path.dirname(targetPath) !== expectedDirectory) return res.status(403).json({ error: 'Некорректный путь к файлу.' });
+  try {
+    if (!fs.lstatSync(targetPath).isFile()) return res.status(404).json({ error: 'Файл не найден.' });
+  } catch (error) {
+    return res.status(404).json({ error: 'Файл не найден.' });
+  }
+
+  const detectedType = await fileTypeFromFile(targetPath);
+  const safeInlineMimes = new Set([...SAFE_IMAGE_MIMES, ...SAFE_VIDEO_MIMES, ...SAFE_AUDIO_MIMES]);
+  const servedMime = detectedType && SAFE_CHAT_MIMES.has(detectedType.mime) ? detectedType.mime : 'application/octet-stream';
+
+  res.set({
+    'Cache-Control': 'private, no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Type': servedMime,
+    'Content-Disposition': safeInlineMimes.has(servedMime) ? 'inline' : 'attachment',
+    'Referrer-Policy': 'no-referrer',
+  });
+  return res.sendFile(targetPath, error => {
+    if (error && !res.headersSent) next(error);
+  });
+};
+
+app.get('/uploads/users/:ownerId/chats/:partnerId/:fileName', (req, res, next) => {
+  sendAuthorizedChatMedia(req, res, next).catch(next);
+});
+app.get('/imgmessages/:fileName', (req, res, next) => {
+  sendAuthorizedChatMedia(req, res, next).catch(next);
+});
+
+app.get('/uploads/users/:ownerId/posts/.tmp/:fileName', async (req, res, next) => {
+  try {
+    const session = getUser(req.headers.authorization || '');
+    if (!session?.id || String(session.id) !== req.params.ownerId) {
+      return res.status(403).json({ error: 'Черновой файл доступен только загрузившему его пользователю.' });
+    }
+    const account = await models.User.findById(session.id).select('_id isDeleted');
+    if (!account || account.isDeleted) return res.status(401).json({ error: 'Аккаунт недоступен.' });
+    const fileName = path.basename(req.params.fileName);
+    if (fileName !== req.params.fileName || /[\\/]/.test(fileName)) return res.sendStatus(404);
+    const filePath = path.resolve(userStorageRoot(account._id), 'posts', '.tmp', fileName);
+    try {
+      if (!fs.lstatSync(filePath).isFile()) return res.sendStatus(404);
+    } catch (error) {
+      return res.sendStatus(404);
+    }
+    res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
+    return res.sendFile(filePath, error => { if (error && !res.headersSent) next(error); });
+  } catch (error) {
+    return res.status(401).json({ error: 'Требуется действующая авторизация.' });
   }
 });
 
-app.post('/uploadmessage', uploadMessage.single('file'), (req, res) => {
-  // return URL that matches the static route for message images
+app.use('/uploads/users/:ownerId/posts/.tmp', (req, res) => res.sendStatus(404));
 
-  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
-  res.json({
-    url: `https://api.ichor.by/imgmessages/${filename}`,
-  });
-  console.log('uploaded message file', req.file);
+// Other user uploads (posts, avatars, thumbnails) are public; chat paths above are protected.
+app.use('/uploads', express.static('uploads', { setHeaders: setUploadedAssetSecurityHeaders }));
+
+app.use('/avatars', express.static('avatars', { setHeaders: setUploadedAssetSecurityHeaders }));
+
+const authenticateUpload = async (req, res, next) => {
+  try {
+    const payload = getUser(req.headers.authorization || '');
+    if (!payload?.id) return res.status(401).json({ error: 'Требуется авторизация.' });
+    const account = await models.User.findById(payload.id).select('_id isDeleted');
+    if (!account || account.isDeleted) return res.status(401).json({ error: 'Аккаунт недоступен.' });
+    req.uploadUser = account;
+    ensureUserStorage(account._id);
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: 'Недействительный токен.' });
+  }
+};
+
+const makeUserUpload = folder => multer.diskStorage({
+  destination: (req, file, callback) => {
+    const destination = path.join(userStorageRoot(req.uploadUser._id), folder);
+    fs.mkdirSync(destination, { recursive: true });
+    callback(null, destination);
+  },
+  filename: (req, file, callback) => callback(null, safeStoredName(file.originalname))
 });
 
-app.post('/upload', upload.single('imageUrl'), (req, res) => {
-  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
-  res.json({
-    url: `https://api.ichor.by/uploads/${filename}`,
-  });
-  console.log(req.file);
+const userAvatarUpload = multer({ storage: makeUserUpload('user'), limits: { fileSize: 5 * 1024 * 1024, fields: 0, parts: 1 } });
+const userMessageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, callback) => {
+      const destination = path.join(userStorageRoot(req.uploadUser._id), 'chats', String(req.body.addressee || 'unknown'));
+      fs.mkdirSync(destination, { recursive: true });
+      callback(null, destination);
+    },
+    filename: (req, file, callback) => callback(null, safeStoredName(file.originalname))
+  }),
+  limits: { fileSize: 50 * 1024 * 1024, files: 5, fields: 1, fieldSize: 128, parts: 6 }
+});
+const userPostUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, callback) => {
+      const destination = path.join(userStorageRoot(req.uploadUser._id), 'posts', '.tmp');
+      fs.mkdirSync(destination, { recursive: true });
+      callback(null, destination);
+    },
+    filename: (req, file, callback) => callback(null, safeStoredName(file.originalname))
+  }),
+  limits: { fileSize: 50 * 1024 * 1024, files: 12, fields: 2, fieldSize: 128, parts: 14 }
 });
 
-app.post('/upload2', upload2.single('imageUrl2'), (req, res) => {
-  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
-  res.json({
-    url: `https://api.ichor.by/imgposts/${filename}`,
-  });
-  console.log(req.file);
+app.post('/uploadavatar', authenticateUpload, (req, res, next) => userAvatarUpload.single('avatar')(req, res, error => {
+  if (error) return next(error);
+  return next();
+}), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Файл не выбран.' });
+  const detectedType = await fileTypeFromFile(req.file.path);
+  if (!detectedType || !SAFE_IMAGE_MIMES.has(detectedType.mime)) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(415).json({ error: 'Аватар должен быть файлом JPEG, PNG, WebP, GIF или AVIF.' });
+  }
+  if (exceedsUserStorageQuota(req.uploadUser._id, req.file.size)) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(413).json({ error: `Превышена квота хранилища (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ). Удалите ненужные файлы или обратитесь к администратору.` });
+  }
+  await createMediaThumbnail(req.file.path, detectedType.mime);
+  if (exceedsUserStorageQuota(req.uploadUser._id)) {
+    removeUploadedUrl(publicUploadUrl(req, `/uploads/users/${req.uploadUser._id}/user/${encodeURIComponent(req.file.filename)}`));
+    return res.status(413).json({ error: `Превышена квота хранилища (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ).` });
+  }
+  res.json({ url: publicUploadUrl(req, `/uploads/users/${req.uploadUser._id}/user/${encodeURIComponent(req.file.filename)}`) });
 });
 
-app.post('/upload3', upload3.single('imageUrl3'), (req, res) => {
-  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
-  res.json({
-    url: `https://api.ichor.by/imgposts/${filename}`,
-  });
-  console.log(req.file);
+app.post('/uploadmessage', authenticateUpload, (req, res, next) => userMessageUpload.single('file')(req, res, error => {
+  if (error) return next(error);
+  return next();
+}), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Файл не выбран.' });
+  const detectedType = await fileTypeFromFile(req.file.path);
+  if (!detectedType || !SAFE_CHAT_MIMES.has(detectedType.mime)) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(415).json({ error: 'Неподдерживаемый тип вложения. Разрешены изображения, видео, аудио и PDF.' });
+  }
+  const recipientId = String(req.body.addressee || '');
+  if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(400).json({ error: 'Некорректный собеседник.' });
+  }
+  const recipient = await models.User.findById(recipientId).select('_id isDeleted');
+  if (!recipient || recipient.isDeleted) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(404).json({ error: 'Собеседник не найден.' });
+  }
+  ensureUserStorage(recipient._id);
+  if (exceedsUserStorageQuota(req.uploadUser._id, req.file.size) || exceedsUserStorageQuota(recipientId, req.file.size)) {
+    fs.rmSync(req.file.path, { force: true });
+    return res.status(413).json({ error: `Превышена квота хранилища одного из участников (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ).` });
+  }
+  const counterpartFolder = path.join(userStorageRoot(recipientId), 'chats', String(req.uploadUser._id));
+  fs.mkdirSync(counterpartFolder, { recursive: true });
+  const recipientFilePath = path.join(counterpartFolder, req.file.filename);
+  fs.copyFileSync(req.file.path, recipientFilePath);
+  const thumbnailPath = await createMediaThumbnail(req.file.path, detectedType.mime);
+  if (thumbnailPath) fs.copyFileSync(thumbnailPath, thumbnailPathFor(recipientFilePath));
+  if (exceedsUserStorageQuota(req.uploadUser._id) || exceedsUserStorageQuota(recipientId)) {
+    removeChatFileCopies(publicUploadUrl(req, `/uploads/users/${req.uploadUser._id}/chats/${recipientId}/${encodeURIComponent(req.file.filename)}`), req.uploadUser._id, recipientId);
+    return res.status(413).json({ error: `Превышена квота хранилища одного из участников (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ).` });
+  }
+  res.json({ url: publicUploadUrl(req, `/uploads/users/${req.uploadUser._id}/chats/${recipientId}/${encodeURIComponent(req.file.filename)}`) });
 });
 
-app.post('/upload4', upload4.single('iconPost'), (req, res) => {
-  const filename = encodeURIComponent(req.file.filename || req.file.originalname);
-  res.json({
-    url: `https://api.ichor.by/imgposts/${filename}`,
-  });
-  console.log(req.file);
+app.post('/uploadpost', authenticateUpload, (req, res, next) => userPostUpload.array('files', 12)(req, res, error => {
+  if (error) return next(error);
+  return next();
+}), async (req, res) => {
+  const files = req.files || [];
+  if (!files.length) return res.status(400).json({ error: 'Файлы не выбраны.' });
+  const slot = String(req.body.slot || '');
+  if (!['imageUrl', 'imageUrl2', 'imageUrl3', 'imageUrl4', 'iconPost'].includes(slot)) {
+    files.forEach(file => fs.rmSync(file.path, { force: true }));
+    return res.status(400).json({ error: 'Некорректный блок записи.' });
+  }
+  const detectedFiles = await Promise.all(files.map(async file => ({ file, type: await fileTypeFromFile(file.path) })));
+  const videoFiles = detectedFiles.filter(item => item.type && SAFE_VIDEO_MIMES.has(item.type.mime)).map(item => item.file);
+  const imageFiles = detectedFiles.filter(item => item.type && SAFE_IMAGE_MIMES.has(item.type.mime)).map(item => item.file);
+  const invalidFiles = detectedFiles.filter(item => !item.type || (!SAFE_VIDEO_MIMES.has(item.type.mime) && !SAFE_IMAGE_MIMES.has(item.type.mime)));
+  const detectedMimeByFile = new Map(detectedFiles.map(item => [item.file, item.type?.mime || '']));
+  const singleFileSlotHasManyFiles = ['imageUrl', 'iconPost'].includes(slot) && files.length > 1;
+  if (videoFiles.some(file => file.size > 10 * 1024 * 1024) || (videoFiles.length && files.length !== 1) || invalidFiles.length || singleFileSlotHasManyFiles || imageFiles.length + videoFiles.length !== files.length || (slot === 'iconPost' && videoFiles.length > 0)) {
+    files.forEach(file => fs.rmSync(file.path, { force: true }));
+    return res.status(400).json({ error: 'Видео до 10 МБ; поддерживаются только изображения и видео, не более одного видео на блок.' });
+  }
+
+  const batchSize = files.reduce((sum, file) => sum + file.size, 0);
+  if (exceedsUserStorageQuota(req.uploadUser._id, batchSize)) {
+    files.forEach(file => fs.rmSync(file.path, { force: true }));
+    return res.status(413).json({ error: `Превышена квота хранилища (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ). Удалите ненужные файлы перед загрузкой.` });
+  }
+
+  let postFolder = null;
+  if (req.body.postId) {
+    const post = await models.Post.findById(req.body.postId).select('_id author');
+    if (!post || String(post.author) !== String(req.uploadUser._id)) {
+      files.forEach(file => fs.rmSync(file.path, { force: true }));
+      return res.status(403).json({ error: 'Нет доступа к записи.' });
+    }
+    postFolder = path.join(userStorageRoot(req.uploadUser._id), 'posts', String(post._id));
+    fs.mkdirSync(postFolder, { recursive: true });
+  }
+
+  const urls = await Promise.all(files.map(async file => {
+    if (postFolder) fs.renameSync(file.path, path.join(postFolder, file.filename));
+    const finalFilePath = postFolder ? path.join(postFolder, file.filename) : file.path;
+    const mimetype = detectedMimeByFile.get(file) || '';
+    await createMediaThumbnail(finalFilePath, mimetype);
+    const storagePath = postFolder
+      ? `/uploads/users/${req.uploadUser._id}/posts/${req.body.postId}/${encodeURIComponent(file.filename)}`
+      : `/uploads/users/${req.uploadUser._id}/posts/.tmp/${encodeURIComponent(file.filename)}`;
+    return publicUploadUrl(req, storagePath);
+  }));
+  if (exceedsUserStorageQuota(req.uploadUser._id)) {
+    files.forEach(file => {
+      const savedPath = postFolder ? path.join(postFolder, file.filename) : file.path;
+      fs.rmSync(savedPath, { force: true });
+      fs.rmSync(thumbnailPathFor(savedPath), { force: true });
+    });
+    return res.status(413).json({ error: `Превышена квота хранилища (${Math.round(USER_STORAGE_LIMIT_BYTES / 1024 / 1024)} МБ).` });
+  }
+  res.json({ urls });
+});
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    const status = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
+    const message = error.code === 'LIMIT_FILE_SIZE'
+      ? 'Размер одного из файлов превышает допустимый лимит.'
+      : 'Превышено допустимое количество файлов или размер запроса.';
+    return res.status(status).json({ error: message });
+  }
+  if (req.path.startsWith('/upload')) {
+    console.error('Upload request failed:', error);
+    return res.status(500).json({ error: 'Не удалось обработать загрузку.' });
+  }
+  return next(error);
 });
 
 // app.use(express.static("/"));

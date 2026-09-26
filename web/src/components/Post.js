@@ -8,6 +8,7 @@ import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments.js';
 import {GET_ME} from '../gql/query';
 import LikeDislike from './LikeDislike';
+import PostMedia from './PostMedia';
 
 const NEW_COMMENT = gql`
   mutation createComment($text: String!, $post: String!) {
@@ -136,7 +137,7 @@ const Post = ({ post }) => {
     </div>
     
     {post.imageUrl && (<div className="imgStyle">
-      <img src={post.imageUrl} />
+      <PostMedia urls={post.imageUrl} alt={post.title} />
     </div>)}
 
       <div className="absPostPart">
@@ -146,17 +147,25 @@ const Post = ({ post }) => {
 
           {post.imageUrl2 && (
           <div className="img-post">
-            <img src={post.imageUrl2} />
+            <PostMedia urls={post.imageUrl2} enableSlider alt={post.title} />
           </div>)}
 
           <ReactMarkdown children={post.body2}  />
 
           {post.imageUrl3 && (
           <div className="img-post">
-            <img src={post.imageUrl3} />
+            <PostMedia urls={post.imageUrl3} enableSlider alt={post.title} />
           </div>)}
 
           <ReactMarkdown children={post.body3}  />
+
+          {post.imageUrl4 && (
+            <div className="img-post">
+              <PostMedia urls={post.imageUrl4} enableSlider alt={post.title} />
+            </div>
+          )}
+
+          <ReactMarkdown children={post.body4} />
 
         </div>
       </div>

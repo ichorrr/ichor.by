@@ -36,6 +36,12 @@ const DELETE_AVATAR_MUTATION = gql`
   }
 `;
 
+const DELETE_MY_ACCOUNT = gql`
+    mutation DeleteMyAccount {
+        deleteMyAccount
+    }
+`;
+
 const ProfileSettings = () => {
     const [profile, setProfile] = useState({
         _id: '',
@@ -90,6 +96,7 @@ const ProfileSettings = () => {
             }
         }
     });
+    const [deleteMyAccount] = useMutation(DELETE_MY_ACCOUNT);
 
     // Load current user profile on mount
     useEffect(() => {
@@ -233,6 +240,20 @@ const ProfileSettings = () => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        const confirmed = window.confirm('Удалить свой аккаунт? Записи, сообщения и загруженные файлы сохранятся, профиль станет анонимным. Это действие нельзя отменить.');
+        if (!confirmed) return;
+        try {
+            await deleteMyAccount();
+            localStorage.removeItem('token');
+            await client.clearStore();
+            window.location.assign('/login');
+        } catch (err) {
+            setError('Не удалось удалить аккаунт. Попробуйте позже.');
+            console.error('Delete account error:', err);
+        }
+    };
+
     if (loading) {
         return <div className="profile-settings"><p>Loading profile...</p></div>;
     }
@@ -261,9 +282,9 @@ const ProfileSettings = () => {
                 />
                 <input
                     type="tel"
-                    name="phone"
+                    name="telephone"
                     placeholder="Phone"
-                    value={profile.phone}
+                    value={profile.telephone}
                     onChange={handleChange}
                 />
 
@@ -337,6 +358,11 @@ const ProfileSettings = () => {
                 </select>
                 <button type="submit">Save Settings</button>
             </form>
+                <section className="profile-delete-account">
+                    <h3>Удаление аккаунта</h3>
+                    <p>Ваши публикации и переписки сохранятся, а данные профиля будут обезличены.</p>
+                    <button type="button" className="avatar-delete-btn" onClick={handleDeleteAccount}>Удалить мой аккаунт без контента</button>
+                </section>
             {error && <p className="error">{error}</p>}
             {saved && <p className="success">Settings saved successfully!</p>}
         </div>

@@ -37,25 +37,6 @@ const GET_MY_LIST_USERS_CHATS = gql`
     }
   }
 `;
-const GET_MY_USERS = gql`
-  query getMyUsers {
-    getMyUsers {
-      _id
-      messages {
-        _id
-        user {
-          _id
-          name
-        }
-        addressee {
-        _id
-        name
-        }
-      }
-    }
-  }
-`;
-
 const GET_CAT = gql`
   query getCat($id: ID!) {
     getCat(_id: $id) {
@@ -134,15 +115,6 @@ const GET_USER = gql`
     getUser(_id: $id) {
       _id
       name
-      messages {
-        _id
-        text
-        user {
-        _id
-        name
-      }
-        createdAt
-      }
         family { 
         _id
         name
@@ -174,34 +146,22 @@ const GET_NOTES = gql`
         imageUrl
         imageUrl2
         imageUrl3
+        imageUrl4
         scriptUrl
         createdAt
-        category {
-          _id
-          catname
-        }
+        category { _id catname }
         viewsCount
         body
         body2
         body3
+        body4
         likesCount
         dislikesCount
         commentCount
         tags
-        externalSource {
-          icon
-          url
-        }
-        comments {
-          _id
-          text
-          likesCount
-          dislikesCount
-        }
-        author {
-          _id
-          name
-        }
+        externalSource { icon url }
+        comments { _id text likesCount dislikesCount }
+        author { _id name }
       }
     }
   }
@@ -216,6 +176,7 @@ const GET_HOME_NOTES = gql`
       imageUrl
       imageUrl2
       imageUrl3
+      imageUrl4
       scriptUrl
       createdAt
       tags
@@ -225,6 +186,7 @@ const GET_HOME_NOTES = gql`
   }
   query homePostFeed {
     technology: postFeed(tag: "Технологии", limit: 7) { ...HomePostFields }
+    main: postFeed(tag: "Главное", limit: 7) { ...HomePostFields }
     events: postFeed(tag: "События", limit: 7) { ...HomePostFields }
     economy: postFeed(tag: "Экономика", limit: 7) { ...HomePostFields }
     people: postFeed(tag: "Люди", limit: 7) { ...HomePostFields }
@@ -247,6 +209,7 @@ const GET_MY_POST = gql`
         iconPost
         imageUrl2
         imageUrl3
+        imageUrl4
         createdAt
         viewsCount
         commentCount
@@ -305,6 +268,7 @@ const GET_ME = gql`
         imageUrl
         imageUrl2
         imageUrl3
+        imageUrl4
         scriptUrl
         createdAt
         updatedAt
@@ -318,6 +282,7 @@ const GET_ME = gql`
           catname
         }
         body
+          body4
         body2
         body3
       }
@@ -347,6 +312,7 @@ const GET_POST = gql`
       imageUrl
       imageUrl2
       imageUrl3
+      imageUrl4
       scriptUrl
       externalSource {
         icon
@@ -365,6 +331,7 @@ const GET_POST = gql`
       body
       body2
       body3
+      body4
       author {
         _id
         name
@@ -398,6 +365,7 @@ const GET_POSTS = gql`
       imageUrl
       imageUrl2
       imageUrl3
+      imageUrl4
       scriptUrl
       createdAt
       updatedAt
@@ -409,6 +377,7 @@ const GET_POSTS = gql`
       body
       body2
       body3
+      body4
       tags
       author {
         _id
@@ -448,7 +417,6 @@ export {
   GET_POST,
   GET_MY_POST,
   GET_ME,
-  GET_MY_USERS,
   GET_COMMENTS,
   IS_LOGGED_IN,
   GET_USER_MESSAGES,

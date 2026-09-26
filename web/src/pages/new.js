@@ -7,14 +7,15 @@ import PostForm from '../components/PostForm';
 import { GET_MY_POST, GET_NOTES } from '../gql/query';
 
 const NEW_POST = gql`
-  mutation createPost($title: String!, $iconPost: String, $imageUrl: String, $imageUrl2: String, $imageUrl3: String, $scriptUrl: Boolean, $externalSource: ExternalSourceInput, $tags: [String], $category: String!, $body: String!, $body2: String!, $body3: String!) {
-    createPost(title: $title, iconPost: $iconPost, imageUrl: $imageUrl, imageUrl2: $imageUrl2, imageUrl3: $imageUrl3, scriptUrl: $scriptUrl, externalSource: $externalSource, tags: $tags, category: $category, body: $body, body2: $body2, body3: $body3 ) {
+  mutation createPost($title: String!, $iconPost: String, $imageUrl: String, $imageUrl2: String, $imageUrl3: String, $imageUrl4: String, $scriptUrl: Boolean, $externalSource: ExternalSourceInput, $tags: [String], $category: String!, $body: String!, $body2: String, $body3: String, $body4: String) {
+    createPost(title: $title, iconPost: $iconPost, imageUrl: $imageUrl, imageUrl2: $imageUrl2, imageUrl3: $imageUrl3, imageUrl4: $imageUrl4, scriptUrl: $scriptUrl, externalSource: $externalSource, tags: $tags, category: $category, body: $body, body2: $body2, body3: $body3, body4: $body4) {
       _id
         title
         iconPost
         imageUrl
         imageUrl2
         imageUrl3
+          imageUrl4
         scriptUrl
         externalSource {
           icon
@@ -28,6 +29,7 @@ const NEW_POST = gql`
         body
         body2
         body3
+          body4
         author {
           _id
           name

@@ -21,6 +21,9 @@ const Post = model(
       imageUrl3: {
         type: String,
       },
+      imageUrl4: {
+        type: String,
+      },
       scriptUrl: {
         type: Boolean,
         default: false
@@ -58,6 +61,9 @@ const Post = model(
         type: String,
       },
       body3: {
+        type: String,
+      },
+      body4: {
         type: String,
       },
       author: {

@@ -11,6 +11,8 @@ const ImageViewer = ({ mediaUrls, startIndex = 0, onClose }) => {
   const urls = Array.isArray(mediaUrls) ? mediaUrls : [mediaUrls];
   const [currentImageIndex, setCurrentImageIndex] = useState(startIndex);
   const currentMedia = urls[currentImageIndex] || urls[0];
+  const [resolvedMedia, setResolvedMedia] = useState('');
+  const [mediaLoadError, setMediaLoadError] = useState('');
   const mediaType = (() => {
     const ext = currentMedia?.split('?')[0].split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) return 'image';
@@ -19,9 +21,45 @@ const ImageViewer = ({ mediaUrls, startIndex = 0, onClose }) => {
     return 'file';
   })();
 
+  React.useEffect(() => {
+    let cancelled = false;
+    let objectUrl = null;
+    setResolvedMedia('');
+    setMediaLoadError('');
+
+    const isProtectedChatMedia = /\/(?:imgmessages|uploads\/users\/[^/]+\/chats)\//.test(currentMedia || '');
+    if (!isProtectedChatMedia) {
+      setResolvedMedia(currentMedia || '');
+      return undefined;
+    }
+
+    fetch(currentMedia, { headers: { Authorization: localStorage.getItem('token') || '' } })
+      .then(response => {
+        if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Нет доступа к вложению. Откройте чат заново.' : 'Не удалось загрузить вложение.');
+        return response.blob();
+      })
+      .then(blob => {
+        objectUrl = URL.createObjectURL(blob);
+        if (cancelled) URL.revokeObjectURL(objectUrl);
+        else setResolvedMedia(objectUrl);
+      })
+      .catch(error => {
+        if (!cancelled) setMediaLoadError(error.message);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [currentMedia]);
+
   const handleDownload = async () => {
     try {
-      const response = await fetch(currentMedia);
+      const isProtectedChatMedia = /\/(?:imgmessages|uploads\/users\/[^/]+\/chats)\//.test(currentMedia || '');
+      const response = await fetch(currentMedia, isProtectedChatMedia
+        ? { headers: { Authorization: localStorage.getItem('token') || '' } }
+        : undefined);
+      if (!response.ok) throw new Error('Media request failed');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -278,30 +316,30 @@ const ImageViewer = ({ mediaUrls, startIndex = 0, onClose }) => {
         onContextMenu={handleContextMenu}
       >
         {mediaType === 'image' ? (
-          <img
+          mediaLoadError ? <p style={{ color: '#fff', padding: 24 }}>{mediaLoadError}</p> : resolvedMedia ? <img
             ref={imgRef}
-            src={currentMedia}
+            src={resolvedMedia}
             alt="Full view"
             style={styles.image}
             draggable={false}
-          />
+          /> : <p style={{ color: '#fff' }}>Загрузка…</p>
         ) : mediaType === 'video' ? (
-          <video
-            src={currentMedia}
+          mediaLoadError ? <p style={{ color: '#fff', padding: 24 }}>{mediaLoadError}</p> : resolvedMedia ? <video
+            src={resolvedMedia}
             controls
             style={{ width: '100%', maxHeight: '90vh', borderRadius: 8, background: '#000' }}
-          />
+          /> : <p style={{ color: '#fff' }}>Загрузка…</p>
         ) : mediaType === 'audio' ? (
           <div style={{ width: '100%', maxWidth: '90vw', padding: 24, borderRadius: 8, background: '#1e1e1e', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <span style={{ color: '#fff', fontSize: 16 }}>🎧 Audio attachment</span>
-            <audio controls src={currentMedia} style={{ width: '100%' }} />
+            {mediaLoadError ? <p style={{ color: '#fff' }}>{mediaLoadError}</p> : resolvedMedia ? <audio controls src={resolvedMedia} style={{ width: '100%' }} /> : <p style={{ color: '#fff' }}>Загрузка…</p>}
           </div>
         ) : (
           <div style={{ width: '100%', maxWidth: '90vw', padding: 32, borderRadius: 8, background: '#f3f3f3', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 18, color: '#222' }}>📄 File attachment</span>
-            <a href={currentMedia} download style={{ color: '#1976d2', textDecoration: 'underline' }}>
+            <button type="button" onClick={handleDownload} style={{ color: '#1976d2', textDecoration: 'underline', background: 'none', border: 0, cursor: 'pointer' }}>
               Download file
-            </a>
+            </button>
           </div>
         )}
         <div style={styles.controls}>

@@ -25,4 +25,4 @@ export const getApiUri = () => {
 
 export const getApiBase = () => getApiUri().replace('/graphql', '');
 
-export const getUploadBase = () => 'https://api.ichor.by';
+export const getUploadBase = () => getApiBase();

@@ -9,7 +9,7 @@ const EMOJIS = [
   { emoji: '😂', label: 'Laugh' }
 ];
 
-function FormMessage({ onSend, placeholder = 'Type your message...', initial = '' }) {
+function FormMessage({ onSend, addressee, placeholder = 'Type your message...', initial = '' }) {
     const [message, setMessage] = useState(initial);
     const [files, setFiles] = useState([]);
     const [previews, setPreviews] = useState([]);
@@ -56,12 +56,18 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
             if (files.length > 0) {
                 for (const file of files) {
                     const form = new FormData();
+                    form.append('addressee', addressee || '');
                     form.append('file', file);
+                    const token = localStorage.getItem('token') || '';
                     const res = await fetch(`${getUploadBase()}/uploadmessage`, {
                         method: 'POST',
+                        headers: { Authorization: token },
                         body: form
                     });
-                    if (!res.ok) throw new Error('Upload failed');
+                    if (!res.ok) {
+                        const error = await res.json().catch(() => ({}));
+                        throw new Error(error.error || 'Upload failed');
+                    }
                     const body = await res.json();
                     fileUrls.push(body.url);
                 }
@@ -273,7 +279,7 @@ function FormMessage({ onSend, placeholder = 'Type your message...', initial = '
                 <label style={{ cursor: 'pointer' }}>
                     <input
                         type="file"
-                        accept="image/*,audio/*,video/*"
+                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska,audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/aac,application/pdf"
                         multiple
                         style={{ display: 'none' }}
                         onChange={handleFileChange}

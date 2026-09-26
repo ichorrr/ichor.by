@@ -6,6 +6,7 @@ import "easymde/dist/easymde.min.css";
 import { GET_ME } from '../gql/query';
 import { getUploadBase } from '../utils/api';
 import Button from './Button';
+import PostMedia from './PostMedia';
 
 const Wrapper = styled.div`
   max-width: 80%;
@@ -33,11 +34,14 @@ const PostForm = props => {
   const [body, setBody] = useState({body: props.body || ''});
   const [body2, setBody2] = useState({body2: props.body2 || ''});
   const [body3, setBody3] = useState({body3: props.body3 || ''});
+  const [body4, setBody4] = useState({body4: props.body4 || ''});
+  const [uploadError, setUploadError] = useState('');
 
   const [iconPost, setIconPost] = useState({iconPost: props.iconPost || ''});
   const [imageUrl, setImageUrl] = useState({imageUrl: props.imageUrl || ''});
   const [imageUrl2, setImageUrl2] = useState({imageUrl2: props.imageUrl2 || ''});
   const [imageUrl3, setImageUrl3] = useState({imageUrl3: props.imageUrl3 || ''});
+  const [imageUrl4, setImageUrl4] = useState({imageUrl4: props.imageUrl4 || ''});
   const [scriptUrl, setScriptUrl] = useState({scriptUrl: props.scriptUrl || false});
   const [externalSourceIcon, setExternalSourceIcon] = useState(
     props.externalSource && typeof props.externalSource === 'object'
@@ -51,7 +55,7 @@ const PostForm = props => {
       ? props.externalSource
       : ''
   );
-  const requiredTags = ['Технологии', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
+  const requiredTags = ['Главное', 'Технологии', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
   const [tags, setTags] = useState({tags: Array.isArray(props.tags) ? props.tags.join(', ') : (props.tags || '')});
   const [selectedRequiredTags, setSelectedRequiredTags] = useState(() => {
     const existingTags = Array.isArray(props.tags)
@@ -87,6 +91,10 @@ const PostForm = props => {
     setBody3({body3});
   };
 
+  const onChangeMDE4 = (body4) => {
+    setBody4({body4});
+  };
+
   const { data } = useQuery(GET_ME);
   const isAdmin = data?.me?.isAdmin;
   const requireRequiredTagSelection = Boolean(props.requireRequiredTag) && Boolean(data?.me) && !isAdmin;
@@ -117,92 +125,61 @@ const PostForm = props => {
     );
   };
 
-  const onClickRemoveImage =  async (imageUrl) => {
-    imageUrl = '';
-    setImageUrl({imageUrl});
+  const uploadFiles = async (event, slot, currentValue, setValue) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    setUploadError('');
+
+    const existing = String(currentValue || '').split('|').filter(Boolean);
+    const isVideo = file => (file.type || '').startsWith('video/') || /\.(mp4|webm|ogg|mov|avi|mkv)$/i.test(file.name);
+    const videoFiles = files.filter(isVideo);
+    const existingHasVideo = existing.some(url => /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url));
+    if (files.some(file => !file.type.startsWith('image/') && !isVideo(file))) {
+      setUploadError('Можно загружать только изображения и видео.');
+      event.target.value = '';
+      return;
+    }
+    if ((videoFiles.length && (files.length !== 1 || existing.length)) || (existingHasVideo && files.length)) {
+      setUploadError('Для одного блока выберите либо одно видео, либо изображения. Удалите текущие файлы перед заменой типа.');
+      event.target.value = '';
+      return;
+    }
+    if (videoFiles.some(file => file.size > 10 * 1024 * 1024)) {
+      setUploadError('Размер видео не должен превышать 10 МБ.');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('slot', slot);
+      if (props.postId) formData.append('postId', props.postId);
+      files.forEach(file => formData.append('files', file));
+      const token = localStorage.getItem('token') || '';
+      const response = await fetch(`${getUploadBase()}/uploadpost`, {
+        method: 'POST',
+        headers: { Authorization: token },
+        body: formData,
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Не удалось загрузить файлы.');
+      setValue({ [slot]: [...existing, ...(result.urls || [])].join('|') });
+    } catch (error) {
+      setUploadError(error.message || 'Не удалось загрузить файлы.');
+    } finally {
+      event.target.value = '';
+    }
   };
 
-  const onClickRemoveImage2 = async (imageUrl2) => {
-    imageUrl2 = '';
-    setImageUrl2({imageUrl2});
-  };
-
-  const onClickRemoveImage3 = async (imageUrl3) => {
-    imageUrl3 = '';
-    setImageUrl3({imageUrl3});
-  };
-
-  const onClickRemoveIcon = async (iconPost) => {
-    iconPost = '';
-    setIconPost({iconPost});
-  };
-
-  const handleChangeFile = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('imageUrl', file);
-
-    const res = await fetch(`${getUploadBase()}/upload`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await res.json();
-    setImageUrl({ imageUrl: data.url });
-  }
-
-  const handleChangeFile2 = async (event) => {
-    const file2 = event.target.files?.[0];
-    if (!file2) return;
-
-    const formData2 = new FormData();
-    formData2.append('imageUrl2', file2);
-
-    const res2 = await fetch(`${getUploadBase()}/upload2`, {
-      method: 'POST',
-      body: formData2,
-    });
-
-    const data2 = await res2.json();
-    setImageUrl2({ imageUrl2: data2.url });
-  }
-
-  const handleChangeFile3 = async (event) => {
-    const file3 = event.target.files?.[0];
-    if (!file3) return;
-
-    const formData3 = new FormData();
-    formData3.append('imageUrl3', file3);
-
-    const res3 = await fetch(`${getUploadBase()}/upload3`, {
-      method: 'POST',
-      body: formData3,
-    });
-
-    const data3 = await res3.json();
-    setImageUrl3({ imageUrl3: data3.url });
-  }
-
-  const ihandleChangeFile = async (event) => {
-    const ifile = event.target.files?.[0];
-    if (!ifile) return;
-
-    const iformData = new FormData();
-    iformData.append('iconPost', ifile);
-
-    const ires = await fetch(`${getUploadBase()}/upload4`, {
-      method: 'POST',
-      body: iformData,
-    });
-
-    const idata = await ires.json();
-    setIconPost({ iconPost: idata.url });
-  }
+  const handleChangeFile = event => uploadFiles(event, 'imageUrl', imageUrl.imageUrl, setImageUrl);
+  const handleChangeFile2 = event => uploadFiles(event, 'imageUrl2', imageUrl2.imageUrl2, setImageUrl2);
+  const handleChangeFile3 = event => uploadFiles(event, 'imageUrl3', imageUrl3.imageUrl3, setImageUrl3);
+  const handleChangeFile4 = event => uploadFiles(event, 'imageUrl4', imageUrl4.imageUrl4, setImageUrl4);
+  const ihandleChangeFile = event => uploadFiles(event, 'iconPost', iconPost.iconPost, setIconPost);
 
   return (
     <Wrapper>
+      {uploadError ? <p role="alert" style={{ color: '#b91c1c', padding: '0 1rem' }}>{uploadError}</p> : null}
       <Form
         onSubmit={event => {
           event.preventDefault();
@@ -229,10 +206,12 @@ const PostForm = props => {
                 ...body,
                 ...body2,
                 ...body3,
+                ...body4,
                 ...iconPost,
                 ...imageUrl,
                 ...imageUrl2,
                 ...imageUrl3,
+                ...imageUrl4,
                 ...scriptUrl,
                 externalSource: isAdmin && (externalSourceUrl || externalSourceIcon) ? {
                   icon: externalSourceIcon,
@@ -250,6 +229,7 @@ const PostForm = props => {
               ref={inputFileRef}
               className="custom-file-input"
               type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
               name="imageUrl"
               id="imageUrl"
               onChange={handleChangeFile}
@@ -257,7 +237,7 @@ const PostForm = props => {
 
             {imageUrl.imageUrl && (
             <>
-              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveImage}  >Удалить изображение</Button>
+              <Button type="button" variant="contained" className='i-delete' onClick={() => setImageUrl({ imageUrl: '' })}>Удалить файл</Button>
               <p className="p-imageurl">{imageUrl.imageUrl}</p>
             </>
            )}
@@ -266,7 +246,7 @@ const PostForm = props => {
         {imageUrl.imageUrl && (
 
             <div className="imageViewer">
-              <img src={imageUrl.imageUrl} />
+              <PostMedia urls={imageUrl.imageUrl} />
             </div>
         )}
       <div className="empty-div"></div>
@@ -378,7 +358,7 @@ const PostForm = props => {
 
             <div className="iconViewer">
                   {iconPost.iconPost && (
-                    <img src={iconPost.iconPost} />
+                    <PostMedia urls={iconPost.iconPost} />
                   )}
             </div>
             <div className="iblock"  >   
@@ -386,6 +366,7 @@ const PostForm = props => {
               ref={iref}
               className="custom-icon-input"
               type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff"
               name="iconPost"
               id="iconPost"
               onChange={ihandleChangeFile}
@@ -393,7 +374,7 @@ const PostForm = props => {
 
             {iconPost.iconPost && (
             <>
-              <Button variant="contained" className='i-delete'  onClick={ onClickRemoveIcon }  >Удалить</Button>
+              <Button type="button" variant="contained" className='i-delete' onClick={() => setIconPost({ iconPost: '' })}>Удалить</Button>
               <p className="p-imageurl">{iconPost.iconPost}</p>
             </>
             )}
@@ -451,6 +432,8 @@ const PostForm = props => {
               ref={inputFileRef2}
               className="custom-file-input"
               type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
               name="imageUrl2"
               id="imageUrl2"
               onChange={handleChangeFile2}
@@ -458,7 +441,7 @@ const PostForm = props => {
 
               {imageUrl2.imageUrl2 && (
               <>
-                <Button className='i-delete' variant="contained" onClick={ onClickRemoveImage2}  >Remove image</Button>
+                <Button type="button" className='i-delete' variant="contained" onClick={() => setImageUrl2({ imageUrl2: '' })}>Удалить файлы</Button>
                 <p className="p-imageurl">{imageUrl2.imageUrl2}</p>
               </>
              )}
@@ -467,7 +450,7 @@ const PostForm = props => {
             {imageUrl2.imageUrl2 && (
 
               <div className="imageViewer">
-                <img src={imageUrl2.imageUrl2} />
+                <PostMedia urls={imageUrl2.imageUrl2} enableSlider />
               </div>
 
             )}
@@ -494,6 +477,8 @@ const PostForm = props => {
               ref={inputFileRef3}
               className="custom-file-input"
               type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
               name="imageUrl3"
               id="imageUrl3"
               onChange={handleChangeFile3}
@@ -501,7 +486,7 @@ const PostForm = props => {
 
               {imageUrl3.imageUrl3 && (
               <>
-                <Button variant="contained" className='i-delete' onClick={ onClickRemoveImage3}  >Remove image</Button>
+                <Button type="button" variant="contained" className='i-delete' onClick={() => setImageUrl3({ imageUrl3: '' })}>Удалить файлы</Button>
                 <p className="p-imageurl">{imageUrl3.imageUrl3}</p>
               </>
              )}
@@ -509,7 +494,7 @@ const PostForm = props => {
             {imageUrl3.imageUrl3 && (
 
               <div className="imageViewer">
-                <img src={imageUrl3.imageUrl3} />
+                <PostMedia urls={imageUrl3.imageUrl3} enableSlider />
               </div>
 
             )}
@@ -525,6 +510,37 @@ const PostForm = props => {
                        onChange={onChangeMDE3}
                        value={body3.body3}
                      />
+        </div>
+
+        <div className="empty-div"></div>
+        <div className="imageUrl">
+          <input
+            className="custom-file-input"
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/tiff,video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo,video/x-matroska"
+            name="imageUrl4"
+            id="imageUrl4"
+            onChange={handleChangeFile4}
+          />
+          {imageUrl4.imageUrl4 && (
+            <>
+              <Button type="button" variant="contained" className="i-delete" onClick={() => setImageUrl4({ imageUrl4: '' })}>Удалить файлы</Button>
+              <p className="p-imageurl">{imageUrl4.imageUrl4}</p>
+              <PostMedia urls={imageUrl4.imageUrl4} enableSlider />
+            </>
+          )}
+        </div>
+        <label htmlFor="body4">Текстовый блок №4</label>
+        <div className="style-simplemde">
+          <SimpleMDE
+            type="text"
+            name="body4"
+            id="body4"
+            placeholder="Содержание"
+            onChange={onChangeMDE4}
+            value={body4.body4}
+          />
         </div>
     
       <div className="algn-btn">

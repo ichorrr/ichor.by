@@ -23,11 +23,12 @@ const Home = () => {
     {}
   );
   const posts = useMemo(() => {
-    const feeds = ['technology', 'events', 'economy', 'people', 'incidents', 'realEstate', 'design'];
+    const feeds = ['main', 'technology', 'events', 'economy', 'people', 'incidents', 'realEstate', 'design'];
     const uniquePosts = new Map();
     feeds.forEach(feed => (data?.[feed]?.posts || []).forEach(post => uniquePosts.set(post._id, post)));
     return [...uniquePosts.values()].sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
   }, [data]);
+  const mainPosts = data?.main?.posts || [];
 
   if (error) return <p>error</p>
   if (loading) return <p>loading...</p>
@@ -37,7 +38,7 @@ const Home = () => {
     <PostParagraph>
       <Fpost />
       <div className="rt-lenta-post">
-        <TitleList posts={posts.slice(0, 3)} />
+        <TitleList posts={mainPosts.slice(0, 3)} />
       </div>
     </PostParagraph>
     <RequiredTagNewsSection posts={posts} />

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { getThumbnailUrl, isVideoUrl } from '../utils/media';
 
 const REQUIRED_TAGS = [
   { name: 'Технологии', icon: '💻' },
@@ -15,9 +16,9 @@ const REQUIRED_TAGS = [
 const normalizeTag = (value) => `${value || ''}`.trim().replace(/^#/, '').toLowerCase();
 
 const getMediaSrc = (post) => {
-  const imageUrl = post.imageUrl || post.iconPost || '';
-  const videoUrl = post.scriptUrl ? post.imageUrl2 || post.imageUrl3 || post.imageUrl : '';
-  return imageUrl || videoUrl || '';
+  return [post.imageUrl, post.imageUrl2, post.imageUrl3, post.imageUrl4, post.iconPost]
+    .filter(Boolean)
+    .map(value => value.split('|')[0])[0] || '';
 };
 
 const getExternalSource = (post) => {
@@ -54,7 +55,9 @@ const RequiredTagNewsSection = ({ posts }) => {
                   <article key={post._id} className="required-tag-news-card">
                     {mediaSrc ? (
                       <div className="required-tag-news-card__media">
-                        <img src={mediaSrc} alt={post.title} loading="lazy" decoding="async" />
+                        {isVideoUrl(mediaSrc)
+                          ? <video src={mediaSrc} poster={getThumbnailUrl(mediaSrc)} aria-label={post.title} preload="metadata" />
+                          : <img src={getThumbnailUrl(mediaSrc) || mediaSrc} alt={post.title} loading="lazy" decoding="async" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = mediaSrc; }} />}
                       </div>
                     ) : null}
                     <div className="required-tag-news-card__content">

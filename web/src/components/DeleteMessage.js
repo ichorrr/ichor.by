@@ -1,11 +1,11 @@
 import { useMutation } from "@apollo/client";
 import { DELETE_MESSAGE } from "../gql/mutation.js";
-import { GET_MY_USERS } from "../gql/query";
+import { GET_MY_LIST_USERS_CHATS } from "../gql/query";
 
 const DeleteMessage = ({ id, chatId }) => {
   const [deleteMessage] = useMutation(DELETE_MESSAGE, {
     variables: { id },
-    refetchQueries: [{ query: GET_MY_USERS }],
+    refetchQueries: [{ query: GET_MY_LIST_USERS_CHATS }],
     awaitRefetchQueries: true,
   });
     const handleDelete = () => {

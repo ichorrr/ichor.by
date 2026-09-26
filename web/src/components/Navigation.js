@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, NavLink, useNavigate, withRouter } from 'react-router-dom';
-import { useQuery, gql } from '@apollo/client';
+import { Link, NavLink } from 'react-router-dom';
+import { useQuery } from '@apollo/client';
 import { GET_ME } from '../gql/query';
 import CatsPage from '../pages/cats';
 import UnreadMessagesIndicator from './UnreadMessagesIndicator';
 
 
 const Navigation = () => {
-const navigate = useNavigate();
 const [isAct, setAct] = useState(false);
 const [isMenuOpen, setIsMenuOpen] = useState(false);
 const rootEl = useRef(null);
+const mobileMenuRef = useRef(null);
 const isLoggedIn = !!localStorage.getItem('token');
 
   // close popup when clicking outside
@@ -24,20 +24,29 @@ const isLoggedIn = !!localStorage.getItem('token');
     return () => document.removeEventListener('click', onClick);
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    const onClickOutside = event => {
+      if (isAct && mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) setAct(false);
+    };
+    const onKeyDown = event => {
+      if (event.key === 'Escape') {
+        setAct(false);
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', onClickOutside);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('click', onClickOutside);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isAct]);
 
-function li_uprises() {
-  const nav = document.getElementById("nav");
-  if (!nav) return;
-  const uprs = nav.querySelectorAll(':scope > li');
-  uprs.forEach((upr, idx) => {
-    upr.classList.toggle('uppr' + idx);
-  });
-}
 
 const handleToggle = () => {
-    li_uprises();
-    setAct(!isAct);
+    setAct(open => !open);
   };
+const closeMobileMenu = () => setAct(false);
 const logout = () => {
   localStorage.removeItem('token');
   window.location.replace('/');
@@ -65,15 +74,15 @@ return (
             <path className="als-2" d="M48.348,30.068H48.106l0.134,0.385h-36.4l0.134-.385H11.652c-0.012-.273-0.021-0.546-0.021-0.822a18.369,18.369,0,1,1,36.737,0C48.369,29.522,48.36,29.8,48.348,30.068ZM30,16.747a12.5,12.5,0,0,0-11.646,7.97H41.646A12.5,12.5,0,0,0,30,16.747Zm0,25A12.5,12.5,0,0,0,42.036,32.6h6.022a18.365,18.365,0,0,1-36.115,0h6.022A12.5,12.5,0,0,0,30,41.744Z"/>
             </svg>
             <span>ichor.by
-						<p>разработка сайтов, приложений</p>
+						<p>интересные мировые новости</p>
 						</span>
           </NavLink>
           </li>
-          <li>
+          {/* <li>
             <NavLink  to="/about" style={({ isActive }) => ({
 
                 })}>О себе</NavLink>
-          </li>
+          </li> */}
           <li className="hvsubmenu">
             <span>
               <ul>
@@ -131,8 +140,8 @@ return (
         </ul>
       </nav>
     </div>
-                <div className="nav-wrap" >
-                <div className="menu-icon" onClick={handleToggle} >
+                <div className="nav-wrap" ref={mobileMenuRef}>
+                <button type="button" className="menu-icon" onClick={handleToggle} aria-expanded={isAct} aria-controls="mobile-main-menu" aria-label={isAct ? 'Закрыть меню' : 'Открыть главное меню'}>
         						<svg id="menu_mobile" width="36" height="36" viewBox="0 0 36 36" >
         								<path className={`cls-1 ${isAct ? "anim0" : ""}`} d="M15,16.6V15h9v1.6H15Z" transform="translate(-1 -1)"/>
         								<path className={`cls-2 ${isAct ? "anim1" : ""}`} d="M15,19.8V18.2h9v1.6H15Z" transform="translate(-1 -1)"/>
@@ -140,42 +149,29 @@ return (
         								<path className="cls-4" d="M19,1A18,18,0,1,1,1,19,18,18,0,0,1,19,1Zm0,4A14,14,0,1,1,5,19,14,14,0,0,1,19,5Z" transform="translate(-1 -1)"/>
         						</svg>
         				    <span>Разделы</span>
-                </div>
-
-                <nav>
-                    <ul className={`dropdown-content ${isAct ? "show" : "hide"}`} id="nav">
-                        <li onClick={handleToggle}><NavLink to="/about" title="О проекте"
-                        style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >О себе</NavLink></li>
-                        <li id="cats"><NavLink to="#" title="categories" >Разделы</NavLink>
-                          <ul className="sub-mobile-menu" onClick={handleToggle}>
-                              <CatsPage />
-                          </ul>
-                        </li>
-                        {isLoggedIn ? (
-                        <li className="log-out-mb"
-                        onClick={event => {
-                          event.preventDefault();
-                              // remove the token
-                              localStorage.removeItem('token');
-                              // clear the application's cache
-                              window.location.replace('/');
-                            }}
-                          >
-                        Выйти ({data.me.name})
-                        </li>
-                        ) : (
-                          <>
-                        <li className="margintop"  onClick={handleToggle}>
-                            <NavLink to="/signup"
-                            style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Создать аккаунт</NavLink>
-                        </li>
-                        <li onClick={handleToggle}>
-                            <NavLink to="/signin"
-                            style={({ isActive }) => { return { color: isActive ? "#159dc3" : "", }; }} >Авторизация</NavLink>
-                        </li>
-                        </>
-                          )}
-                    </ul>
+                </button>
+                <nav className={`mobile-main-menu ${isAct ? 'is-open' : ''}`} id="mobile-main-menu" aria-label="Главное меню" aria-hidden={!isAct}>
+                  <NavLink to="/" className="mobile-main-menu__item" onClick={closeMobileMenu}>Главная</NavLink>
+                  <NavLink to="/about" className="mobile-main-menu__item" onClick={closeMobileMenu}>О проекте</NavLink>
+                  <details className="mobile-main-menu__categories">
+                    <summary>Разделы</summary>
+                    <div className="mobile-main-menu__category-links" onClick={closeMobileMenu}>
+                      <CatsPage />
+                    </div>
+                  </details>
+                  {isLoggedIn ? (
+                    <>
+                      <NavLink to="/myprofile" className="mobile-main-menu__item" onClick={closeMobileMenu}>Профиль</NavLink>
+                      <NavLink to="/new" className="mobile-main-menu__item" onClick={closeMobileMenu}>Создать запись <span>＋</span></NavLink>
+                      {data?.me?.isAdmin && <NavLink to="/admin" className="mobile-main-menu__item" onClick={closeMobileMenu}>Админка</NavLink>}
+                      <button type="button" className="mobile-main-menu__item mobile-main-menu__logout" onClick={logout}>Выйти ({data.me.name})</button>
+                    </>
+                  ) : (
+                    <>
+                      <NavLink to="/signup" className="mobile-main-menu__item" onClick={closeMobileMenu}>Создать аккаунт</NavLink>
+                      <NavLink to="/signin" className="mobile-main-menu__item" onClick={closeMobileMenu}>Авторизация</NavLink>
+                    </>
+                  )}
                 </nav>
 </div>
     </div>

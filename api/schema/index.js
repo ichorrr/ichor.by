@@ -51,6 +51,7 @@ type Post {
   imageUrl: String
   imageUrl2: String
   imageUrl3: String
+  imageUrl4: String
   scriptUrl: Boolean
   externalSource: ExternalSource
   tags: [String]
@@ -64,6 +65,7 @@ type Post {
   body: String!
   body2: String
   body3: String
+  body4: String
   author: User!
   comments: [Comment!]!
   commentCount: Int    # quick access to number of comments
@@ -123,14 +125,15 @@ type Mutation {
   signIn(email: String!, password: String!): String!
   signUp(name: String!, email: String!, password: String!): String!
   deleteUsers(userIds: [ID!]!, mode: UserDeletionMode!): Int!
+  deleteMyAccount: Boolean!
   requestPasswordReset(email: String!): String!
   resetPassword(token: String!, password: String!): String!
   changePassword(currentPassword: String!, newPassword: String!): Boolean!
   createCat(catname: String!): Cat!
-  createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String!, body: String!, body2: String, body3: String): Post!
+  createPost(title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, imageUrl4: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String!, body: String!, body2: String, body3: String, body4: String): Post!
   moderatePost(postId: String!, decision: String!, reason: String): Post
   deletePost(_id: String!): Boolean!
-  updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String, body: String!, body2: String, body3: String): Post!
+  updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, imageUrl4: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String, body: String!, body2: String, body3: String, body4: String): Post!
   createComment(text: String!, post: String!): Comment!
   deleteComment(_id: String!): Boolean!
   createMessage(text: String, file: String, addressee: String!): Message!
