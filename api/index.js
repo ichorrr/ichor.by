@@ -28,6 +28,7 @@ import { fileTypeFromFile } from 'file-type';
 
 import mongoose from 'mongoose';
 import { update } from 'tar';
+import { renderArticleSeoHtml } from './seo.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2253,6 +2254,29 @@ app.use((error, req, res, next) => {
   const clientBuildPath = path.resolve(__dirname, '../web/dist');
   if (fs.existsSync(clientBuildPath)) {
     app.use(express.static(clientBuildPath));
+    app.get(['/posts/:id', '/cats/:cname/post/:id', '/users/:uname/post/:id'], async (req, res, next) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+          return res.status(404).sendFile(path.join(clientBuildPath, 'index.html'));
+        }
+
+        const post = await models.Post.findOne({
+          _id: req.params.id,
+          status: { $ne: 'pending' },
+        })
+          .select('_id title body body2 body3 body4 iconPost imageUrl imageUrl2 imageUrl3 imageUrl4 createdAt updatedAt')
+          .lean();
+
+        if (!post) {
+          return res.status(404).sendFile(path.join(clientBuildPath, 'index.html'));
+        }
+
+        const html = await fs.promises.readFile(path.join(clientBuildPath, 'index.html'), 'utf8');
+        return res.type('html').send(renderArticleSeoHtml(html, post));
+      } catch (error) {
+        return next(error);
+      }
+    });
     app.get('*', (req, res) => {
       res.sendFile(path.join(clientBuildPath, 'index.html'));
     });

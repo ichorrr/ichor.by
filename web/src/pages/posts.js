@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Post from '../components/Post';
+import ArticleSeo from '../components/ArticleSeo';
 import { useQuery } from '@apollo/client';
 import { GET_POST, GET_POSTS } from '../gql/query';
 import Futer from '../components/Futer';
@@ -27,6 +28,7 @@ const PostPage = () => {
 
   return (
     <>
+      <ArticleSeo post={data.getPost} />
       <Link to={-1}  className="css-back">
         <svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46">
           <circle className="xcls-1" cx="23" cy="23" r="23" stroke="#ededed" strokeWidth="0" fill="#ffffff" />
