@@ -43,7 +43,6 @@ if (error) return (
 <div className="css-userform">
 <div className="up err-message">
   <h3>{error.message}</h3>
-  <span>incorrect email or password</span>
   </div>
     <UserForm action={signUp} formType="signUp" />
   </div>
