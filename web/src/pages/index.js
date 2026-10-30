@@ -1,10 +1,7 @@
 import React from 'react';
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
-import { GET_POSTS } from '../gql/query';
 import Layout from '../components/Layout';
-import Loader from '../components/Loader';
 
 import Home from './home';
 import PostPage from './posts';
@@ -26,10 +23,6 @@ import ForgotPassword from './forgot-password';
 import ResetPassword from './reset-password';
 
 const Pages = () => {
-  const { loading, error, data, fetchMore } = useQuery(GET_POSTS);
-  if (loading) return <div><Loader  /></div>;
-  if (error) return <p>error...</p>;
-
   return (
     <BrowserRouter>
       <Layout>

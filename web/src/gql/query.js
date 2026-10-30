@@ -5,12 +5,6 @@ const GET_CATS = gql`
     getCats {
       _id
       catname
-      posts {
-        title
-        author{
-          name
-        }
-      }
     }
   }
 `;
@@ -179,6 +173,8 @@ const GET_HOME_NOTES = gql`
       imageUrl4
       scriptUrl
       createdAt
+      viewsCount
+      commentCount
       tags
       externalSource { url }
       author { name }
@@ -303,6 +299,17 @@ const GET_ME = gql`
   }
 `;
 
+const GET_NAV_USER = gql`
+  query getNavUser {
+    me {
+      _id
+      name
+      avatar
+      isAdmin
+    }
+  }
+`;
+
 const GET_POST = gql`
   query getPost($id: ID!) {
     getPost(_id: $id) {
@@ -423,5 +430,6 @@ export {
   GET_UNREAD_MESSAGES_COUNT,
   GET_COMMENT_COUNT,
   GET_MY_LIST_USERS_CHATS,
-  GET_USERS
+  GET_USERS,
+  GET_NAV_USER
 };

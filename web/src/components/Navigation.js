@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { GET_ME } from '../gql/query';
+import { GET_NAV_USER } from '../gql/query';
 import CatsPage from '../pages/cats';
 import UnreadMessagesIndicator from './UnreadMessagesIndicator';
 
@@ -52,7 +52,7 @@ const logout = () => {
   window.location.replace('/');
 };
 
-const { data, loading, error } = useQuery(GET_ME, { skip: !isLoggedIn });
+const { data, loading, error } = useQuery(GET_NAV_USER, { skip: !isLoggedIn });
 if (isLoggedIn && loading) return <p>Загрузка...</p>;
 if (isLoggedIn && error) {
   console.error('Error fetching user data:', error);
@@ -94,8 +94,8 @@ return (
            <>
                     <li className="log-out" ref={rootEl}  onClick={() => { setIsMenuOpen(!isMenuOpen); }} style={{ background: isMenuOpen ? '#159dc3' : 'transparent', border: isMenuOpen ? 'none' : '' }} >
                            <div className="user-info">
-                            <img className="avatar" src={data.me.avatar}  />
-                            <div className='me-name'>{data.me.name}</div>
+                            <img className="avatar" src={data?.me?.avatar || ''} alt={data?.me?.name || 'User'} />
+                            <div className='me-name'>{data?.me?.name}</div>
                             <div style={{ marginLeft: 6 }}><UnreadMessagesIndicator /></div>
                             </div>
                             <div className={`popup-menu ${isMenuOpen ? 'open' : 'closed'}`}>
@@ -142,10 +142,10 @@ return (
     </div>
                 <div className="nav-wrap" ref={mobileMenuRef}>
                 <button type="button" className="menu-icon" onClick={handleToggle} aria-expanded={isAct} aria-controls="mobile-main-menu" aria-label={isAct ? 'Закрыть меню' : 'Открыть главное меню'}>
-        						<svg id="menu_mobile" width="36" height="36" viewBox="0 0 36 36" >
-        								<path className={`cls-1 ${isAct ? "anim0" : ""}`} d="M15,16.6V15h9v1.6H15Z" transform="translate(-1 -1)"/>
-        								<path className={`cls-2 ${isAct ? "anim1" : ""}`} d="M15,19.8V18.2h9v1.6H15Z" transform="translate(-1 -1)"/>
-        								<path className={`cls-3 ${isAct ? "anim2" : ""}`} d="M15,23V21.4h9V23H15Z" transform="translate(-1 -1)"/>
+                        <svg id="menu_mobile" width="36" height="36" viewBox="0 0 36 36" aria-hidden="true">
+                          <path className="cls-1 menu-icon__line menu-icon__line--top" d="M15,16.6V15h9v1.6H15Z" transform="translate(-1 -1)"/>
+                          <path className="cls-2 menu-icon__line menu-icon__line--middle" d="M15,19.8V18.2h9v1.6H15Z" transform="translate(-1 -1)"/>
+                          <path className="cls-3 menu-icon__line menu-icon__line--bottom" d="M15,23V21.4h9V23H15Z" transform="translate(-1 -1)"/>
         								<path className="cls-4" d="M19,1A18,18,0,1,1,1,19,18,18,0,0,1,19,1Zm0,4A14,14,0,1,1,5,19,14,14,0,0,1,19,5Z" transform="translate(-1 -1)"/>
         						</svg>
         				    <span>Разделы</span>

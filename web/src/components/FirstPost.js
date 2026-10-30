@@ -33,14 +33,15 @@ const IS_LOGGED_IN = gql`
 `;
 
 const Fpost = ({post}) => {
-  const ref = useRef()
-  const { loading, error, data } = useQuery( GET_FIRST_POST, IS_LOGGED_IN);
+  const ref = useRef();
+  const { loading, error, data } = useQuery(GET_FIRST_POST);
 
   if (loading) return <p>loading...</p>;
   if (error) return <p>error...</p>;
+  if (!data?.postFirst) return null;
 
-  let idcat = data.postFirst.category._id;
-  let iduser = data.postFirst.author._id;
+  const idcat = data.postFirst.category?._id;
+  const iduser = data.postFirst.author?._id;
 
   return (
     <article>

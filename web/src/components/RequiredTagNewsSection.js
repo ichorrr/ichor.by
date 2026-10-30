@@ -65,12 +65,30 @@ const RequiredTagNewsSection = ({ posts }) => {
                         <h4>{post.title}</h4>
                       </Link>
                       <div className="required-tag-news-meta">
-                        <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-                        {externalSource ? (
-                          <a href={externalSource.href} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                            {externalSource.url}
-                          </a>
-                        ) : null}
+                        <div className="required-tag-news-meta__source">
+                          <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
+                          {externalSource ? (
+                            <a href={externalSource.href} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+                              {externalSource.url}
+                            </a>
+                          ) : null}
+                        </div>
+                        <div className="required-tag-news-stats" aria-label="Статистика статьи">
+                          <span className="required-tag-news-stats__item" aria-label={`Просмотров: ${post.viewsCount || 0}`} title="Просмотры">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            {post.viewsCount || 0}
+                          </span>
+                          <span className="required-tag-news-stats__item" aria-label={`Комментариев: ${post.commentCount || 0}`} title="Комментарии">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l-2 2v-6.5a7.5 7.5 0 1 1 17-3Z" />
+                              <path d="M8 11h.01M12 11h.01M16 11h.01" />
+                            </svg>
+                            {post.commentCount || 0}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </article>

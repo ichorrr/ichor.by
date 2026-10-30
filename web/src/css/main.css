@@ -1129,15 +1129,49 @@ a.delete-comm:hover {
 
 .required-tag-news-meta {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
   font-size: 0.8rem;
   color: #6c7b87;
+}
+
+.required-tag-news-meta__source {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .required-tag-news-meta a {
   color: #159dc3;
   word-break: break-all;
+}
+
+.required-tag-news-stats {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.65rem;
+  color: #647987;
+}
+
+.required-tag-news-stats__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.required-tag-news-stats__item svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 
 @media (max-width: 960px) {
@@ -2132,12 +2166,56 @@ div.xclose:hover {
   }
 
 
-  .loader-canvas {
-    display: block;
-    position: fixed;
-    width: 100%;
-    height: 100%;
+.app-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #f8fcfd 0%, #eaf7fa 100%);
+}
+
+.app-loader__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-family: Arial, sans-serif;
+}
+
+.app-loader__spinner {
+  width: 38px;
+  height: 38px;
+  margin-bottom: 8px;
+  border: 3px solid rgba(21, 157, 195, 0.16);
+  border-top-color: #159dc3;
+  border-radius: 50%;
+  animation: app-loader-spin 0.8s linear infinite;
+}
+
+.app-loader__brand {
+  color: #0c4553;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.app-loader__message {
+  color: #64818a;
+  font-size: 13px;
+}
+
+@keyframes app-loader-spin {
+  to {
+    transform: rotate(360deg);
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loader__spinner {
+    animation: none;
+  }
+}
 
   .bg-canvas {
     display: block;
@@ -2731,6 +2809,382 @@ input[type="text"], #password {
   bottom: -4em;
 }
 /* end wrapper sign in & up */
+}
+
+/* Responsive layout safeguards for shared page components */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+#root,
+main,
+article,
+section,
+aside {
+  min-width: 0;
+}
+
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+pre,
+code {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.post-page-layout {
+  width: min(100% - 2rem, 1440px);
+  margin: 1.5rem auto;
+}
+
+.post-main {
+  min-width: 0;
+  width: auto;
+  margin: 0;
+}
+
+.post-side-links {
+  flex-basis: 250px;
+  margin: 0;
+}
+
+.required-tag-news-section {
+  width: min(100% - 2rem, 1440px);
+  margin: 0 auto 2rem;
+}
+
+.required-tag-news-list {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+@media (max-width: 960px) {
+  .post-page-layout {
+    gap: 1rem;
+  }
+
+  .post-main {
+    flex-basis: 100%;
+  }
+
+  .post-side-links {
+    flex: 1 1 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .post-page-layout,
+  .required-tag-news-section {
+    width: calc(100% - 1.25rem);
+  }
+
+  .post-page-layout {
+    margin-block: 1rem;
+  }
+
+  .post-main {
+    flex-basis: 100%;
+  }
+
+  .post-side-links {
+    padding: 0.85rem;
+  }
+
+  .required-tag-news-block {
+    padding: 0.85rem;
+  }
+
+  .required-tag-news-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .required-tag-news-meta {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .required-tag-news-stats {
+    margin-left: auto;
+  }
+
+  .cats_block li {
+    padding: 1rem 0;
+  }
+
+  .cats_block li h1 {
+    font-size: clamp(1rem, 4.5vw, 1.35rem);
+    overflow-wrap: anywhere;
+  }
+
+  .mypost_li.li-post-flex {
+    display: grid;
+    grid-template-columns: clamp(56px, 18vw, 88px) minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .mypost_li.li-post-flex .iconPost {
+    position: relative;
+    inset: auto;
+    float: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0;
+  }
+
+  .mypost_li.li-post-flex .iconPost img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .mypost_li.li-post-flex .post-cont {
+    min-width: 0;
+    margin: 0;
+  }
+
+  .mypost_li.li-post-flex .post-cont h1,
+  .mypost_li.li-post-flex .post-cont a {
+    overflow-wrap: anywhere;
+  }
+
+  .top-block h2 {
+    min-width: 0;
+    font-size: clamp(1.5rem, 7vw, 2.25rem);
+    line-height: 1.2;
+  }
+
+  .css-txt {
+    font-size: 1rem;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+  }
+
+  .css-txt img,
+  .imgStyle img,
+  .imgStyle video {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  .modal-content {
+    width: calc(100% - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+    padding: 1rem;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .required-tag-news-meta {
+    gap: 0.5rem;
+  }
+
+  .required-tag-news-stats {
+    gap: 0.45rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 920px) {
+  .chat-container {
+    display: block;
+    float: none;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    padding-top: 72px;
+    overflow: hidden;
+  }
+
+  .chat-mobile-shell {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 72px);
+    height: calc(100dvh - 72px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .chat-mobile-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .chat-mobile-panel .head-chat-name {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    background: #fff;
+  }
+
+  .chat-mobile-panel .head-chat-name > ul {
+    display: flex !important;
+    float: none !important;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .chat-mobile-panel .head-chat-name > ul > li {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  .chat-mobile-panel .head-chat-name > ul > li:first-child,
+  .chat-mobile-panel .head-chat-name > ul > li:nth-child(2) {
+    flex: 0 0 auto;
+  }
+
+  .chat-mobile-panel .css-back-chat {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 44px;
+    min-width: 36px;
+  }
+
+  .chat-mobile-panel .css-back-chat svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .chat-mobile-panel .avatar-chat {
+    width: 42px;
+    height: 42px;
+    margin: 0;
+  }
+
+  .chat-mobile-panel .head-chat-name h2 {
+    margin: 0 0 0.2rem;
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+  }
+
+  .chat-mobile-panel .head-chat-name p.last-visit {
+    margin: 0;
+    padding: 0;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .chat-mobile-panel .head-chat-name li.rButMenu {
+    position: relative;
+    right: auto;
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding: 0;
+    transform: none;
+  }
+
+  .chat-mobile-panel .messages-block {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chat-mobile-panel .all-messages-block {
+    flex: 1 0 auto;
+    min-width: 0;
+    min-height: 100%;
+    padding: 1rem 0.75rem;
+  }
+
+  .chat-mobile-panel .message-block {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .chat-mobile-panel .message-block img,
+  .chat-mobile-panel .message-block video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .chat-mobile-panel .form-message {
+    position: relative;
+    inset: auto;
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.65rem calc(0.5rem + env(safe-area-inset-bottom));
+    overflow: visible;
+  }
+
+  .chat-mobile-panel .fm-textarea {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    resize: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .chat-mobile-panel .head-chat-name {
+    padding-inline: 0.5rem;
+  }
+
+  .chat-mobile-panel .head-chat-name > ul {
+    gap: 0.35rem;
+  }
+
+  .chat-mobile-panel .avatar-chat {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 @media  screen and (max-width: 376px) {
@@ -3663,4 +4117,3 @@ bottom: -4em;
 }
 /* end wrapper sign in & up */
 }
-

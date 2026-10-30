@@ -584,7 +584,18 @@ const resolvers = {
         let totalQuery = visiblePostQuery;
 
         const tagQuery = tag
-          ? { tags: { $regex: `^#?${escapeRegex(tag)}$`, $options: 'i' } }
+          ? (() => {
+              const rawTag = String(tag).trim();
+              const tagVariants = Array.from(new Set([
+                rawTag,
+                `#${rawTag}`,
+                rawTag.toLowerCase(),
+                `#${rawTag.toLowerCase()}`,
+                rawTag.toUpperCase(),
+                `#${rawTag.toUpperCase()}`,
+              ].filter(Boolean))).filter(Boolean);
+              return tagVariants.length ? { tags: { $in: tagVariants } } : null;
+            })()
           : null;
         const qualifierQuery = qualifier ? { $or: [{author: qualifier}, {category: qualifier}] } : null;
         const feedFilter = tagQuery || qualifierQuery;
@@ -2254,6 +2265,29 @@ app.use((error, req, res, next) => {
   const clientBuildPath = path.resolve(__dirname, '../web/dist');
   if (fs.existsSync(clientBuildPath)) {
     app.use(express.static(clientBuildPath));
+    app.get('/robots.txt', (req, res) => res
+      .type('text/plain')
+      .send('User-agent: *\nAllow: /\nSitemap: https://ichor.by/sitemap.xml\n'));
+    app.get('/sitemap.xml', async (req, res, next) => {
+      try {
+        const posts = await models.Post.find({ status: { $ne: 'pending' } })
+          .select('_id createdAt updatedAt')
+          .sort({ createdAt: -1 })
+          .limit(50000)
+          .lean();
+        const urls = posts.map(post => {
+          const lastModified = post.updatedAt || post.createdAt;
+          const lastmod = lastModified && !Number.isNaN(new Date(lastModified).getTime())
+            ? `<lastmod>${new Date(lastModified).toISOString()}</lastmod>`
+            : '';
+          return `<url><loc>https://ichor.by/posts/${encodeURIComponent(post._id)}</loc>${lastmod}</url>`;
+        });
+        const sitemap = `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join('')}</urlset>`;
+        return res.type('application/xml').set('Cache-Control', 'public, max-age=3600').send(sitemap);
+      } catch (error) {
+        return next(error);
+      }
+    });
     app.get(['/posts/:id', '/cats/:cname/post/:id', '/users/:uname/post/:id'], async (req, res, next) => {
       try {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

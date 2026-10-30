@@ -48,6 +48,21 @@ export const renderArticleSeoHtml = (html, post) => {
   const description = getDescription(post);
   const canonical = `${SITE_ORIGIN}/posts/${post._id}`;
   const image = getImageUrl(post);
+  const articleData = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline: post.title,
+    description,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+    publisher: { '@type': 'Organization', name: 'ICHOR.BY', url: SITE_ORIGIN },
+  };
+  if (image) articleData.image = [image];
+  if (post.createdAt && !Number.isNaN(new Date(post.createdAt).getTime())) {
+    articleData.datePublished = new Date(post.createdAt).toISOString();
+  }
+  if (post.updatedAt && !Number.isNaN(new Date(post.updatedAt).getTime())) {
+    articleData.dateModified = new Date(post.updatedAt).toISOString();
+  }
   const tags = [
     metaTag('property', 'og:type', 'article'),
     metaTag('property', 'og:site_name', 'ICHOR.BY'),
@@ -59,6 +74,7 @@ export const renderArticleSeoHtml = (html, post) => {
     metaTag('name', 'twitter:title', title),
     metaTag('name', 'twitter:description', description),
     `<link rel="canonical" href="${escapeHtml(canonical)}">`,
+    `<script type="application/ld+json">${JSON.stringify(articleData).replace(/</g, '\\u003c')}</script>`,
   ];
 
   if (image) {
@@ -74,6 +90,9 @@ export const renderArticleSeoHtml = (html, post) => {
   }
 
   return html
+    .replace(/<meta\s+property=["']og:[^"']+["'][^>]*>/gi, '')
+    .replace(/<meta\s+name=["']twitter:[^"']+["'][^>]*>/gi, '')
+    .replace(/<link\s+rel=["']canonical["'][^>]*>/i, '')
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)}</title>`)
     .replace(/<meta\s+name=["']?description["']?[^>]*>/i, metaTag('name', 'description', description))
     .replace(/<meta\s+name=["']?article-seo-insertion-point["']?[^>]*>/i, tags.join('\n    '));
