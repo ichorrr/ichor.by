@@ -248,15 +248,6 @@ const GET_ME = gql`
       avatar
       bio
       isAdmin
-      messages {
-        _id
-        text
-        createdAt
-        author {
-          _id
-          name
-        }
-      }
       posts {
         _id
         title
@@ -294,6 +285,18 @@ const GET_ME = gql`
           _id
           name
         }
+      }
+    }
+  }
+`;
+
+const GET_CHAT_USER = gql`
+  query getChatUser {
+    me {
+      _id
+      family {
+        _id
+        name
       }
     }
   }
@@ -424,6 +427,7 @@ export {
   GET_POST,
   GET_MY_POST,
   GET_ME,
+  GET_CHAT_USER,
   GET_COMMENTS,
   IS_LOGGED_IN,
   GET_USER_MESSAGES,

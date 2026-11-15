@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { GET_ME } from '../gql/query';
+import { GET_NAV_USER } from '../gql/query';
 import Post from '../components/Post';
 import '../css/admin.css';
 
@@ -76,7 +76,10 @@ const DELETE_USERS = gql`
 const AdminPage = () => {
   const isLoggedIn = !!localStorage.getItem('token');
   const [previewPostId, setPreviewPostId] = useState(null);
-  const { data: meData, loading: meLoading } = useQuery(GET_ME, { skip: !isLoggedIn });
+  const { data: meData, loading: meLoading, error: meError } = useQuery(GET_NAV_USER, {
+    skip: !isLoggedIn,
+    fetchPolicy: 'network-only'
+  });
   const { data, loading, error, refetch } = useQuery(GET_PENDING_POSTS, { skip: !isLoggedIn });
   const { data: usersData, loading: usersLoading, error: usersError, refetch: refetchUsers } = useQuery(GET_USERS, { skip: !isLoggedIn });
   const [moderatePost] = useMutation(MODERATE_POST);
@@ -85,6 +88,7 @@ const AdminPage = () => {
 
   if (!isLoggedIn) return <p>Требуется авторизация.</p>;
   if (meLoading) return <p>Загрузка профиля...</p>;
+  if (meError) return <p>Ошибка загрузки профиля: {meError.message}</p>;
   if (!meData?.me?.isAdmin) return <p>Только администратор может открыть эту страницу.</p>;
   if (loading) return <p>Загрузка заявок...</p>;
   if (error) {

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Messages from '../components/Messages';
 import { gql, useQuery } from '@apollo/client';
 import ListMyUserChats from '../components/ListMyUserChats';
-import { GET_ME } from '../gql/query';
+import { GET_CHAT_USER } from '../gql/query';
 import GroupChatPage from './group-chat';
 
 const GROUP_CHAT_EXISTS = gql`
@@ -33,12 +33,7 @@ const ChatPage = () => {
     return () => window.removeEventListener('resize', onResize);
   }, [id]);
 
-  const { loading, error, data } = useQuery(GET_ME, {
-    onError: (error) => {
-      console.error('Error fetching user data:', error);
-      navigate('/signin');
-    }
-  });
+  const { loading, error, data } = useQuery(GET_CHAT_USER, { fetchPolicy: 'network-only' });
   const { data: groupData, loading: groupLoading, error: groupError } = useQuery(GROUP_CHAT_EXISTS, {
     variables: { id },
     fetchPolicy: 'network-only',
@@ -57,8 +52,9 @@ const ChatPage = () => {
   if (loading || (data?.me && id && groupLoading)) return <p>Загрузка чата…</p>;
   if (error) {
     console.error('Error fetching user data:', error);
-    return <p>Error: {error.message}</p>;
+    return <p role="alert">Не удалось загрузить профиль для чата: {error.message}</p>;
   }
+  if (!data?.me) return <p>Требуется авторизация.</p>;
   if (groupError) {
     console.error('Error checking group discussion:', groupError);
     return <p role="alert">Не удалось проверить обсуждение: {groupError.message}</p>;

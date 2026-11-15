@@ -120,7 +120,8 @@ const MyProf = () => {
   };
 
   if (loading) return <p>loading...</p>;
-  if (error) return <p>error...</p>;
+  if (error) return <p role="alert">Не удалось загрузить профиль: {error.message}</p>;
+  if (!data?.me) return <p>Требуется авторизация.</p>;
 
   return (
     <div

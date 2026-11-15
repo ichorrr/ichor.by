@@ -15,7 +15,7 @@ import { GraphQLScalarType, Kind } from 'graphql';
 import models from './models/index.js';
 import { activityFeatures, activityScore } from './activity-rating.js';
 import { chooseBotMove, gameOutcome } from './game-logic.js';
-import { assertMessageEncryptionConfigured } from './message-crypto.js';
+import { assertMessageEncryptionConfigured, decryptMessageText } from './message-crypto.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import helmet from 'helmet';
@@ -36,6 +36,18 @@ import { renderArticleSeoHtml } from './seo.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 process.chdir(__dirname);
+
+const readMessageText = message => {
+  const storedText = typeof message?.get === 'function'
+    ? message.get('text', null, { getters: false })
+    : message?.text;
+  try {
+    return decryptMessageText(storedText);
+  } catch (error) {
+    console.error(`Unable to decrypt chat message ${message?._id || 'unknown'}:`, error.message);
+    return 'Сообщение недоступно';
+  }
+};
 
 const userStorageRoot = userId => path.join(__dirname, 'uploads', 'users', String(userId));
 const USER_STORAGE_LIMIT_BYTES = Math.max(1, Number(process.env.USER_STORAGE_LIMIT_MB) || 500) * 1024 * 1024;
@@ -507,6 +519,7 @@ const resolvers = {
       },
 
       async me(parent, args, { models, user }) {
+        if (!user?.id) return null;
         return await models.User.findById(user.id);
       },
 
@@ -588,7 +601,7 @@ const resolvers = {
             if (lastMessageDoc) {
               lastMessage = {
                 _id: lastMessageDoc._id,
-                text: lastMessageDoc.text,
+                text: readMessageText(lastMessageDoc),
                 file: lastMessageDoc.file || null,
                 user: lastMessageDoc.user?._id || lastMessageDoc.user,
                 addressee: lastMessageDoc.addressee,
@@ -709,7 +722,7 @@ const resolvers = {
     if (user && user.id) {
       const userId = new mongoose.Types.ObjectId(user.id);
       return messages.map(msg => {
-        const msgObj = msg.toObject ? msg.toObject({ getters: true }) : msg;
+        const msgObj = msg.toObject ? msg.toObject({ getters: false }) : msg;
         const userLiked = msgObj.likes?.some(l => String(l.user) === user.id);
         const userDisliked = msgObj.dislikes?.some(l => String(l.user) === user.id);
         msgObj.userLike = userLiked ? 'like' : userDisliked ? 'dislike' : null;
@@ -2371,6 +2384,7 @@ const resolvers = {
       }
     },
     Message: {
+      text: parent => readMessageText(parent),
       unreadCount: parent => parent.unreadCount || 0,
       file: async (parent, args, { user, models }) => {
         const isChatMedia = String(parent.file || '').split('|').some(url => /\/imgmessages\/|\/uploads\/users\/[^/]+\/chats\//.test(url));

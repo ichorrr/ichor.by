@@ -138,8 +138,8 @@ type Comment {
   text: String!
   createdAt: Date!
   updatedAt: Date!
-  post: Post!
-  author: User!
+  post: Post
+  author: User
   likesCount: Int!
   dislikesCount: Int!
   userLike: String     # 'like', 'dislike', or null
@@ -147,7 +147,7 @@ type Comment {
 
 type Message {
   _id: ID!
-  text: String!
+  text: String
   createdAt: Date!
   updatedAt: Date!
   file: String

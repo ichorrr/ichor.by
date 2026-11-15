@@ -53,7 +53,7 @@ return (
         {postcom.map(({_id, text, createdAt, author, likesCount = 0, dislikesCount = 0}) => (
               <div key={_id} className='comment-block'>
                 <div>
-                  <span className='author-comment'>{author.name}</span>
+                  <span className='author-comment'>{author?.name || 'Пользователь'}</span>
                   <span>{format(new Date(createdAt), 'dd LLL yyyy  HH:mm')}</span>
                 </div>
                 <p>{text}</p>
@@ -65,7 +65,7 @@ return (
                     initialDislikes={dislikesCount}
                     isAuthenticated={!!props.me}
                   />
-                  {props.me && props.me.me._id === author._id && (
+                  {props.me && author?._id && props.me.me._id === author._id && (
                     <DeleteComm id={_id} />
                   )}
                 </div>

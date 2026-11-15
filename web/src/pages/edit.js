@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import PostForm from '../components/PostForm';
-import { GET_POST, GET_ME } from '../gql/query';
+import { GET_POST, GET_NAV_USER } from '../gql/query';
 import {EDIT_POST} from '../gql/mutation';
 
 const EditPost = () => {
@@ -14,7 +14,9 @@ const EditPost = () => {
     document.title = 'Edit Posts - ICHOR.BY';
   });
 
-  const {data: userdata } = useQuery(GET_ME);
+  const { data: userdata, loading: userLoading, error: userError } = useQuery(GET_NAV_USER, {
+    fetchPolicy: 'network-only'
+  });
   const {  loading, error, data } = useQuery(GET_POST, { variables: { id } });
 
 const [editPost] = useMutation(EDIT_POST, {
@@ -28,9 +30,11 @@ const [editPost] = useMutation(EDIT_POST, {
 
 if (loading) return <p>loading...</p>;
 if (error) return <p>error...</p>;
+if (userLoading) return <p>loading...</p>;
+if (userError) return <p>Ошибка загрузки пользователя: {userError.message}</p>;
 
-
-if(userdata.me._id !== data.getPost.author._id)
+if (!userdata?.me) return <p>Требуется авторизация.</p>;
+if (userdata.me._id !== data?.getPost?.author?._id)
 {return <p>You do not have access to edit this post</p>}
   return <div>
   <div className="top-new-post">
