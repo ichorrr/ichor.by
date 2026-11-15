@@ -108,4 +108,5 @@ const Post = model(
   )
 );
 
+Post.schema.index({ author: 1, status: 1 });
 export default Post;

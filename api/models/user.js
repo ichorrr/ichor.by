@@ -73,6 +73,12 @@ const User = model(
         default: false,
         index: true
       },
+      privacy: {
+        showEmail: { type: Boolean, default: false },
+        showTelephone: { type: Boolean, default: false },
+        allowDirectMessages: { type: Boolean, default: true },
+        allowGroupInvites: { type: Boolean, default: true }
+      },
       posts: [
         {
           type: Types.ObjectId,

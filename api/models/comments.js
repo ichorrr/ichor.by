@@ -47,4 +47,5 @@ const Comment = model(
   )
 );
 
+Comment.schema.index({ author: 1 });
 export default Comment;

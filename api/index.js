@@ -13,6 +13,9 @@ import depthLimit from 'graphql-depth-limit';
 import { createComplexityLimitRule } from 'graphql-validation-complexity';
 import { GraphQLScalarType, Kind } from 'graphql';
 import models from './models/index.js';
+import { activityFeatures, activityScore } from './activity-rating.js';
+import { chooseBotMove, gameOutcome } from './game-logic.js';
+import { assertMessageEncryptionConfigured } from './message-crypto.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import helmet from 'helmet';
@@ -213,6 +216,121 @@ const validatePostMedia = fields => {
     }
   }
 };
+const loadActivityRows = async (models, userIds) => {
+  const userFilter = { isDeleted: { $ne: true } };
+  if (userIds) userFilter._id = { $in: userIds };
+  const rows = await models.User.aggregate([
+    { $match: userFilter },
+    {
+      $lookup: {
+        from: models.Post.collection.name,
+        localField: '_id',
+        foreignField: 'author',
+        as: 'ratingPosts'
+      }
+    },
+    {
+      $lookup: {
+        from: models.Comment.collection.name,
+        localField: '_id',
+        foreignField: 'author',
+        as: 'ratingComments'
+      }
+    },
+    {
+      $addFields: {
+        approvedPostDocs: {
+          $filter: {
+            input: '$ratingPosts',
+            as: 'post',
+            cond: { $eq: ['$$post.status', 'approved'] }
+          }
+        },
+        commentDocs: { $ifNull: ['$ratingComments', []] }
+      }
+    },
+    {
+      $project: {
+        name: 1,
+        family: 1,
+        createdAt: 1,
+        approvedPosts: { $size: '$approvedPostDocs' },
+        comments: { $size: '$commentDocs' },
+        postLikes: {
+          $sum: {
+            $map: {
+              input: '$approvedPostDocs',
+              as: 'post',
+              in: {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$$post.likes', []] },
+                    as: 'reaction',
+                    cond: { $ne: ['$$reaction.user', '$_id'] }
+                  }
+                }
+              }
+            }
+          }
+        },
+        commentLikes: {
+          $sum: {
+            $map: {
+              input: '$commentDocs',
+              as: 'comment',
+              in: {
+                $size: {
+                  $filter: {
+                    input: { $ifNull: ['$$comment.likes', []] },
+                    as: 'reaction',
+                    cond: { $ne: ['$$reaction.user', '$_id'] }
+                  }
+                }
+              }
+            }
+          }
+        },
+        views: {
+          $sum: {
+            $map: {
+              input: '$approvedPostDocs',
+              as: 'post',
+              in: { $ifNull: ['$$post.viewsCount', 0] }
+            }
+          }
+        }
+      }
+    }
+  ]);
+  return rows.map(row => ({
+    ...row,
+    score: activityScore({
+      approvedPosts: row.approvedPosts || 0,
+      comments: row.comments || 0,
+      likes: (row.postLikes || 0) + (row.commentLikes || 0),
+      views: row.views || 0
+    })
+  }));
+};
+const activityLeaderboardCache = { rows: null, expiresAt: 0, pending: null };
+const activityRows = async (models, userIds) => {
+  if (userIds) return loadActivityRows(models, userIds);
+  if (activityLeaderboardCache.rows && activityLeaderboardCache.expiresAt > Date.now()) {
+    return activityLeaderboardCache.rows;
+  }
+  if (!activityLeaderboardCache.pending) {
+    activityLeaderboardCache.pending = loadActivityRows(models)
+      .then(rows => {
+        activityLeaderboardCache.rows = rows;
+        activityLeaderboardCache.expiresAt = Date.now() + 30_000;
+        return rows;
+      })
+      .finally(() => {
+        activityLeaderboardCache.pending = null;
+      });
+  }
+  return activityLeaderboardCache.pending;
+};
 const removeChatFileCopies = (url, userId, addresseeId) => {
   removeUploadedUrl(url);
   if (!url || !userId || !addresseeId) return;
@@ -306,13 +424,76 @@ const dateScalar = new GraphQLScalarType({
 const resolvers = {
     Date: dateScalar,
   
-    User: {
-      unreadCount: (parent) => parent.unreadCount || 0
-    },
-    Message: {
-      unreadCount: (parent) => parent.unreadCount || 0
-    },
     Query: {
+      async getUserActivityRank(parent, { userId }, { models }) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+          throw new GraphQLError('Invalid user ID', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const [scores, target] = await Promise.all([
+          activityRows(models),
+          models.User.findById(userId).select('family isDeleted isAdmin')
+        ]);
+        if (!target || target.isDeleted) {
+          throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+        const sorted = [...scores].sort((a, b) => b.score - a.score || String(a._id).localeCompare(String(b._id)));
+        const targetRank = sorted.findIndex(row => String(row._id) === String(userId));
+        if (targetRank < 0) {
+          throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+        }
+        const friendIds = new Set([String(userId), ...(target.family || []).map(String)]);
+        const friends = sorted.filter(row => friendIds.has(String(row._id)));
+        const friendRank = friends.findIndex(row => String(row._id) === String(userId));
+        const globalAverage = Math.round(sorted.reduce((sum, row) => sum + row.score, 0) / Math.max(1, sorted.length));
+        const friendsAverage = Math.round(friends.reduce((sum, row) => sum + row.score, 0) / Math.max(1, friends.length));
+        return {
+          score: sorted[targetRank].score,
+          globalRank: targetRank + 1,
+          globalTotal: sorted.length,
+          friendsRank: friendRank + 1,
+          friendsTotal: friends.length,
+          friendsAverage,
+          globalAverage,
+          features: activityFeatures(sorted[targetRank].score, target.isAdmin)
+        };
+      },
+      async getChatGames(parent, { chatId }, { models, user }) {
+        if (!user?.id) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        if (!mongoose.Types.ObjectId.isValid(chatId)) {
+          throw new GraphQLError('Invalid chat ID', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const chat = await models.Chat.findOne({
+          _id: chatId,
+          type: { $in: ['article', 'topic'] },
+          participants: new mongoose.Types.ObjectId(user.id)
+        }).select('_id');
+        if (!chat) {
+          throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+        }
+        const filter = { chat: chat._id };
+        const games = await models.Game.find(filter).sort({ createdAt: -1 }).limit(20);
+        const now = new Date();
+        const expiredBotReactions = games.filter(game => (
+          game.botOpponent
+          && game.type === 'reaction'
+          && game.status === 'active'
+          && game.botRespondsAt
+          && game.botRespondsAt <= now
+        ));
+        if (!expiredBotReactions.length) return games;
+        await models.Game.updateMany(
+          {
+            _id: { $in: expiredBotReactions.map(game => game._id) },
+            status: 'active',
+            botOpponent: true,
+            botRespondsAt: { $lte: now }
+          },
+          { $set: { status: 'completed', botWinner: true, finishedAt: now } }
+        );
+        return models.Game.find(filter).sort({ createdAt: -1 }).limit(20);
+      },
       async getUsers(parent, args, { models, user }) {
         if (!user) {
           throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -385,7 +566,7 @@ const resolvers = {
           const familyIds = Array.isArray(currentUser.family) ? currentUser.family : [];
           if (familyIds.length === 0) return [];
 
-          const familyUsers = await models.User.find({ _id: { $in: familyIds } }).select('_id name avatar');
+          const familyUsers = await models.User.find({ _id: { $in: familyIds } }).select('_id name avatar lastVisit');
 
           const chats = await Promise.all(familyUsers.map(async (fam) => {
             const lastMessageDoc = await models.Message.findOne({
@@ -448,7 +629,43 @@ const resolvers = {
         }
       },
 
-
+      async getMyGroupChats(parent, args, { models, user }) {
+        if (!user?.id) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        return models.Chat.find({
+          type: { $in: ['article', 'topic'] },
+          participants: new mongoose.Types.ObjectId(user.id)
+        }).sort({ updatedAt: -1 }).limit(100);
+      },
+      async getMyChatInvitations(parent, args, { models, user }) {
+        if (!user?.id) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        return models.Chat.find({
+          type: { $in: ['article', 'topic'] },
+          invitations: {
+            $elemMatch: {
+              user: new mongoose.Types.ObjectId(user.id),
+              status: 'pending'
+            }
+          }
+        }).sort({ updatedAt: -1 }).limit(100);
+      },
+      async getGroupChat(parent, { _id }, { models, user }) {
+        if (!user?.id) {
+          throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+        }
+        if (!mongoose.Types.ObjectId.isValid(_id)) {
+          throw new GraphQLError('Invalid chat ID', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const chat = await models.Chat.findOne({
+          _id,
+          type: { $in: ['article', 'topic'] },
+          participants: new mongoose.Types.ObjectId(user.id)
+        });
+        return chat;
+      },
 
         async getUserMessages(parent, args, { models, user }) {
       if (!user?.id) {
@@ -492,7 +709,7 @@ const resolvers = {
     if (user && user.id) {
       const userId = new mongoose.Types.ObjectId(user.id);
       return messages.map(msg => {
-        const msgObj = msg.toObject ? msg.toObject() : msg;
+        const msgObj = msg.toObject ? msg.toObject({ getters: true }) : msg;
         const userLiked = msgObj.likes?.some(l => String(l.user) === user.id);
         const userDisliked = msgObj.dislikes?.some(l => String(l.user) === user.id);
         msgObj.userLike = userLiked ? 'like' : userDisliked ? 'dislike' : null;
@@ -511,6 +728,13 @@ const resolvers = {
               code: 'NOT_FOUND',
             },
           });
+        }
+        if (message.chat) {
+          const chat = await models.Chat.findOne({ _id: message.chat, participants: new mongoose.Types.ObjectId(user.id) });
+          if (!chat) {
+            throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+          }
+          return message;
         }
         if (String(message.user) !== String(user.id) && String(message.addressee) !== String(user.id)) {
           throw new GraphQLError('You can only read a chat message addressed to you or sent by you', { extensions: { code: 'FORBIDDEN' } });
@@ -912,6 +1136,12 @@ const resolvers = {
             .forEach(removeUploadedUrl);
   
           await models.Comment.deleteMany({ post: post._id });
+          const articleChats = await models.Chat.find({ type: 'article', post: post._id }).select('_id');
+          if (articleChats.length) {
+            const chatIds = articleChats.map(chat => chat._id);
+            await models.Message.deleteMany({ chat: { $in: chatIds } });
+            await models.Chat.deleteMany({ _id: { $in: chatIds } });
+          }
           await post.deleteOne();
           return true;
         } catch (err) {
@@ -977,6 +1207,12 @@ const resolvers = {
         }
         // find the message
         const message = await models.Message.findById(_id);
+        if (message?.chat) {
+          const chat = await models.Chat.findOne({ _id: message.chat, participants: new mongoose.Types.ObjectId(user.id) });
+          if (!chat) {
+            throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+          }
+        }
         // if the message owner and current user don't match, throw a forbidden error
         if (message && String(message.user) !== user.id) {
           throw new GraphQLError("You don't have permissions to delete the message", { 
@@ -1005,6 +1241,12 @@ const resolvers = {
         }
         // find the message
         const message = await models.Message.findById(_id);
+        if (message?.chat) {
+          const chat = await models.Chat.findOne({ _id: message.chat, participants: new mongoose.Types.ObjectId(user.id) });
+          if (!chat) {
+            throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+          }
+        }
         // if the message owner and current user don't match, throw a forbidden error
         if (message && String(message.user) !== user.id) {
           throw new GraphQLError("You don't have permissions to delete the message", {
@@ -1287,6 +1529,43 @@ const resolvers = {
           'You must be signed in to create a message'
         , { extensions: { code: 'UNAUTHENTICATED' } });
       }
+
+      if (args.chatId) {
+        if (!mongoose.Types.ObjectId.isValid(args.chatId)) {
+          throw new GraphQLError('Invalid chat ID', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const chat = await models.Chat.findOne({
+          _id: args.chatId,
+          type: { $in: ['article', 'topic'] },
+          participants: new mongoose.Types.ObjectId(user.id)
+        });
+        if (!chat) {
+          throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+        }
+        if (args.file) {
+          throw new GraphQLError('Attachments are not yet supported in group discussions', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        if (!String(args.text || '').trim()) {
+          throw new GraphQLError('A message is required', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        if (String(args.text).length > 5000) {
+          throw new GraphQLError('Messages must be 5000 characters or fewer', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        const message = await models.Message.create({
+          text: args.text || '',
+          file: args.file || null,
+          chat: chat._id,
+          user: new mongoose.Types.ObjectId(user.id),
+          read: false
+        });
+        chat.messages.addToSet(message._id);
+        await chat.save();
+        return message;
+      }
+
+      if (!args.addressee || !mongoose.Types.ObjectId.isValid(args.addressee)) {
+        throw new GraphQLError('A valid recipient is required', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
       
       // Convert addressee string to ObjectId
       let addresseeId;
@@ -1298,26 +1577,31 @@ const resolvers = {
         });
       }
 
-      const newMessage = new models.Message({
-        text: args.text,
-        file: args.file,
-        addressee: addresseeId.toString(), // Store as string but ensure it's valid
-        likesCount: 0,
-        user: new mongoose.Types.ObjectId(user.id)
-      });
-      const createMessage = await newMessage.save();
-
       const author = await models.User.findById(
         new mongoose.Types.ObjectId(user.id)
       );
-
       const recipient = await models.User.findById(addresseeId);
-      
+      if (!author) {
+        throw new GraphQLError('Sender not found', { extensions: { code: 'NOT_FOUND' } });
+      }
        if (!recipient) {
         throw new GraphQLError('Recipient not found', {
             extensions: { code: 'NOT_FOUND' },
         });
        }
+       if (recipient.privacy?.allowDirectMessages === false
+         && !recipient.family.some(id => String(id) === String(user.id))) {
+        throw new GraphQLError('This user only accepts messages from friends', { extensions: { code: 'FORBIDDEN' } });
+       }
+
+      const newMessage = new models.Message({
+        text: args.text,
+        file: args.file,
+        addressee: addresseeId.toString(),
+        likesCount: 0,
+        user: new mongoose.Types.ObjectId(user.id)
+      });
+      const createMessage = await newMessage.save();
 
          ensureUserStorage(author._id);
          ensureUserStorage(recipient._id);
@@ -1336,6 +1620,289 @@ const resolvers = {
       }
       await author.save();
       return createMessage;
+    },
+    joinArticleDiscussion: async (_, { postId }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      if (!mongoose.Types.ObjectId.isValid(postId)) {
+        throw new GraphQLError('Invalid post ID', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const currentUser = await models.User.findById(user.id).select('isAdmin');
+      const postQuery = { _id: postId };
+      if (!currentUser?.isAdmin) postQuery.status = { $ne: 'pending' };
+      const post = await models.Post.findOne(postQuery).select('_id title status');
+      if (!post) {
+        throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      let chat = await models.Chat.findOne({ type: 'article', post: post._id });
+      if (!chat) {
+        try {
+          chat = await models.Chat.create({
+            type: 'article',
+            title: `Обсуждение: ${post.title}`.slice(0, 100),
+            category: 'Обсуждения материалов',
+            post: post._id,
+            owner: user.id,
+            participants: [user.id]
+          });
+        } catch (error) {
+          if (error.code !== 11000) throw error;
+          chat = await models.Chat.findOne({ type: 'article', post: post._id });
+        }
+      }
+      if (!chat) {
+        throw new GraphQLError('Could not create article discussion', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+      }
+      if (!chat.participants.some(id => String(id) === String(user.id))) {
+        chat.participants.addToSet(user.id);
+        await chat.save();
+      }
+      return chat;
+    },
+    createTopicChat: async (_, { title, topic, invitees }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      const cleanTitle = String(title || '').trim();
+      const cleanTopic = String(topic || '').trim();
+      if (!cleanTitle || cleanTitle.length > 100 || !cleanTopic || cleanTopic.length > 200) {
+        throw new GraphQLError('Enter a chat title and topic (up to 100 and 200 characters)', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      if (!Array.isArray(invitees) || invitees.length > 30) {
+        throw new GraphQLError('Invite up to 30 friends', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const inviteeIds = [...new Set(invitees.map(String))];
+      if (inviteeIds.some(id => !mongoose.Types.ObjectId.isValid(id) || id === String(user.id))) {
+        throw new GraphQLError('Invalid invitee', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const currentUser = await models.User.findById(user.id).select('family');
+      const friends = new Set((currentUser?.family || []).map(String));
+      if (inviteeIds.some(id => !friends.has(id))) {
+        throw new GraphQLError('You can only invite friends from your chat list', { extensions: { code: 'FORBIDDEN' } });
+      }
+      const invitedUsers = await models.User.find({ _id: { $in: inviteeIds } }).select('_id privacy');
+      if (invitedUsers.length !== inviteeIds.length) {
+        throw new GraphQLError('One or more invitees were not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      if (invitedUsers.some(invitee => invitee.privacy?.allowGroupInvites === false)) {
+        throw new GraphQLError('One or more friends do not accept group invitations', { extensions: { code: 'FORBIDDEN' } });
+      }
+      return models.Chat.create({
+        type: 'topic',
+        title: cleanTitle,
+        topic: cleanTopic,
+        category: 'Тематические обсуждения',
+        owner: user.id,
+        participants: [user.id],
+        invitations: inviteeIds.map(id => ({ user: id, invitedBy: user.id, status: 'pending' }))
+      });
+    },
+    respondToChatInvitation: async (_, { chatId, accept }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      if (!mongoose.Types.ObjectId.isValid(chatId)) {
+        throw new GraphQLError('Invalid chat ID', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const chat = await models.Chat.findOne({
+        _id: chatId,
+        type: { $in: ['article', 'topic'] },
+        invitations: {
+          $elemMatch: {
+            user: new mongoose.Types.ObjectId(user.id),
+            status: 'pending'
+          }
+        }
+      });
+      if (!chat) {
+        throw new GraphQLError('Invitation not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      const invitation = chat.invitations.find(item => String(item.user) === String(user.id) && item.status === 'pending');
+      invitation.status = accept ? 'accepted' : 'declined';
+      if (accept) chat.participants.addToSet(user.id);
+      await chat.save();
+      return chat;
+    },
+    updatePrivacySettings: async (_, settings, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      const updated = await models.User.findByIdAndUpdate(
+        user.id,
+        { $set: { privacy: settings } },
+        { new: true, runValidators: true }
+      );
+      if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+      return updated;
+    },
+    startGame: async (_, { chatId, type, opponentId, playWithBot = false }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      if (!mongoose.Types.ObjectId.isValid(chatId)
+        || !['tic_tac_toe', 'reaction'].includes(type)
+        || (playWithBot ? Boolean(opponentId) : !mongoose.Types.ObjectId.isValid(opponentId))
+        || (!playWithBot && String(opponentId) === String(user.id))) {
+        throw new GraphQLError('Invalid game or opponent', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const chat = await models.Chat.findOne({
+        _id: chatId,
+        type: { $in: ['article', 'topic'] },
+        participants: { $all: playWithBot ? [user.id] : [user.id, opponentId] }
+      }).select('_id participants');
+      if (!chat) {
+        throw new GraphQLError('Both players must belong to this discussion', { extensions: { code: 'FORBIDDEN' } });
+      }
+      const activeGame = await models.Game.findOne({
+        chat: chat._id,
+        players: playWithBot ? [user.id] : { $all: [user.id, opponentId] },
+        botOpponent: playWithBot ? true : { $ne: true },
+        status: 'active'
+      }).select('_id');
+      if (activeGame) {
+        throw new GraphQLError('There is already an active game between these players in this chat', { extensions: { code: 'CONFLICT' } });
+      }
+      const playerIds = playWithBot ? [user.id] : [user.id, opponentId];
+      const [playerScores, playerAccounts] = await Promise.all([
+        activityRows(models, playerIds.map(id => new mongoose.Types.ObjectId(id))),
+        models.User.find({ _id: { $in: playerIds } }).select('isAdmin')
+      ]);
+      const scoreById = new Map(playerScores.map(row => [String(row._id), row.score]));
+      const adminById = new Map(playerAccounts.map(account => [String(account._id), account.isAdmin]));
+      if (!adminById.get(String(user.id)) && (scoreById.get(String(user.id)) || 0) < 300) {
+        throw new GraphQLError('You need 300 activity points to create a game room', { extensions: { code: 'FORBIDDEN' } });
+      }
+      if (!playWithBot && !adminById.get(String(opponentId)) && (scoreById.get(String(opponentId)) || 0) < 100) {
+        throw new GraphQLError('Your opponent needs 100 activity points to play games', { extensions: { code: 'FORBIDDEN' } });
+      }
+      const now = Date.now();
+      return models.Game.create({
+        chat: chat._id,
+        type,
+        players: playWithBot ? [user.id] : [user.id, opponentId],
+        botOpponent: playWithBot,
+        status: 'active',
+        board: Array(9).fill(''),
+        turn: type === 'tic_tac_toe' ? user.id : null,
+        startedAt: new Date(type === 'reaction' ? now + 3500 : now),
+        botRespondsAt: playWithBot && type === 'reaction' ? new Date(now + 4700) : null
+      });
+    },
+    makeGameMove: async (_, { gameId, cell }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      if (!mongoose.Types.ObjectId.isValid(gameId) || !Number.isInteger(cell) || cell < 0 || cell > 8) {
+        throw new GraphQLError('Invalid game move', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const game = await models.Game.findById(gameId);
+      if (!game || game.type !== 'tic_tac_toe') {
+        throw new GraphQLError('Game not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      const currentChat = await models.Chat.findOne({
+        _id: game.chat,
+        type: { $in: ['article', 'topic'] },
+        participants: { $all: game.players }
+      }).select('_id');
+      if (!currentChat) {
+        throw new GraphQLError('You are no longer a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+      }
+      const playerIndex = game.players.findIndex(player => String(player) === String(user.id));
+      if (playerIndex < 0) {
+        throw new GraphQLError('You are not a player in this game', { extensions: { code: 'FORBIDDEN' } });
+      }
+      if (game.status !== 'active' || String(game.turn) !== String(user.id) || game.board[cell]) {
+        throw new GraphQLError('This move is not allowed', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const nextBoard = [...game.board];
+      nextBoard[cell] = playerIndex === 0 ? 'X' : 'O';
+      let outcome = gameOutcome(nextBoard);
+      if (!outcome && game.botOpponent) {
+        const botMove = chooseBotMove(nextBoard);
+        if (botMove >= 0) {
+          nextBoard[botMove] = 'O';
+          outcome = gameOutcome(nextBoard);
+        }
+      }
+      const updated = await models.Game.findOneAndUpdate(
+        {
+          _id: game._id,
+          status: 'active',
+          turn: new mongoose.Types.ObjectId(user.id),
+          [`board.${cell}`]: ''
+        },
+        {
+          $set: {
+            board: nextBoard,
+            turn: outcome ? null : game.botOpponent ? user.id : game.players[1 - playerIndex],
+            winner: outcome === (playerIndex === 0 ? 'X' : 'O') ? game.players[playerIndex] : null,
+            botWinner: outcome === 'O' && game.botOpponent,
+            status: outcome ? 'completed' : 'active',
+            finishedAt: outcome ? new Date() : null
+          }
+        },
+        { new: true, runValidators: true }
+      );
+      if (!updated) {
+        throw new GraphQLError('The game changed; refresh and try again', { extensions: { code: 'CONFLICT' } });
+      }
+      return updated;
+    },
+    playReactionGame: async (_, { gameId }, { models, user }) => {
+      if (!user?.id) {
+        throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
+      }
+      if (!mongoose.Types.ObjectId.isValid(gameId)) {
+        throw new GraphQLError('Invalid game ID', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const game = await models.Game.findById(gameId);
+      if (!game || game.type !== 'reaction') {
+        throw new GraphQLError('Game not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      const currentChat = await models.Chat.findOne({
+        _id: game.chat,
+        type: { $in: ['article', 'topic'] },
+        participants: { $all: game.players }
+      }).select('_id');
+      if (!currentChat) {
+        throw new GraphQLError('You are no longer a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+      }
+      if (!game.players.some(player => String(player) === String(user.id))) {
+        throw new GraphQLError('You are not a player in this game', { extensions: { code: 'FORBIDDEN' } });
+      }
+      const now = new Date();
+      if (game.startedAt > now) {
+        await models.Game.updateOne(
+          { _id: game._id, status: 'active', falseStarts: { $ne: new mongoose.Types.ObjectId(user.id) } },
+          { $addToSet: { falseStarts: new mongoose.Types.ObjectId(user.id) } }
+        );
+        throw new GraphQLError('Too early! False starts cannot win.', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      if (game.botOpponent && game.botRespondsAt <= now) {
+        const botWin = await models.Game.findOneAndUpdate(
+          { _id: game._id, status: 'active', botOpponent: true, botRespondsAt: { $lte: now } },
+          { $set: { botWinner: true, status: 'completed', finishedAt: now } },
+          { new: true }
+        );
+        if (botWin) return botWin;
+        throw new GraphQLError('The round is over', { extensions: { code: 'CONFLICT' } });
+      }
+      const updated = await models.Game.findOneAndUpdate(
+        {
+          _id: game._id,
+          status: 'active',
+          startedAt: { $lte: now },
+          winner: null,
+          falseStarts: { $ne: new mongoose.Types.ObjectId(user.id) }
+        },
+        { $set: { winner: new mongoose.Types.ObjectId(user.id), status: 'completed', finishedAt: now } },
+        { new: true }
+      );
+      if (!updated) {
+        throw new GraphQLError('The round is over or you false-started', { extensions: { code: 'CONFLICT' } });
+      }
+      return updated;
     },
     updateUser: async (_, { name, email, telephone, avatar, bio }, { models, user }) => {
       if (!user) {
@@ -1386,6 +1953,12 @@ const resolvers = {
       }
       // find the message
       const message = await models.Message.findById(_id);
+      if (message?.chat) {
+        const chat = await models.Chat.findOne({ _id: message.chat, participants: new mongoose.Types.ObjectId(user.id) });
+        if (!chat) {
+          throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+        }
+      }
       // if the message owner and current user don't match, throw a forbidden error
       if (message && String(message.user) !== user.id) {
         throw new GraphQLError("You don't have permissions to update the message", {
@@ -1464,6 +2037,15 @@ const resolvers = {
           const message = await models.Message.findById(targetId);
           if (!message) {
             throw new GraphQLError('Message not found', { extensions: { code: 'NOT_FOUND' } });
+          }
+          if (message.chat) {
+            const chat = await models.Chat.findOne({
+              _id: message.chat,
+              participants: userId
+            });
+            if (!chat) throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+          } else if (String(message.user) !== user.id && String(message.addressee) !== user.id) {
+            throw new GraphQLError('You cannot react to this message', { extensions: { code: 'FORBIDDEN' } });
           }
 
           // Check if user already liked/disliked
@@ -1673,6 +2255,23 @@ const resolvers = {
   },
 
   User: {
+      unreadCount: parent => parent.unreadCount || 0,
+      email: (parent, args, { user }) => (
+        (user?.id && String(parent._id) === String(user.id)) || parent.privacy?.showEmail
+          ? parent.email
+          : null
+      ),
+      telephone: (parent, args, { user }) => (
+        (user?.id && String(parent._id) === String(user.id)) || parent.privacy?.showTelephone
+          ? parent.telephone
+          : null
+      ),
+      privacy: parent => ({
+        showEmail: parent.privacy?.showEmail ?? false,
+        showTelephone: parent.privacy?.showTelephone ?? false,
+        allowDirectMessages: parent.privacy?.allowDirectMessages ?? true,
+        allowGroupInvites: parent.privacy?.allowGroupInvites ?? true
+      }),
       async posts(parent, args, { models }) {
         return await models.Post.find({ author: parent._id}).sort({createdAt: -1, updatedAt: -1});
       },
@@ -1703,6 +2302,39 @@ const resolvers = {
         if (!message || (String(message.user) !== String(user.id) && String(message.addressee) !== String(user.id))) return null;
         return message;
       },
+    },
+
+    Chat: {
+      async participants(parent, args, { models }) {
+        return models.User.find({ _id: { $in: parent.participants || [] } }).select('_id name avatar');
+      },
+      async owner(parent, args, { models }) {
+        return parent.owner ? models.User.findById(parent.owner).select('_id name avatar') : null;
+      },
+      async post(parent, args, { models }) {
+        return parent.post ? models.Post.findById(parent.post).select('_id title') : null;
+      },
+      async messages(parent, args, { models, user }) {
+        if (!user?.id || !(parent.participants || []).some(id => String(id) === String(user.id))) {
+          throw new GraphQLError('You are not a member of this discussion', { extensions: { code: 'FORBIDDEN' } });
+        }
+        const messages = await models.Message.find({ chat: parent._id })
+          .sort({ createdAt: -1 })
+          .limit(200)
+          .populate('user', '_id name avatar');
+        return messages.reverse();
+      }
+    },
+    Game: {
+      async players(parent, args, { models }) {
+        const players = await models.User.find({ _id: { $in: parent.players || [] } }).select('_id name avatar');
+        const playersById = new Map(players.map(player => [String(player._id), player]));
+        const orderedPlayers = (parent.players || []).map(playerId => playersById.get(String(playerId))).filter(Boolean);
+        if (parent.botOpponent) {
+          orderedPlayers.push({ _id: 'bot', name: 'Бот', avatar: null });
+        }
+        return orderedPlayers;
+      }
     },
   
     Cat: {
@@ -1740,18 +2372,27 @@ const resolvers = {
     },
     Message: {
       unreadCount: parent => parent.unreadCount || 0,
-      file: (parent, args, { user }) => {
+      file: async (parent, args, { user, models }) => {
         const isChatMedia = String(parent.file || '').split('|').some(url => /\/imgmessages\/|\/uploads\/users\/[^/]+\/chats\//.test(url));
-        if (isChatMedia && (!user?.id || (String(parent.user?._id || parent.user) !== String(user.id) && String(parent.addressee) !== String(user.id)))) {
-          return null;
+        if (isChatMedia) {
+          if (!user?.id) return null;
+          if (parent.chat) {
+            const chat = await models.Chat.findById(parent.chat).select('participants');
+            if (!chat?.participants.some(id => String(id) === String(user.id))) return null;
+          } else if (String(parent.user?._id || parent.user) !== String(user.id) && String(parent.addressee) !== String(user.id)) {
+            return null;
+          }
         }
         return signChatFileUrl(parent.file, user?.id);
       },
-      author: async (parent, args, { models }) => await models.User.findById(parent.user)
+      author: async (parent, args, { models }) => (
+        parent.user?.name ? parent.user : models.User.findById(parent.user)
+      )
     },
   };
 const DB_HOST = process.env.DB_HOST;
 
+assertMessageEncryptionConfigured();
 mongoose.connect(DB_HOST);
 mongoose.connection.once('open', async () => {
   // Older installations may still have the former unique name index.
@@ -2267,7 +2908,29 @@ app.use((error, req, res, next) => {
     app.use(express.static(clientBuildPath));
     app.get('/robots.txt', (req, res) => res
       .type('text/plain')
-      .send('User-agent: *\nAllow: /\nSitemap: https://ichor.by/sitemap.xml\n'));
+      .set('Cache-Control', 'public, max-age=3600')
+      .send([
+        'User-agent: *',
+        'Allow: /',
+        'Disallow: /admin',
+        'Disallow: /chat',
+        'Disallow: /discussions',
+        'Disallow: /edit',
+        'Disallow: /forgot-password',
+        'Disallow: /group-chat',
+        'Disallow: /myprofile',
+        'Disallow: /myposts',
+        'Disallow: /new',
+        'Disallow: /reset-password',
+        'Disallow: /settings',
+        'Disallow: /signin',
+        'Disallow: /signup',
+        'Disallow: /graphql',
+        'Disallow: /imgmessages/',
+        'Disallow: /uploads/users/*/chats/',
+        'Sitemap: https://ichor.by/sitemap.xml',
+        ''
+      ].join('\n')));
     app.get('/sitemap.xml', async (req, res, next) => {
       try {
         const posts = await models.Post.find({ status: { $ne: 'pending' } })

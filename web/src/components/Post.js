@@ -1,14 +1,15 @@
-import React from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, gql } from '@apollo/client';
-import PostUser from './PostUser';
 import { format } from 'date-fns';
 import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments.js';
 import {GET_ME} from '../gql/query';
 import LikeDislike from './LikeDislike';
 import PostMedia from './PostMedia';
+import SharePost from './SharePost';
+import DeletePost from './DeletePost.js';
 
 const NEW_COMMENT = gql`
   mutation createComment($text: String!, $post: String!) {
@@ -27,9 +28,28 @@ const NEW_COMMENT = gql`
       }
     }`;
 
+const JOIN_ARTICLE_DISCUSSION = gql`
+  mutation JoinArticleDiscussion($postId: ID!) {
+    joinArticleDiscussion(postId: $postId) {
+      _id
+    }
+  }
+`;
+
 const Post = ({ post }) => {
 
   const navigate = useNavigate();
+
+  const rootEl = useRef(null);
+  const [alert, setAlert] = useState(false);
+
+  useEffect(() => {
+  
+      const onClick = e => {
+        if(rootEl.current && alert && !rootEl.current.contains(e.target))
+        {setAlert(false)}}
+        document.addEventListener('click', onClick);
+  }, [alert, setAlert]);
 
   let idcat = post.category._id;
   let iduser = post.author._id;
@@ -52,6 +72,10 @@ const Post = ({ post }) => {
       navigate(`/posts/${post._id}`);
     }
   } );
+  const [joinDiscussion, { loading: joining, error: discussionError }] = useMutation(JOIN_ARTICLE_DISCUSSION, {
+    onCompleted: result => navigate(`/chat/${result.joinArticleDiscussion._id}`),
+    onError: err => console.error('Unable to open article discussion:', err)
+  });
 
   return (
 <>
@@ -98,7 +122,7 @@ const Post = ({ post }) => {
           <li  className='plank-span'>
             <span>👁️ {post.viewsCount}</span>
           </li>
-          <li style={{ marginLeft: 'auto' }}>
+          <li className="post-like-menu-slot">
             <LikeDislike
               targetId={post._id}
               type="post"
@@ -107,8 +131,52 @@ const Post = ({ post }) => {
               isAuthenticated={!!localStorage.getItem('token')}
             />
           </li>
+          {datacom?.me?._id === post.author._id && (
+            <>
+            <li className="post-user-menu-slot">
+             <div className="svg-plank" ref={rootEl} onClick={() => setAlert(!alert)}>
+                   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="26" viewBox="0 0 28 26">
+                     <circle id="Эллипс_2" data-name="Эллипс 2" className="small-menu-01" cx="14" cy="14" r="11.125"/>
+                     <path id="Линия_1" data-name="Линия 1" className="small-menu-02" d="M9,17V15H19v2H9Z"/>
+                     <path id="Линия_1_копия" data-name="Линия 1 копия" className="small-menu-02" d="M9,13V11H19v2H9Z"/>
+                   </svg>
+              </div>
+            </li>
+            <li>
+              <div className={"svg-menu-plank" +" " +`${(alert) ? "dxnv" : "dddd"}`} >
+                  <h4>Панель управления</h4>
+
+                  <ul>
+                    <li>
+                      <Link to={`/edit/${post._id}`} className="css-edit">Редактировать</Link>
+                    </li>
+                    <li>
+                      <DeletePost postId={post._id} />
+                    </li>
+                  </ul>
+                </div>
+            </li>
+            </>
+          )}
           </ul>
-          <PostUser post={post} me={datacom} />
+        </div>
+        <div className="post-actions">
+          <button
+            type="button"
+            className="post-actions__discuss"
+            disabled={joining}
+            onClick={() => {
+              if (!localStorage.getItem('token')) {
+                navigate('/signin');
+                return;
+              }
+              joinDiscussion({ variables: { postId: post._id } });
+            }}
+          >
+            {joining ? 'Открываем чат…' : 'Обсудить в чате'}
+          </button>
+          <SharePost post={post} />
+          {discussionError && <span role="alert">Не удалось открыть обсуждение: {discussionError.message}</span>}
         </div>
       </div>
 

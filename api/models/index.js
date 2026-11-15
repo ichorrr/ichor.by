@@ -4,6 +4,7 @@ import Comment from './comments.js';
 import Cat from './cat.js';
 import Message from './messages.js';
 import Chat from './chat.js';
+import Game from './game.js';
 
 const models = {
   User,
@@ -11,7 +12,8 @@ const models = {
   Comment,
   Cat,
   Message,
-  Chat
+  Chat,
+  Game
 };
 
 export default models;

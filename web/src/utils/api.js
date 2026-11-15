@@ -1,4 +1,16 @@
 export const getApiUri = () => {
+  const localApiUri = (process.env.LOCAL_API_URI || '').trim();
+  if (localApiUri) {
+    const localMatch = localApiUri.match(/^(https?:)\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/graphql)?/i);
+    if (localMatch) {
+      const protocol = localMatch[1] === 'https:' ? 'http:' : localMatch[1];
+      const host = localMatch[2];
+      const port = localMatch[3] || ':4000';
+      return `${protocol}//${host}${port}/graphql`;
+    }
+    return localApiUri;
+  }
+
   const envUri = process.env.API_URI || '';
   const normalizedEnv = envUri.trim();
 

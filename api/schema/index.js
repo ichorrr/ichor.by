@@ -5,7 +5,7 @@ scalar Date
 type User {
   _id: ID!
   name: String!
-  email: String!
+  email: String
   avatar: String
   bio: String
   telephone: String
@@ -22,12 +22,65 @@ type User {
   unreadCount: Int      # number of unread messages in the chat; computed server-side
   isAdmin: Boolean
   isDeleted: Boolean
+  privacy: PrivacySettings
+}
+
+type PrivacySettings {
+  showEmail: Boolean!
+  showTelephone: Boolean!
+  allowDirectMessages: Boolean!
+  allowGroupInvites: Boolean!
+}
+
+type ActivityFeature {
+  id: String!
+  title: String!
+  description: String!
+  requiredScore: Int!
+  unlocked: Boolean!
+}
+
+type UserActivityRank {
+  score: Int!
+  globalRank: Int!
+  globalTotal: Int!
+  friendsRank: Int!
+  friendsTotal: Int!
+  friendsAverage: Int!
+  globalAverage: Int!
+  features: [ActivityFeature!]!
+}
+
+type Game {
+  _id: ID!
+  chat: ID!
+  type: String!
+  players: [User!]!
+  botOpponent: Boolean!
+  botWinner: Boolean!
+  status: String!
+  board: [String!]!
+  turn: ID
+  winner: ID
+  falseStarts: [ID!]!
+  startedAt: Date!
+  botRespondsAt: Date
+  finishedAt: Date
+  createdAt: Date!
 }
 
 type Chat {
   _id: ID!
+  type: String
+  title: String
+  topic: String
+  category: String
+  post: Post
+  owner: User
   participants: [User!]!
   messages: [Message!]!
+  createdAt: Date
+  updatedAt: Date
 }
 
 type ExternalSource {
@@ -104,7 +157,7 @@ type Message {
   dislikesCount: Int!
   userLike: String     # 'like', 'dislike', or null
   author: User!
-  addressee: String!
+  addressee: String
   chat: Chat
   }
 
@@ -136,7 +189,14 @@ type Mutation {
   updatePost(_id: String!, title: String!, iconPost: String, imageUrl: String, imageUrl2: String, imageUrl3: String, imageUrl4: String, scriptUrl: Boolean, externalSource: ExternalSourceInput, tags: [String], category: String, body: String!, body2: String, body3: String, body4: String): Post!
   createComment(text: String!, post: String!): Comment!
   deleteComment(_id: String!): Boolean!
-  createMessage(text: String, file: String, addressee: String!): Message!
+  createMessage(text: String, file: String, addressee: String, chatId: ID): Message!
+  joinArticleDiscussion(postId: ID!): Chat!
+  createTopicChat(title: String!, topic: String!, invitees: [ID!]!): Chat!
+  respondToChatInvitation(chatId: ID!, accept: Boolean!): Chat!
+  updatePrivacySettings(showEmail: Boolean!, showTelephone: Boolean!, allowDirectMessages: Boolean!, allowGroupInvites: Boolean!): User!
+  startGame(chatId: ID!, type: String!, opponentId: ID, playWithBot: Boolean = false): Game!
+  makeGameMove(gameId: ID!, cell: Int!): Game!
+  playReactionGame(gameId: ID!): Game!
   deleteMessage(_id: String!): Boolean!
   updateMessage(_id: String!, text: String!, file: String, addressee: String): Message!
   updateUser(name: String, email: String, telephone: String, avatar: String, bio: String): User!
@@ -163,6 +223,11 @@ type Query {
   getMessages: [Message!]!
   getMessage(_id: ID!): Message
   getMyListUsersChats: [User!]!
+  getMyGroupChats: [Chat!]!
+  getMyChatInvitations: [Chat!]!
+  getGroupChat(_id: ID!): Chat
+  getUserActivityRank(userId: ID!): UserActivityRank!
+  getChatGames(chatId: ID!): [Game!]!
   getUserMessages(addressee: [String!], users: [ID!]): [Message!]!
   getUnreadMessagesCount: Int!
   getCommentCount(post: String!): Int!

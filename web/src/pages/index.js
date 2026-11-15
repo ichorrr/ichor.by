@@ -29,7 +29,10 @@ const Pages = () => {
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route path="/myposts" element={< MyProf />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="/chat/:id" element={<ChatPage type="chat" />} />
+        <Route path="/discussions" element={<ChatPage />} />
+        <Route path="/group-chat/:id" element={<ChatPage type="chat" />} />
         <Route exact path="/users/:id" element={< GetUser type="user" />} />
         <Route path="/arts" element={< ArtPost type="arts" />} />
         <Route exact path="/cats/:id" element={ < CatPage type="cat" />} />

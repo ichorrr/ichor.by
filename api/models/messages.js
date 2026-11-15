@@ -1,4 +1,5 @@
 import { model, Schema, Types } from 'mongoose';
+import { decryptMessageText, encryptMessageText } from '../message-crypto.js';
 
 const Message = model(
   'Message',
@@ -7,7 +8,9 @@ const Message = model(
     {
       text: {
         type: String,
-        required: false
+        required: false,
+        get: decryptMessageText,
+        set: encryptMessageText
       },
 
       file: {
@@ -44,7 +47,7 @@ const Message = model(
       },
       addressee: {
         type: String,
-        required: true
+        required: false
       },
       chat: {
         type: Types.ObjectId,

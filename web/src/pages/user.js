@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, gql } from '@apollo/client';
 import { GET_NOTES, GET_POST, GET_USER } from '../gql/query';
 import UserPosts from '../components/UserPosts';
+import ActivityRating from '../components/ActivityRating';
 
 const GetUser = () => {
   let  { id } = useParams();
@@ -17,6 +18,7 @@ const GetUser = () => {
 
   return (
     <>
+    <ActivityRating userId={userposts?._id} />
     <UserPosts posts={userposts} />
   </>
 );

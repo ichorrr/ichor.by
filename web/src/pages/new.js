@@ -65,24 +65,27 @@ const NewPost = props => {
 
   if (submitted) {
     return (
-      <div className="top-new-post" style={{ maxWidth: 780, margin: '2rem auto', padding: '0 1rem' }}>
-        <h1><span className='bold-class'>Запись отправлена на модерацию</span></h1>
-        <p className='p-newpost'>Спасибо! Ваша запись получена и направлена на проверку администратором. После одобрения она станет доступна всем читателям.</p>
-        <p>Администратор также отправит вам уведомление в Чат о решении по публикации.</p>
-        <button onClick={() => navigate('/myprofile')} style={{ marginTop: '1rem' }}>Перейти в профиль</button>
-      </div>
+      <section className="new-post-page">
+        <div className="new-post-success">
+          <h1>Запись отправлена на модерацию</h1>
+          <p>Спасибо! Ваша запись получена и направлена на проверку администратором. После одобрения она станет доступна всем читателям.</p>
+          <p>Администратор также отправит вам уведомление в чате о решении по публикации.</p>
+          <button type="button" onClick={() => navigate('/myprofile')}>Перейти в профиль</button>
+        </div>
+      </section>
     );
   }
 
   return (
-    <>
-      {loading && <p> loading...</p>}
-      {error && <p>Не удалось сохранить запись. Попробуйте ещё раз.</p>}
-      <div className="top-new-post">
-      <h1><span className='bold-class'>Новая запись</span></h1><p className='p-newpost'>Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
-      </div>
+    <section className="new-post-page">
+      {loading && <p className="new-post-status" role="status">Сохраняем запись…</p>}
+      {error && <p className="new-post-error" role="alert">Не удалось сохранить запись. Попробуйте ещё раз.</p>}
+      <header className="top-new-post new-post-page__header">
+        <h1>Новая запись</h1>
+        <p className="p-newpost">Добавьте содержание, выберите категорию, загрузите изображения и опубликуйте на сайте.</p>
+      </header>
       <PostForm action={data} requireRequiredTag={true} />
-    </>
+    </section>
   );
 };
 

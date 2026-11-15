@@ -13,6 +13,12 @@ const GET_CURRENT_USER = gql`
       telephone
       avatar
       bio
+      privacy {
+        showEmail
+        showTelephone
+        allowDirectMessages
+        allowGroupInvites
+      }
     }
   }
 `;
@@ -42,6 +48,30 @@ const DELETE_MY_ACCOUNT = gql`
     }
 `;
 
+const UPDATE_PRIVACY_SETTINGS = gql`
+  mutation UpdatePrivacySettings(
+    $showEmail: Boolean!
+    $showTelephone: Boolean!
+    $allowDirectMessages: Boolean!
+    $allowGroupInvites: Boolean!
+  ) {
+    updatePrivacySettings(
+      showEmail: $showEmail
+      showTelephone: $showTelephone
+      allowDirectMessages: $allowDirectMessages
+      allowGroupInvites: $allowGroupInvites
+    ) {
+      _id
+      privacy {
+        showEmail
+        showTelephone
+        allowDirectMessages
+        allowGroupInvites
+      }
+    }
+  }
+`;
+
 const ProfileSettings = () => {
     const [profile, setProfile] = useState({
         _id: '',
@@ -52,6 +82,12 @@ const ProfileSettings = () => {
         bio: '',
         notifications: true,
         theme: 'light',
+        privacy: {
+            showEmail: false,
+            showTelephone: false,
+            allowDirectMessages: true,
+            allowGroupInvites: true
+        },
     });
 
     const [avatarPreview, setAvatarPreview] = useState('');  // Base64 or URL for preview
@@ -97,6 +133,7 @@ const ProfileSettings = () => {
         }
     });
     const [deleteMyAccount] = useMutation(DELETE_MY_ACCOUNT);
+    const [updatePrivacySettings] = useMutation(UPDATE_PRIVACY_SETTINGS);
 
     // Load current user profile on mount
     useEffect(() => {
@@ -111,6 +148,12 @@ const ProfileSettings = () => {
                 bio: user.bio || '',
                 notifications: true,
                 theme: 'light',
+                privacy: {
+                    showEmail: user.privacy?.showEmail ?? false,
+                    showTelephone: user.privacy?.showTelephone ?? false,
+                    allowDirectMessages: user.privacy?.allowDirectMessages ?? true,
+                    allowGroupInvites: user.privacy?.allowGroupInvites ?? true
+                },
             });
             if (user.avatar) {
                 setAvatarPreview(user.avatar);
@@ -123,6 +166,14 @@ const ProfileSettings = () => {
         setProfile(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
+        }));
+    };
+
+    const handlePrivacyChange = (e) => {
+        const { name, checked } = e.target;
+        setProfile(prev => ({
+            ...prev,
+            privacy: { ...prev.privacy, [name]: checked }
         }));
     };
 
@@ -232,6 +283,7 @@ const ProfileSettings = () => {
                     variables: updateVars
                 });
             }
+            await updatePrivacySettings({ variables: profile.privacy });
             setSaved(true);
             setTimeout(() => setSaved(false), 3000);
         } catch (err) {
@@ -356,6 +408,26 @@ const ProfileSettings = () => {
                     <option value="light">Light</option>
                     <option value="dark">Dark</option>
                 </select>
+                <fieldset>
+                    <legend>Конфиденциальность</legend>
+                    <label>
+                        <input type="checkbox" name="showEmail" checked={profile.privacy.showEmail} onChange={handlePrivacyChange} />
+                        Показывать email в профиле
+                    </label>
+                    <label>
+                        <input type="checkbox" name="showTelephone" checked={profile.privacy.showTelephone} onChange={handlePrivacyChange} />
+                        Показывать телефон в профиле
+                    </label>
+                    <label>
+                        <input type="checkbox" name="allowDirectMessages" checked={profile.privacy.allowDirectMessages} onChange={handlePrivacyChange} />
+                        Принимать личные сообщения не только от друзей
+                    </label>
+                    <label>
+                        <input type="checkbox" name="allowGroupInvites" checked={profile.privacy.allowGroupInvites} onChange={handlePrivacyChange} />
+                        Принимать приглашения в групповые чаты
+                    </label>
+                </fieldset>
+                <p>Текст чатов шифруется в базе данных, но сервер расшифровывает его для доставки; вложения пока не шифруются на диске. Сквозного шифрования нет. Защита при передаче требует HTTPS на сервере.</p>
                 <button type="submit">Save Settings</button>
             </form>
                 <section className="profile-delete-account">

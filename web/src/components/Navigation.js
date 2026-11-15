@@ -106,6 +106,16 @@ return (
                                     </NavLink>
                                   </li>
                                   <li>
+                                    <NavLink to="/chat" onClick={() => setIsMenuOpen(false)} className="popup-link">
+                                      Чаты
+                                    </NavLink>
+                                  </li>
+                                  <li>
+                                    <NavLink to="/settings" onClick={() => setIsMenuOpen(false)} className="popup-link">
+                                      Настройки приватности
+                                    </NavLink>
+                                  </li>
+                                  <li>
                                     <NavLink to="/new" onClick={() => setIsMenuOpen(false)} className="popup-link">
                                       Создать&nbsp;+
                                     </NavLink>
@@ -162,6 +172,8 @@ return (
                   {isLoggedIn ? (
                     <>
                       <NavLink to="/myprofile" className="mobile-main-menu__item" onClick={closeMobileMenu}>Профиль</NavLink>
+                      <NavLink to="/chat" className="mobile-main-menu__item" onClick={closeMobileMenu}>Чаты</NavLink>
+                      <NavLink to="/settings" className="mobile-main-menu__item" onClick={closeMobileMenu}>Настройки приватности</NavLink>
                       <NavLink to="/new" className="mobile-main-menu__item" onClick={closeMobileMenu}>Создать запись <span>＋</span></NavLink>
                       {data?.me?.isAdmin && <NavLink to="/admin" className="mobile-main-menu__item" onClick={closeMobileMenu}>Админка</NavLink>}
                       <button type="button" className="mobile-main-menu__item mobile-main-menu__logout" onClick={logout}>Выйти ({data.me.name})</button>

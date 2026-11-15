@@ -24,31 +24,53 @@ const getAttachmentType = (url) => {
 
 const getAttachmentName = (url) => decodeURIComponent(url.split('/').pop().split('?')[0]);
 
-const PrivateChatImage = ({ url, name, style }) => {
+const PrivateChatImage = ({ url, fallbackUrl, name, style }) => {
   const [source, setSource] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let objectUrl = null;
     let cancelled = false;
+    setSource('');
+    setLoadFailed(false);
+
     const load = async () => {
-      try {
-        const token = localStorage.getItem('token') || '';
-        const response = await fetch(url, { headers: { Authorization: token } });
-        if (!response.ok) throw new Error('Не удалось загрузить вложение чата.');
-        objectUrl = URL.createObjectURL(await response.blob());
-        if (!cancelled) setSource(objectUrl);
-      } catch (error) {
-        if (!cancelled) setSource('');
+      const token = localStorage.getItem('token') || '';
+      const urls = Array.from(new Set([url, fallbackUrl].filter(Boolean)));
+
+      for (const mediaUrl of urls) {
+        try {
+          const response = await fetch(mediaUrl, { headers: { Authorization: token } });
+          if (!response.ok) continue;
+
+          const nextObjectUrl = URL.createObjectURL(await response.blob());
+          if (cancelled) {
+            URL.revokeObjectURL(nextObjectUrl);
+            return;
+          }
+          objectUrl = nextObjectUrl;
+          setSource(nextObjectUrl);
+          return;
+        } catch (error) {
+          // Try the original attachment when its thumbnail cannot be loaded.
+        }
       }
+
+      if (!cancelled) setLoadFailed(true);
     };
+
     load();
     return () => {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [url]);
+  }, [url, fallbackUrl]);
 
-  return source ? <img src={source} alt={name} style={style} /> : <span style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: '#222' }}>Загрузка…</span>;
+  if (source) return <img src={source} alt={name} style={style} />;
+  if (loadFailed) {
+    return <span role="img" aria-label="Фото недоступно" style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 8, boxSizing: 'border-box', color: '#fff', background: '#555', textAlign: 'center' }}>Фото недоступно</span>;
+  }
+  return <span style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', background: '#222' }}>Загрузка…</span>;
 };
 
 const CREATE_MESSAGE = gql`
@@ -195,6 +217,7 @@ const MessageBubble = ({ message, mine, props, contextMenuId, setContextMenuPos,
                             <div onContextMenu={(e) => mine && onImageContextMenu(e, _id, idx, attachmentUrl)}>
                               <PrivateChatImage
                                 url={getThumbnailUrl(attachmentUrl) || attachmentUrl}
+                                fallbackUrl={attachmentUrl}
                                 name={name}
                                 style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 8 }}
                               />
@@ -581,6 +604,8 @@ useEffect(() => {
   };
   return (
     <>
+      <div className="chat-conversation-layout">
+        <div className="chat-conversation-main">
       <div className='head-chat-name'> 
             <ul style={{alignItems: 'center', display: 'inline', float: 'left', width: '100%'}}>
               <li>
@@ -682,12 +707,14 @@ useEffect(() => {
 
       </div>
             <FormMessage onSend={handleSendMessage} addressee={props.mem} />
+        </div>
       {showInfoPanel && (
         <InfoUserChat 
           userData={chatUserData} 
           onClose={() => setShowInfoPanel(false)}
         />
       )}
+      </div>
 
       {viewMedia && (
         <ImageViewer

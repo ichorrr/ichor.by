@@ -6,16 +6,8 @@ import ListMyUserChats from '../components/ListMyUserChats';
 import Messages from '../components/Messages';
 import { useNavigate } from 'react-router-dom';
 import '../css/main.css';
+import ActivityRating from '../components/ActivityRating';
 
-const containerStyle = {
-  display: 'flex',
-  gap: 20,
-  alignItems: 'flex-start',
-  boxSizing: 'border-box'
-};
-const leftStyle = { width: 340, top: 90, position: 'sticky' };
-const centerStyle = { paddingTop: 72 };
-const rightStyle = { width: '50%', top: 80, position: 'sticky' };
 const card = { background: '#fff', borderRadius: 8, padding: 12, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' };
 const tabs = [
   { id: 'chat', label: 'Чат' },
@@ -132,7 +124,7 @@ const MyProf = () => {
 
   return (
     <div
-      style={isCompactView ? { ...containerStyle, display: 'block' } : containerStyle}
+      className={isCompactView ? 'profile-mobile-layout' : 'profile-layout'}
       onTouchStart={isCompactView ? handleTouchStart : undefined}
       onTouchEnd={isCompactView ? handleTouchEnd : undefined}
     >
@@ -154,7 +146,8 @@ const MyProf = () => {
           </div>
 
           <div className="profile-mobile-content">
-            {activeTab === 'chat' ? (
+              <ActivityRating userId={me._id} />
+              {activeTab === 'chat' ? (
               <div className={`profile-mobile-chat-shell ${selectedChatUserId ? 'chat-open' : ''}`}>
                 <div className="profile-mobile-chat-list">
                   <ListMyUserChats
@@ -257,15 +250,16 @@ const MyProf = () => {
         </div>
       ) : (
         <>
-          <aside style={leftStyle}>
-            <div style={card}>
+          <aside className="profile-layout__chats">
+            <div className="profile-card" style={card}>
               <h3 style={{ marginTop: 0 }}>Чаты</h3>
               <ListMyUserChats />
             </div>
           </aside>
 
-          <section style={centerStyle}>
-            <div style={card}>
+          <section className="profile-layout__posts">
+            <ActivityRating userId={me._id} />
+            <div className="profile-card" style={card}>
               <h2>Мои записи</h2>
               <div className="search-sort-controls">
                 <input
@@ -301,8 +295,8 @@ const MyProf = () => {
             </div>
           </section>
 
-          <aside style={rightStyle}>
-            <div style={card} className="right-comments">
+          <aside className="profile-layout__comments">
+            <div className="profile-card right-comments" style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0 }}>Последние комментарии</h3>
                 <button

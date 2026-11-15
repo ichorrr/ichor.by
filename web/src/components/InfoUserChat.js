@@ -4,22 +4,6 @@ const InfoUserChat = ({ userData, onClose }) => {
   if (!userData) return null;
 
   const styles = {
-    panel: {
-      position: 'fixed',
-      right: 0,
-      top: '70px',
-      height: '100vh',
-      width: '15%',
-      backgroundColor: '#fff',
-      borderLeft: '1px solid rgba(0,0,0,0.08)',
-      boxShadow: '-2px 0 8px rgba(0,0,0,0.08)',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      boxSizing: 'border-box',
-      overflowY: 'auto',
-      backdropFilter: 'blur(5px)'
-    },
     closeButton: {
       position: 'absolute',
       top: '12px',
@@ -73,7 +57,7 @@ const InfoUserChat = ({ userData, onClose }) => {
   };
 
   return (
-    <div style={styles.panel}>
+    <aside className="chat-info-panel">
       <button
         onClick={onClose}
         style={styles.closeButton}
@@ -98,7 +82,7 @@ const InfoUserChat = ({ userData, onClose }) => {
       <div style={styles.name}>
         {userData.name || 'Unknown User'}
       </div>
-    </div>
+    </aside>
   );
 };
 

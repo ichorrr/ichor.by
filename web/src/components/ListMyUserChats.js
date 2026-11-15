@@ -4,8 +4,35 @@ import { useParams, Link } from 'react-router-dom';
 import { GET_MY_LIST_USERS_CHATS, GET_USERS } from '../gql/query';
 import { DELETE_USER_FROM_CHATS } from '../gql/mutation';
 import UnreadBadge from './UnreadBadge';
+import GroupDiscussions from './GroupDiscussions';
+
+const PINNED_CHATS_STORAGE_KEY = 'pinnedUserChats';
+const MAX_PINNED_CHATS = 5;
 
 const truncate = (text, n = 15) => (text && text.length > n ? text.slice(0, n) + '...' : text || '');
+
+const readPinnedChatIds = () => {
+    try {
+        const storedIds = window.localStorage.getItem(PINNED_CHATS_STORAGE_KEY);
+        if (!storedIds) return [];
+
+        const parsedIds = JSON.parse(storedIds);
+        if (!Array.isArray(parsedIds) || parsedIds.some(id => typeof id !== 'string')) {
+            console.error('Invalid pinned chats data in local storage');
+            return [];
+        }
+
+        return [...new Set(parsedIds)].slice(0, MAX_PINNED_CHATS);
+    } catch (error) {
+        console.error('Unable to read pinned chats from local storage:', error);
+        return [];
+    }
+};
+
+const getLastMessageTimestamp = chat => {
+    const timestamp = Date.parse(chat.lastMessage?.createdAt || '');
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+};
 
 const formatLastVisit = (date) => {
     if (!date) return '';
@@ -28,6 +55,7 @@ const ListMyUserChats = ({ onSelectChat, compactMode = false, activeUserIdOverri
     const [query, setQuery] = useState('');
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuUserId, setContextMenuUserId] = useState(null);
+    const [pinnedChatIds, setPinnedChatIds] = useState(readPinnedChatIds);
     const { id: routeActiveUserId } = useParams();
     const activeUserId = activeUserIdOverride ?? routeActiveUserId;
 
@@ -98,16 +126,50 @@ const shouldSearchAll = (query || '').trim().length >= 2;
     }, [dataMessages?.getMyListUsersChats]);
 
     const visibleChats = useMemo(() => {
-        if (!query.trim()) return chats;
         const q = query.trim().toLowerCase();
-        return chats.filter(item => {
-            const name = (item.name || '').toLowerCase();
-            const lastText = (item.lastMessage?.text || '').toLowerCase();
-            return name.includes(q) || lastText.includes(q);
-        });
-    }, [chats, query]);
+        return chats
+            .filter(item => {
+                if (!q) return true;
+                const name = (item.name || '').toLowerCase();
+                const lastText = (item.lastMessage?.text || '').toLowerCase();
+                return name.includes(q) || lastText.includes(q);
+            })
+            .sort((a, b) => {
+                const aPinned = pinnedChatIds.includes(String(a._id));
+                const bPinned = pinnedChatIds.includes(String(b._id));
+                if (aPinned !== bPinned) return aPinned ? -1 : 1;
+                return getLastMessageTimestamp(b) - getLastMessageTimestamp(a);
+            });
+    }, [chats, pinnedChatIds, query]);
 
     const filteredChats = visibleChats;
+
+    const handleTogglePinnedChat = () => {
+        if (!contextMenuUserId) return;
+
+        const chatId = String(contextMenuUserId);
+        const availablePinnedIds = pinnedChatIds.filter(id =>
+            chats.some(chat => String(chat._id) === id)
+        );
+        const isPinned = availablePinnedIds.includes(chatId);
+        if (!isPinned && availablePinnedIds.length >= MAX_PINNED_CHATS) {
+            window.alert(`Можно закрепить не более ${MAX_PINNED_CHATS} чатов.`);
+            return;
+        }
+
+        const nextPinnedIds = isPinned
+            ? availablePinnedIds.filter(id => id !== chatId)
+            : [...availablePinnedIds, chatId];
+
+        try {
+            window.localStorage.setItem(PINNED_CHATS_STORAGE_KEY, JSON.stringify(nextPinnedIds));
+            setPinnedChatIds(nextPinnedIds);
+            setContextMenu(null);
+        } catch (error) {
+            console.error('Unable to save pinned chats to local storage:', error);
+            window.alert('Не удалось сохранить закреплённые чаты.');
+        }
+    };
 
     // when searching globally, filter all users from DB
     const searchResults = useMemo(() => {
@@ -186,6 +248,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                 </>
             ) : (
                 filteredChats.map(({ _id, name, avatar, lastMessage, lastVisit, unreadCount }) => {
+                    const isPinned = pinnedChatIds.includes(String(_id));
                     let preview;
                     if (lastMessage?.text) {
                         preview = truncate(lastMessage.text, 15);
@@ -217,7 +280,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                                 className="lc-chat-list-avatar"
                             />
                             <div className="lc-chat-list-info">
-                                <div className="lc-chat-list-name">{name}</div>
+                                <div className="lc-chat-list-name">{name}{isPinned ? ' 📌' : ''}</div>
                                 <div className="lc-chat-list-last-message-row">
                                     <div className="lc-chat-list-last-message-preview">{preview}</div>
                                     <div className="lc-chat-list-right">
@@ -243,7 +306,7 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                                 className="lc-chat-list-avatar"
                             />
                             <div className="lc-chat-list-info">
-                                <div className="lc-chat-list-name">{name}</div>
+                                <div className="lc-chat-list-name">{name}{isPinned ? ' 📌' : ''}</div>
                                 <div className="lc-chat-list-last-message-row">
                                     <div className="lc-chat-list-last-message-preview">{preview}</div>
                                     <div className="lc-chat-list-right">
@@ -260,11 +323,29 @@ const shouldSearchAll = (query || '').trim().length >= 2;
                 })
             )}
 
+            <GroupDiscussions />
+
             {contextMenu && (
-                <div className="lc-chat-list-context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+                <div
+                    className="lc-chat-list-context-menu"
+                    style={{ top: contextMenu.y, left: contextMenu.x }}
+                    role="menu"
+                >
                     <button
+                        type="button"
+                        className="lc-chat-list-context-menu-item"
+                        onClick={handleTogglePinnedChat}
+                        role="menuitem"
+                    >
+                        {pinnedChatIds.includes(String(contextMenuUserId))
+                            ? 'Открепить чат'
+                            : 'Закрепить вверху списка'}
+                    </button>
+                    <button
+                        type="button"
                         className="lc-chat-list-context-menu-item lc-chat-list-context-menu-item-delete"
                         onClick={handleDeleteUser}
+                        role="menuitem"
                     >
                         Delete from chats
                     </button>
