@@ -182,6 +182,7 @@ const GET_HOME_NOTES = gql`
   }
   query homePostFeed {
     technology: postFeed(tag: "Технологии", limit: 7) { ...HomePostFields }
+    games: postFeed(tag: "Компьютерные игры", limit: 7) { ...HomePostFields }
     main: postFeed(tag: "Главное", limit: 7) { ...HomePostFields }
     events: postFeed(tag: "События", limit: 7) { ...HomePostFields }
     economy: postFeed(tag: "Экономика", limit: 7) { ...HomePostFields }

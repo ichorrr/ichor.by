@@ -12,6 +12,8 @@ const Comments = props =>  {
     const onClickHandler = () => {
         setComments((comments) => [...comments, text])
     }
+
+    const currentUser = props.me?.me;
     
     const onChangeHandler = (e) => {
         setText(e.target.value);
@@ -28,7 +30,7 @@ const Comments = props =>  {
 
 return (
     <div className='comments-block'>
-      {props.me && (
+      {currentUser && (
         <div className='form-comment'>
           
           
@@ -63,9 +65,9 @@ return (
                     type="comment"
                     initialLikes={likesCount}
                     initialDislikes={dislikesCount}
-                    isAuthenticated={!!props.me}
+                    isAuthenticated={!!currentUser}
                   />
-                  {props.me && author?._id && props.me.me._id === author._id && (
+                  {currentUser?._id && author?._id && currentUser._id === author._id && (
                     <DeleteComm id={_id} />
                   )}
                 </div>

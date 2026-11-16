@@ -8,6 +8,7 @@ import useWindowSize from './UseWindowSize.js';
 const REQUIRED_TAGS = [
   { name: 'Главное', icon: '📰' },
   { name: 'Технологии', icon: '💻' },
+  { name: 'Компьютерные игры', icon: '🎮' },
   { name: 'События', icon: '📅' },
   { name: 'Экономика', icon: '💰' },
   { name: 'Люди', icon: '👥' },

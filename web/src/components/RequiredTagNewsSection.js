@@ -5,6 +5,7 @@ import { getThumbnailUrl, isVideoUrl } from '../utils/media';
 
 const REQUIRED_TAGS = [
   { name: 'Технологии', icon: '💻' },
+  { name: 'Компьютерные игры', icon: '🎮' },
   { name: 'События', icon: '📅' },
   { name: 'Экономика', icon: '💰' },
   { name: 'Люди', icon: '👥' },

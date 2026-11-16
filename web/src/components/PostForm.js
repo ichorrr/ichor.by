@@ -55,7 +55,7 @@ const PostForm = props => {
       ? props.externalSource
       : ''
   );
-  const requiredTags = ['Главное', 'Технологии', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
+  const requiredTags = ['Главное', 'Технологии', 'Компьютерные игры', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
   const [tags, setTags] = useState({tags: Array.isArray(props.tags) ? props.tags.join(', ') : (props.tags || '')});
   const [selectedRequiredTags, setSelectedRequiredTags] = useState(() => {
     const existingTags = Array.isArray(props.tags)

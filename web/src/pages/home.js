@@ -23,7 +23,7 @@ const Home = () => {
     {}
   );
   const posts = useMemo(() => {
-    const feeds = ['main', 'technology', 'events', 'economy', 'people', 'incidents', 'realEstate', 'design'];
+    const feeds = ['main', 'technology', 'games', 'events', 'economy', 'people', 'incidents', 'realEstate', 'design'];
     const uniquePosts = new Map();
     feeds.forEach(feed => (data?.[feed]?.posts || []).forEach(post => uniquePosts.set(post._id, post)));
     return [...uniquePosts.values()].sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
