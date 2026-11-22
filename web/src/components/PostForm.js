@@ -56,18 +56,23 @@ const PostForm = props => {
       : ''
   );
   const requiredTags = ['Главное', 'Технологии', 'Компьютерные игры', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'];
-  const [tags, setTags] = useState({tags: Array.isArray(props.tags) ? props.tags.join(', ') : (props.tags || '')});
+  const existingTagsForInput = Array.isArray(props.tags)
+    ? props.tags
+    : typeof props.tags === 'string'
+    ? props.tags.split(',')
+    : [];
+  const [tags, setTags] = useState({
+    tags: existingTagsForInput
+      .map(tag => (tag || '').trim().replace(/^#/, ''))
+      .filter(tag => tag && !['Главное', 'Технологии', 'Компьютерные игры', 'События', 'Экономика', 'Люди', 'Происшествия', 'Недвижимость', 'Дизайн'].includes(tag))
+      .join(', ')
+  });
   const [selectedRequiredTags, setSelectedRequiredTags] = useState(() => {
-    const existingTags = Array.isArray(props.tags)
-      ? props.tags
-      : typeof props.tags === 'string'
-      ? props.tags.split(',')
-      : [];
-
-    return existingTags
+    return existingTagsForInput
       .map(tag => (tag || '').trim().replace(/^#/, ''))
       .filter(Boolean)
-      .filter(tag => requiredTags.includes(tag));
+      .filter(tag => requiredTags.includes(tag))
+      .slice(0, 1);
   });
   const [value, setValue] = useState( { category: props.category, title: props.title || ''} );
 
@@ -120,9 +125,7 @@ const PostForm = props => {
   };
 
   const toggleRequiredTag = (tag) => {
-    setSelectedRequiredTags(prev =>
-      prev.includes(tag) ? prev.filter(item => item !== tag) : [...prev, tag]
-    );
+    setSelectedRequiredTags(prev => prev.includes(tag) ? [] : [tag]);
   };
 
   const uploadFiles = async (event, slot, currentValue, setValue) => {
@@ -183,12 +186,16 @@ const PostForm = props => {
       <Form
         onSubmit={event => {
           event.preventDefault();
-          const customTagsArray = tags.tags ? tags.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
+          const customTagsArray = tags.tags
+            ? tags.tags.split(',')
+              .map(tag => tag.trim().replace(/^#/, ''))
+              .filter(tag => tag && !requiredTags.includes(tag))
+            : [];
           const normalizedSelectedRequiredTags = selectedRequiredTags.map(tag => tag.trim()).filter(Boolean);
           const tagsArray = Array.from(new Set([...normalizedSelectedRequiredTags, ...customTagsArray]));
 
           if (requireRequiredTagSelection && normalizedSelectedRequiredTags.length === 0) {
-            alert('Пожалуйста, выберите хотя бы один основной тег.');
+            alert('Пожалуйста, выберите один основной тег.');
             return;
           }
 
@@ -334,7 +341,7 @@ const PostForm = props => {
       </div>
       {requireRequiredTagSelection ? (
         <p style={{ marginTop: 8, fontSize: 12, color: '#b45309' }}>
-          Выберите хотя бы один основной тег для новой записи.
+          Для новой записи можно выбрать только один основной тег.
         </p>
       ) : null}
 

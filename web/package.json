@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "parcel public/index.html",
     "start": "parcel",
-    "build": "parcel build"
+    "build": "parcel build",
+    "postbuild": "node -e \"require('fs').copyFileSync('public/.htaccess', 'dist/.htaccess')\""
   },
   "staticFiles": {
     "staticPath": "public",

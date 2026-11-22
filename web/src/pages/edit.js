@@ -42,7 +42,7 @@ if (userdata.me._id !== data?.getPost?.author?._id)
   </div>
   <div>
     
-  <PostForm postId={data.getPost._id} iconPost={data.getPost.iconPost} body={data.getPost.body} body2={data.getPost.body2} body3={data.getPost.body3} body4={data.getPost.body4} imageUrl={data.getPost.imageUrl} imageUrl2={data.getPost.imageUrl2} imageUrl3={data.getPost.imageUrl3} imageUrl4={data.getPost.imageUrl4} scriptUrl={data.getPost.scriptUrl} externalSource={data.getPost.externalSource} tags={data.getPost.tags} title={data.getPost.title} category={data.getPost.category._id} action={editPost}/>
+  <PostForm postId={data.getPost._id} iconPost={data.getPost.iconPost} body={data.getPost.body} body2={data.getPost.body2} body3={data.getPost.body3} body4={data.getPost.body4} imageUrl={data.getPost.imageUrl} imageUrl2={data.getPost.imageUrl2} imageUrl3={data.getPost.imageUrl3} imageUrl4={data.getPost.imageUrl4} scriptUrl={data.getPost.scriptUrl} externalSource={data.getPost.externalSource} tags={data.getPost.tags} title={data.getPost.title} category={data.getPost.category._id} action={editPost} requireRequiredTag={true}/>
   {console.log(data)}
 </div>
 

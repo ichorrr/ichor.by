@@ -238,7 +238,7 @@ const Post = ({ post }) => {
         </div>
       </div>
     </article>
-<Comments action={data} post={post} me={datacom}/>
+<Comments action={data} post={post} me={datacom} isSubmitting={loading}/>
     </>
   );
 };

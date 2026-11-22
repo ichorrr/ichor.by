@@ -228,6 +228,36 @@ const validatePostMedia = fields => {
     }
   }
 };
+
+const primaryPostTags = [
+  'Главное',
+  'Технологии',
+  'Компьютерные игры',
+  'События',
+  'Экономика',
+  'Люди',
+  'Происшествия',
+  'Недвижимость',
+  'Дизайн'
+];
+
+const normalizePostTags = (tags, requirePrimaryTag = false) => {
+  const normalizedTags = Array.from(new Set(
+    (Array.isArray(tags) ? tags : [])
+      .map(tag => String(tag || '').trim().replace(/^#/, ''))
+      .filter(Boolean)
+  ));
+  const selectedPrimaryTags = normalizedTags.filter(tag => primaryPostTags.includes(tag));
+
+  if (selectedPrimaryTags.length > 1) {
+    throw new GraphQLError('Для записи можно выбрать только один основной тег.', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (requirePrimaryTag && selectedPrimaryTags.length === 0) {
+    throw new GraphQLError('Для записи необходимо выбрать один основной тег.', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+
+  return normalizedTags;
+};
 const loadActivityRows = async (models, userIds) => {
   const userFilter = { isDeleted: { $ne: true } };
   if (userIds) userFilter._id = { $in: userIds };
@@ -1334,6 +1364,7 @@ const resolvers = {
           , { extensions: { code: 'FORBIDDEN' } });
         }
         validatePostMedia({ imageUrl, imageUrl2, imageUrl3, imageUrl4, iconPost });
+        const normalizedTags = normalizePostTags(tags, !currentUser?.isAdmin);
         const externalSourceValue = externalSource && typeof externalSource === 'object'
           ? externalSource
           : { url: externalSource };
@@ -1351,7 +1382,7 @@ const resolvers = {
           imageUrl4,
           scriptUrl,
           externalSource: externalSourceValue,
-          tags,
+          tags: normalizedTags,
         };
 
         // Администраторские записи всегда остаются опубликованными и не попадают в модерацию.
@@ -1409,6 +1440,7 @@ const resolvers = {
           throw new GraphQLError('Only administrators can select category Новости or Статьи.', { extensions: { code: 'FORBIDDEN' } });
         }
         validatePostMedia(args);
+        const normalizedTags = normalizePostTags(args.tags, !currentUser?.isAdmin);
   
         const newPost = await models.Post({
           title: args.title,
@@ -1421,7 +1453,7 @@ const resolvers = {
           externalSource: args.externalSource && typeof args.externalSource === 'object'
             ? args.externalSource
             : { url: args.externalSource },
-          tags: args.tags,
+          tags: normalizedTags,
           body: args.body,
           body2: args.body2,
           body3: args.body3,
@@ -2418,6 +2450,19 @@ mongoose.connection.once('open', async () => {
 });
 const app = express();
 
+app.use((req, res, next) => {
+  const forwardedProtocol = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const protocol = forwardedProtocol || (req.secure ? 'https' : 'http');
+  const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+
+  if (host === 'www.ichor.by' || protocol !== 'https') {
+    const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(301, `https://ichor.by${req.path}${query}`);
+  }
+
+  next();
+});
+
 const httpServer = http.createServer(app);
 // Security middleware
 app.use(helmet({
@@ -2940,6 +2985,10 @@ app.use((error, req, res, next) => {
         'Disallow: /signin',
         'Disallow: /signup',
         'Disallow: /graphql',
+        'Disallow: /tag/',
+        'Disallow: /cats/',
+        'Disallow: /*?page=',
+        'Disallow: /*?p=',
         'Disallow: /imgmessages/',
         'Disallow: /uploads/users/*/chats/',
         'Sitemap: https://ichor.by/sitemap.xml',
@@ -2947,7 +2996,7 @@ app.use((error, req, res, next) => {
       ].join('\n')));
     app.get('/sitemap.xml', async (req, res, next) => {
       try {
-        const posts = await models.Post.find({ status: { $ne: 'pending' } })
+        const posts = await models.Post.find({ status: 'approved' })
           .select('_id createdAt updatedAt')
           .sort({ createdAt: -1 })
           .limit(50000)
@@ -2971,6 +3020,10 @@ app.use((error, req, res, next) => {
           return res.status(404).sendFile(path.join(clientBuildPath, 'index.html'));
         }
 
+        if (!req.path.startsWith(`/posts/${req.params.id}`)) {
+          return res.redirect(301, `https://ichor.by/posts/${encodeURIComponent(req.params.id)}`);
+        }
+
         const post = await models.Post.findOne({
           _id: req.params.id,
           status: { $ne: 'pending' },
@@ -2989,6 +3042,41 @@ app.use((error, req, res, next) => {
       }
     });
     app.get('*', (req, res) => {
+      const noIndexPaths = [
+        '/signin',
+        '/signup',
+        '/forgot-password',
+        '/reset-password',
+        '/new',
+        '/edit',
+        '/myprofile',
+        '/myposts',
+        '/settings',
+        '/admin',
+        '/chat',
+        '/discussions',
+        '/group-chat',
+      ];
+      const isTagPath = req.path === '/tag' || req.path.startsWith('/tag/');
+      const isPagination = req.query.page || req.query.p;
+
+      if (noIndexPaths.some(pathPrefix => req.path === pathPrefix || req.path.startsWith(`${pathPrefix}/`)) || isTagPath || isPagination) {
+        fs.promises.readFile(path.join(clientBuildPath, 'index.html'), 'utf8')
+          .then(html => {
+            const withRobots = html.replace(
+              /<meta\s+name=["']robots["'][^>]*>/i,
+              '<meta name="robots" content="noindex, follow">'
+            );
+            const finalHtml = /<meta\s+name=["']robots["']/.test(withRobots)
+              ? withRobots
+              : withRobots.replace('</head>', '    <meta name="robots" content="noindex, follow">\n  </head>');
+            const finalHtmlWithoutCanonical = finalHtml.replace(/<link\s+rel=["']canonical["'][^>]*>/i, '');
+            res.type('html').send(finalHtmlWithoutCanonical);
+          })
+          .catch(next);
+        return;
+      }
+
       res.sendFile(path.join(clientBuildPath, 'index.html'));
     });
   }

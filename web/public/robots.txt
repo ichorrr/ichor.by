@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /chat
+Disallow: /discussions
+Disallow: /edit/
+Disallow: /forgot-password
+Disallow: /group-chat/
+Disallow: /myprofile
+Disallow: /myposts
+Disallow: /new
+Disallow: /reset-password
+Disallow: /settings
+Disallow: /signin
+Disallow: /signup
+Disallow: /tag/
+Disallow: /graphql
+
+Sitemap: https://ichor.by/sitemap.xml

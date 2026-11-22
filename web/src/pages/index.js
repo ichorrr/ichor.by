@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 
 import Home from './home';
@@ -22,10 +22,52 @@ import AdminPage from './admin';
 import ForgotPassword from './forgot-password';
 import ResetPassword from './reset-password';
 
+const RouteSeoGuard = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const noIndexPaths = [
+      '/signin',
+      '/signup',
+      '/forgot-password',
+      '/reset-password',
+      '/new',
+      '/edit',
+      '/myprofile',
+      '/myposts',
+      '/settings',
+      '/admin',
+      '/chat',
+      '/discussions',
+      '/group-chat',
+    ];
+    const shouldNoIndex = noIndexPaths.some(path => location.pathname === path || location.pathname.startsWith(`${path}/`))
+      || location.pathname === '/tag'
+      || location.pathname.startsWith('/tag/')
+      || /(?:^|&)(?:page|p)=/.test(location.search.slice(1));
+
+    let robots = document.head.querySelector('meta[name="robots"]');
+    if (shouldNoIndex) {
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.name = 'robots';
+        document.head.appendChild(robots);
+      }
+      robots.content = 'noindex, follow';
+      document.head.querySelector('link[rel="canonical"]')?.remove();
+    } else if (robots) {
+      robots.remove();
+    }
+  }, [location.pathname, location.search]);
+
+  return null;
+};
+
 const Pages = () => {
   return (
     <BrowserRouter>
       <Layout>
+      <RouteSeoGuard />
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route path="/myposts" element={< MyProf />} />

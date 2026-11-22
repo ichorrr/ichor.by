@@ -7,13 +7,9 @@ import LikeDislike from './LikeDislike';
 
 const Comments = props =>  {
     const [text, setText] = useState("");
-    const [comments, setComments] = useState([]);
-
-    const onClickHandler = () => {
-        setComments((comments) => [...comments, text])
-    }
 
     const currentUser = props.me?.me;
+    const isSubmitting = Boolean(props.isSubmitting);
     
     const onChangeHandler = (e) => {
         setText(e.target.value);
@@ -37,15 +33,18 @@ return (
           <CommentCount count={props.post.commentCount || postcom.length} text="всего {count} комментариев" className="length-comments" />
           <form onSubmit={event => {
             event.preventDefault();
+            if (!text.trim() || isSubmitting) return;
             props.action({
               variables: {
-                text,
+                text: text.trim(),
                 post: props.post._id
               }
             });
           }}>
-          <textarea value={text} onChange={onChangeHandler}  placeholder="Добавить комментарий...">Текст комментария</textarea>
-          <button type="submit"  value={comments} onClick={onClickHandler}>Опубликовать</button>
+          <textarea value={text} onChange={onChangeHandler} disabled={isSubmitting} placeholder="Добавить комментарий..." />
+          <button type="submit" disabled={isSubmitting || !text.trim()}>
+            {isSubmitting ? 'Загрузка...' : 'Опубликовать'}
+          </button>
           </form>
         </div>
         )}
