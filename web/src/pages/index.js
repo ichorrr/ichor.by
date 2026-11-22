@@ -21,6 +21,7 @@ import TagPage from './tag';
 import AdminPage from './admin';
 import ForgotPassword from './forgot-password';
 import ResetPassword from './reset-password';
+import AppInfo from './app-info';
 
 const RouteSeoGuard = () => {
   const location = useLocation();
@@ -90,6 +91,7 @@ const Pages = () => {
         <Route path="/myprofile" element={<MyProf />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/about" element={<About />} />
+        <Route path="/app-info" element={<AppInfo />} />
         <Route path="/tag/:tag" element={<TagPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/edit/:id" element={ < EditPost /> } />

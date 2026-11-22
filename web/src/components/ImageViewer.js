@@ -33,7 +33,7 @@ const ImageViewer = ({ mediaUrls, startIndex = 0, onClose }) => {
       return undefined;
     }
 
-    fetch(currentMedia, { headers: { Authorization: localStorage.getItem('token') || '' } })
+    fetch(currentMedia)
       .then(response => {
         if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Нет доступа к вложению. Откройте чат заново.' : 'Не удалось загрузить вложение.');
         return response.blob();
@@ -55,10 +55,7 @@ const ImageViewer = ({ mediaUrls, startIndex = 0, onClose }) => {
 
   const handleDownload = async () => {
     try {
-      const isProtectedChatMedia = /\/(?:imgmessages|uploads\/users\/[^/]+\/chats)\//.test(currentMedia || '');
-      const response = await fetch(currentMedia, isProtectedChatMedia
-        ? { headers: { Authorization: localStorage.getItem('token') || '' } }
-        : undefined);
+      const response = await fetch(currentMedia);
       if (!response.ok) throw new Error('Media request failed');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

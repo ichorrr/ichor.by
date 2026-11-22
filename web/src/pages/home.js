@@ -7,6 +7,7 @@ import Fpost from '../components/FirstPost';
 
 import { GET_HOME_NOTES } from '../gql/query';
 import RequiredTagNewsSection from '../components/RequiredTagNewsSection';
+import Futer from '../components/Futer';
 
 const PostParagraph = styled.div`
     position: relative;
@@ -42,6 +43,7 @@ const Home = () => {
       </div>
     </PostParagraph>
     <RequiredTagNewsSection posts={posts} />
+    <Futer />
   </>
   )};
 

@@ -5,3 +5,14 @@ PassengerNodejs "/extrahome/ichorby/nodevenv/ichor.by/api/18/bin/node"
 PassengerAppType node
 PassengerStartupFile start.cjs
 # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+<IfModule mod_headers.c>
+  Header always set Access-Control-Allow-Origin "*" "expr=%{REQUEST_URI} =~ m#^/(uploads/users/[^/]+/chats/|imgmessages/)#"
+  Header always set Access-Control-Allow-Methods "GET, HEAD, OPTIONS" "expr=%{REQUEST_URI} =~ m#^/(uploads/users/[^/]+/chats/|imgmessages/)#"
+  Header always set Access-Control-Allow-Headers "Authorization, Range, Content-Type" "expr=%{REQUEST_URI} =~ m#^/(uploads/users/[^/]+/chats/|imgmessages/)#"
+</IfModule>
+
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteCond %{REQUEST_URI} ^/(uploads/users/[^/]+/chats/|imgmessages/)
+RewriteRule ^ - [R=204,L]

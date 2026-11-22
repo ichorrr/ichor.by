@@ -52,7 +52,7 @@ return (
 
         <h3 className='comment-name'>Комментарии</h3>
         {postcom.map(({_id, text, createdAt, author, likesCount = 0, dislikesCount = 0}) => (
-              <div key={_id} className='comment-block'>
+              <div key={_id} id={`comment-${_id}`} className='comment-block'>
                 <div>
                   <span className='author-comment'>{author?.name || 'Пользователь'}</span>
                   <span>{format(new Date(createdAt), 'dd LLL yyyy  HH:mm')}</span>

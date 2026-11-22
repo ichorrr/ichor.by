@@ -68,8 +68,11 @@ const Post = ({ post }) => {
   const [ data, { loading, error } ] = useMutation( NEW_COMMENT, {
     
     onCompleted: data => {
-      window.location.reload(),
-      navigate(`/posts/${post._id}`);
+      const commentId = data?.createComment?._id;
+      if (commentId) {
+        window.location.hash = `comment-${commentId}`;
+      }
+      window.location.reload();
     }
   } );
   const [joinDiscussion, { loading: joining, error: discussionError }] = useMutation(JOIN_ARTICLE_DISCUSSION, {
@@ -84,10 +87,9 @@ const Post = ({ post }) => {
     <div className='top-block'>
       <div id={post._id} ></div>
       <h2>{post.title}</h2>
-    
-      {(sourceHref ) && (
-        <div className="post-details-row">
-          {sourceHref && (
+
+      <div className="post-toolbar">
+        {sourceHref && (
             <div className="post-external-source">
               {sourceIcon ? (
                 sourceIcon.startsWith('http') ? (
@@ -98,9 +100,26 @@ const Post = ({ post }) => {
               ) : null}
               <a href={sourceHref} target="_blank" rel="noreferrer">{sourceUrl}</a>
             </div>
-          )}
-          </div>
-      )}
+        )}
+        <div className="post-actions">
+          <button
+            type="button"
+            className="post-actions__discuss"
+            disabled={joining}
+            onClick={() => {
+              if (!localStorage.getItem('token')) {
+                navigate('/signin');
+                return;
+              }
+              joinDiscussion({ variables: { postId: post._id } });
+            }}
+          >
+            {joining ? 'Открываем чат…' : 'Обсудить в чате'}
+          </button>
+          <SharePost post={post} />
+        </div>
+        {discussionError && <span role="alert">Не удалось открыть обсуждение: {discussionError.message}</span>}
+      </div>
       
 
       <div className="all-post-block">
@@ -159,24 +178,6 @@ const Post = ({ post }) => {
             </>
           )}
           </ul>
-        </div>
-        <div className="post-actions">
-          <button
-            type="button"
-            className="post-actions__discuss"
-            disabled={joining}
-            onClick={() => {
-              if (!localStorage.getItem('token')) {
-                navigate('/signin');
-                return;
-              }
-              joinDiscussion({ variables: { postId: post._id } });
-            }}
-          >
-            {joining ? 'Открываем чат…' : 'Обсудить в чате'}
-          </button>
-          <SharePost post={post} />
-          {discussionError && <span role="alert">Не удалось открыть обсуждение: {discussionError.message}</span>}
         </div>
       </div>
 

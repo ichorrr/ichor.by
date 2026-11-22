@@ -1364,7 +1364,7 @@ const resolvers = {
           , { extensions: { code: 'FORBIDDEN' } });
         }
         validatePostMedia({ imageUrl, imageUrl2, imageUrl3, imageUrl4, iconPost });
-        const normalizedTags = normalizePostTags(tags, !currentUser?.isAdmin);
+        const normalizedTags = normalizePostTags(tags, false);
         const externalSourceValue = externalSource && typeof externalSource === 'object'
           ? externalSource
           : { url: externalSource };
@@ -2450,10 +2450,23 @@ mongoose.connection.once('open', async () => {
 });
 const app = express();
 
+app.use(cors({
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Range'],
+  exposedHeaders: ['Content-Length', 'Content-Disposition', 'Content-Range'],
+  optionsSuccessStatus: 204,
+}));
+app.options('*', cors());
+
 app.use((req, res, next) => {
   const forwardedProtocol = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const protocol = forwardedProtocol || (req.secure ? 'https' : 'http');
   const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+
+  if (host === 'api.ichor.by') {
+    return next();
+  }
 
   if (host === 'www.ichor.by' || protocol !== 'https') {
     const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
@@ -2476,14 +2489,7 @@ app.use(helmet({
     },
   },
 }));
-// CORS middleware
-
-app.use(cors({
-  origin: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 204,
-}));
+// CORS middleware is installed before canonical and application routes.
 
 app.use(express.json());
 

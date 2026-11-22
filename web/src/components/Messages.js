@@ -35,12 +35,11 @@ const PrivateChatImage = ({ url, fallbackUrl, name, style }) => {
     setLoadFailed(false);
 
     const load = async () => {
-      const token = localStorage.getItem('token') || '';
       const urls = Array.from(new Set([url, fallbackUrl].filter(Boolean)));
 
       for (const mediaUrl of urls) {
         try {
-          const response = await fetch(mediaUrl, { headers: { Authorization: token } });
+          const response = await fetch(mediaUrl);
           if (!response.ok) continue;
 
           const nextObjectUrl = URL.createObjectURL(await response.blob());

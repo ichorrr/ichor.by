@@ -22,14 +22,6 @@ const getMediaSrc = (post) => {
     .map(value => value.split('|')[0])[0] || '';
 };
 
-const getExternalSource = (post) => {
-  const sourceUrl = post.externalSource && typeof post.externalSource === 'string'
-    ? post.externalSource
-    : post.externalSource?.url;
-  const sourceHref = sourceUrl ? (sourceUrl.startsWith('http') ? sourceUrl : `https://${sourceUrl}`) : null;
-  return sourceHref ? { url: sourceUrl, href: sourceHref } : null;
-};
-
 const RequiredTagNewsSection = ({ posts }) => {
   const allPosts = Array.isArray(posts) ? posts : [];
 
@@ -51,7 +43,6 @@ const RequiredTagNewsSection = ({ posts }) => {
             <div className="required-tag-news-list">
               {filteredPosts.map(post => {
                 const mediaSrc = getMediaSrc(post);
-                const externalSource = getExternalSource(post);
                 return (
                   <article key={post._id} className="required-tag-news-card">
                     {mediaSrc ? (
@@ -68,11 +59,6 @@ const RequiredTagNewsSection = ({ posts }) => {
                       <div className="required-tag-news-meta">
                         <div className="required-tag-news-meta__source">
                           <span>{format(new Date(post.createdAt), 'dd LLL yyyy')}</span>
-                          {externalSource ? (
-                            <a href={externalSource.href} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-                              {externalSource.url}
-                            </a>
-                          ) : null}
                         </div>
                         <div className="required-tag-news-stats" aria-label="Статистика статьи">
                           <span className="required-tag-news-stats__item" aria-label={`Просмотров: ${post.viewsCount || 0}`} title="Просмотры">
