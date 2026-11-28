@@ -58,8 +58,10 @@ type Game {
   players: [User!]!
   botOpponent: Boolean!
   botWinner: Boolean!
+  pointsEarned: Int!
   status: String!
   board: [String!]!
+  battleship: BattleshipView
   turn: ID
   winner: ID
   falseStarts: [ID!]!
@@ -67,6 +69,11 @@ type Game {
   botRespondsAt: Date
   finishedAt: Date
   createdAt: Date!
+}
+
+type BattleshipView {
+  ownBoard: [String!]!
+  opponentBoard: [String!]!
 }
 
 type Chat {

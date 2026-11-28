@@ -7,7 +7,8 @@ import UniBlock from '../components/UniBlock';
 import Comments from '../components/Comments.js';
 import {GET_ME} from '../gql/query';
 import LikeDislike from './LikeDislike';
-import PostMedia from './PostMedia';
+import ImageViewer from './ImageViewer';
+import PostMedia, { getPostImages } from './PostMedia';
 import SharePost from './SharePost';
 import DeletePost from './DeletePost.js';
 
@@ -42,6 +43,7 @@ const Post = ({ post }) => {
 
   const rootEl = useRef(null);
   const [alert, setAlert] = useState(false);
+  const [viewMedia, setViewMedia] = useState(null);
 
   useEffect(() => {
   
@@ -61,6 +63,11 @@ const Post = ({ post }) => {
     ? post.externalSource.icon
     : null;
   const sourceHref = sourceUrl ? (sourceUrl.startsWith('http') ? sourceUrl : `https://${sourceUrl}`) : null;
+  const postImages = getPostImages(post.imageUrl, post.imageUrl2, post.imageUrl3, post.imageUrl4);
+  const openPostImage = imageUrl => {
+    const startIndex = postImages.indexOf(imageUrl);
+    if (startIndex !== -1) setViewMedia({ urls: postImages, startIndex });
+  };
 
   const { data: datacom } = useQuery( GET_ME);
     
@@ -206,7 +213,7 @@ const Post = ({ post }) => {
     </div>
     
     {post.imageUrl && (<div className="imgStyle">
-      <PostMedia urls={post.imageUrl} alt={post.title} />
+      <PostMedia urls={post.imageUrl} alt={post.title} onImageClick={openPostImage} />
     </div>)}
 
       <div className="absPostPart">
@@ -216,21 +223,21 @@ const Post = ({ post }) => {
 
           {post.imageUrl2 && (
           <div className="img-post">
-            <PostMedia urls={post.imageUrl2} enableSlider alt={post.title} />
+            <PostMedia urls={post.imageUrl2} enableSlider alt={post.title} onImageClick={openPostImage} />
           </div>)}
 
           <ReactMarkdown children={post.body2}  />
 
           {post.imageUrl3 && (
           <div className="img-post">
-            <PostMedia urls={post.imageUrl3} enableSlider alt={post.title} />
+            <PostMedia urls={post.imageUrl3} enableSlider alt={post.title} onImageClick={openPostImage} />
           </div>)}
 
           <ReactMarkdown children={post.body3}  />
 
           {post.imageUrl4 && (
             <div className="img-post">
-              <PostMedia urls={post.imageUrl4} enableSlider alt={post.title} />
+              <PostMedia urls={post.imageUrl4} enableSlider alt={post.title} onImageClick={openPostImage} />
             </div>
           )}
 
@@ -240,6 +247,13 @@ const Post = ({ post }) => {
       </div>
     </article>
 <Comments action={data} post={post} me={datacom} isSubmitting={loading}/>
+      {viewMedia && (
+        <ImageViewer
+          mediaUrls={viewMedia.urls}
+          startIndex={viewMedia.startIndex}
+          onClose={() => setViewMedia(null)}
+        />
+      )}
     </>
   );
 };

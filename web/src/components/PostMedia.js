@@ -3,8 +3,9 @@ import { getThumbnailUrl } from '../utils/media';
 
 const getFiles = value => String(value || '').split('|').map(url => url.trim()).filter(Boolean);
 const isVideo = url => /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url.split('#')[0]);
+export const getPostImages = (...mediaFields) => mediaFields.flatMap(getFiles).filter(url => !isVideo(url));
 
-const PostMediaAsset = ({ url, alt, video = false, className, controls = false, preload = 'metadata' }) => {
+const PostMediaAsset = ({ url, alt, video = false, className, controls = false, preload = 'metadata', onImageClick }) => {
   const thumbnail = getThumbnailUrl(url);
   const isStagedUpload = (() => {
     try { return new URL(url, window.location.origin).pathname.includes('/posts/.tmp/'); }
@@ -42,19 +43,34 @@ const PostMediaAsset = ({ url, alt, video = false, className, controls = false, 
 
   if (!src) return <span className={className} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: 100 }}>Загрузка…</span>;
   if (video) return <video className={className} src={src} poster={isStagedUpload ? undefined : thumbnail} controls={controls} preload={preload} />;
-  return <img className={className} src={src} alt={alt} onError={event => {
-    if (!isStagedUpload && event.currentTarget.src !== url) event.currentTarget.src = url;
-  }} />;
+  return <img
+    className={className}
+    src={src}
+    alt={alt}
+    onClick={onImageClick ? () => onImageClick(url) : undefined}
+    onKeyDown={onImageClick ? event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onImageClick(url);
+      }
+    } : undefined}
+    role={onImageClick ? 'button' : undefined}
+    tabIndex={onImageClick ? 0 : undefined}
+    style={onImageClick ? { cursor: 'zoom-in' } : undefined}
+    onError={event => {
+      if (!isStagedUpload && event.currentTarget.src !== url) event.currentTarget.src = url;
+    }}
+  />;
 };
 
-const ImageSlider = ({ images, alt }) => {
+const ImageSlider = ({ images, alt, onImageClick }) => {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => setActiveIndex(0), [images.join('|')]);
 
   if (images.length < 2) {
     const image = images[0];
-    return <PostMediaAsset url={image} alt={alt} />;
+    return <PostMediaAsset url={image} alt={alt} onImageClick={onImageClick} />;
   }
 
   const showPrevious = () => setActiveIndex(index => (index - 1 + images.length) % images.length);
@@ -63,14 +79,14 @@ const ImageSlider = ({ images, alt }) => {
   return (
     <div className="post-image-slider" aria-label={`Галерея изображений: ${images.length}`}>
       <button type="button" className="post-image-slider__arrow" onClick={showPrevious} aria-label="Предыдущее изображение">‹</button>
-      <PostMediaAsset url={images[activeIndex]} alt={`${alt} (${activeIndex + 1}/${images.length})`} />
+      <PostMediaAsset url={images[activeIndex]} alt={`${alt} (${activeIndex + 1}/${images.length})`} onImageClick={onImageClick} />
       <button type="button" className="post-image-slider__arrow" onClick={showNext} aria-label="Следующее изображение">›</button>
       <div className="post-image-slider__count">{activeIndex + 1} / {images.length}</div>
     </div>
   );
 };
 
-const PostMedia = ({ urls, enableSlider = false, alt = 'Изображение записи' }) => {
+const PostMedia = ({ urls, enableSlider = false, alt = 'Изображение записи', onImageClick }) => {
   const files = getFiles(urls);
   if (!files.length) return null;
 
@@ -81,12 +97,12 @@ const PostMedia = ({ urls, enableSlider = false, alt = 'Изображение �
   if (files.some(isVideo)) {
     return files.map(url => isVideo(url)
       ? <PostMediaAsset key={url} className="post-video" url={url} video controls />
-      : <PostMediaAsset key={url} url={url} alt={alt} />);
+      : <PostMediaAsset key={url} url={url} alt={alt} onImageClick={onImageClick} />);
   }
 
   return enableSlider && files.length > 1
-    ? <ImageSlider images={files} alt={alt} />
-    : files.map(url => <PostMediaAsset key={url} url={url} alt={alt} />);
+    ? <ImageSlider images={files} alt={alt} onImageClick={onImageClick} />
+    : files.map(url => <PostMediaAsset key={url} url={url} alt={alt} onImageClick={onImageClick} />);
 };
 
 export default PostMedia;

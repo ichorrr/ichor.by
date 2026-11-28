@@ -13,9 +13,17 @@ import depthLimit from 'graphql-depth-limit';
 import { createComplexityLimitRule } from 'graphql-validation-complexity';
 import { GraphQLScalarType, Kind } from 'graphql';
 import models from './models/index.js';
-import { activityFeatures, activityScore } from './activity-rating.js';
-import { chooseBotMove, gameOutcome } from './game-logic.js';
+import { activityFeatures, activityScore, gamePointsFor, GAME_POINT_REWARDS } from './activity-rating.js';
+import {
+  chooseBotMove,
+  chooseBotBattleshipShot,
+  createBattleshipState,
+  fireBattleshipShot,
+  gameOutcome,
+  getBattleshipView
+} from './game-logic.js';
 import { assertMessageEncryptionConfigured, decryptMessageText } from './message-crypto.js';
+import { shouldRedirectToCanonicalHost } from './request-routing.js';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import helmet from 'helmet';
@@ -344,32 +352,75 @@ const loadActivityRows = async (models, userIds) => {
       }
     }
   ]);
+  const rankedUserIds = rows.map(row => row._id);
+  const gamePointRows = rankedUserIds.length ? await models.Game.aggregate([
+    { $match: { status: 'completed', players: { $in: rankedUserIds } } },
+    { $unwind: '$players' },
+    { $match: { players: { $in: rankedUserIds } } },
+    {
+      $group: {
+        _id: '$players',
+        points: {
+          $sum: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$winner', '$players'] }, then: GAME_POINT_REWARDS.win },
+                {
+                  case: {
+                    $and: [
+                      { $eq: [{ $ifNull: ['$winner', null] }, null] },
+                      { $ne: [{ $ifNull: ['$botWinner', false] }, true] }
+                    ]
+                  },
+                  then: GAME_POINT_REWARDS.draw
+                }
+              ],
+              default: GAME_POINT_REWARDS.loss
+            }
+          }
+        }
+      }
+    }
+  ]) : [];
+  const gamePointsByUser = new Map(gamePointRows.map(row => [String(row._id), row.points]));
   return rows.map(row => ({
     ...row,
     score: activityScore({
       approvedPosts: row.approvedPosts || 0,
       comments: row.comments || 0,
       likes: (row.postLikes || 0) + (row.commentLikes || 0),
-      views: row.views || 0
+      views: row.views || 0,
+      gamePoints: gamePointsByUser.get(String(row._id)) || 0
     })
   }));
 };
-const activityLeaderboardCache = { rows: null, expiresAt: 0, pending: null };
+const activityLeaderboardCache = { rows: null, expiresAt: 0, pending: null, version: 0 };
+const invalidateActivityLeaderboard = () => {
+  activityLeaderboardCache.version += 1;
+  activityLeaderboardCache.rows = null;
+  activityLeaderboardCache.expiresAt = 0;
+  activityLeaderboardCache.pending = null;
+};
 const activityRows = async (models, userIds) => {
   if (userIds) return loadActivityRows(models, userIds);
   if (activityLeaderboardCache.rows && activityLeaderboardCache.expiresAt > Date.now()) {
     return activityLeaderboardCache.rows;
   }
   if (!activityLeaderboardCache.pending) {
-    activityLeaderboardCache.pending = loadActivityRows(models)
+    const version = activityLeaderboardCache.version;
+    let pending;
+    pending = loadActivityRows(models)
       .then(rows => {
-        activityLeaderboardCache.rows = rows;
-        activityLeaderboardCache.expiresAt = Date.now() + 30_000;
+        if (version === activityLeaderboardCache.version) {
+          activityLeaderboardCache.rows = rows;
+          activityLeaderboardCache.expiresAt = Date.now() + 30_000;
+        }
         return rows;
       })
       .finally(() => {
-        activityLeaderboardCache.pending = null;
+        if (activityLeaderboardCache.pending === pending) activityLeaderboardCache.pending = null;
       });
+    activityLeaderboardCache.pending = pending;
   }
   return activityLeaderboardCache.pending;
 };
@@ -534,6 +585,7 @@ const resolvers = {
           },
           { $set: { status: 'completed', botWinner: true, finishedAt: now } }
         );
+        invalidateActivityLeaderboard();
         return models.Game.find(filter).sort({ createdAt: -1 }).limit(20);
       },
       async getUsers(parent, args, { models, user }) {
@@ -1422,6 +1474,8 @@ const resolvers = {
           }
         }
 
+        if (updatedPost) await moveTempPostFiles(updatedPost);
+
         return updatedPost;
       },
   
@@ -1786,7 +1840,7 @@ const resolvers = {
         throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
       }
       if (!mongoose.Types.ObjectId.isValid(chatId)
-        || !['tic_tac_toe', 'reaction'].includes(type)
+        || !['tic_tac_toe', 'reaction', 'battleship'].includes(type)
         || (playWithBot ? Boolean(opponentId) : !mongoose.Types.ObjectId.isValid(opponentId))
         || (!playWithBot && String(opponentId) === String(user.id))) {
         throw new GraphQLError('Invalid game or opponent', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -1829,7 +1883,10 @@ const resolvers = {
         botOpponent: playWithBot,
         status: 'active',
         board: Array(9).fill(''),
-        turn: type === 'tic_tac_toe' ? user.id : null,
+        battleship: type === 'battleship'
+          ? createBattleshipState(playWithBot ? [user.id, null] : [user.id, opponentId])
+          : null,
+        turn: ['tic_tac_toe', 'battleship'].includes(type) ? user.id : null,
         startedAt: new Date(type === 'reaction' ? now + 3500 : now),
         botRespondsAt: playWithBot && type === 'reaction' ? new Date(now + 4700) : null
       });
@@ -1838,12 +1895,16 @@ const resolvers = {
       if (!user?.id) {
         throw new GraphQLError('You must be signed in', { extensions: { code: 'UNAUTHENTICATED' } });
       }
-      if (!mongoose.Types.ObjectId.isValid(gameId) || !Number.isInteger(cell) || cell < 0 || cell > 8) {
+      if (!mongoose.Types.ObjectId.isValid(gameId) || !Number.isInteger(cell)) {
         throw new GraphQLError('Invalid game move', { extensions: { code: 'BAD_USER_INPUT' } });
       }
       const game = await models.Game.findById(gameId);
-      if (!game || game.type !== 'tic_tac_toe') {
+      if (!game || !['tic_tac_toe', 'battleship'].includes(game.type)) {
         throw new GraphQLError('Game not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      const maxCell = game.type === 'battleship' ? 99 : 8;
+      if (cell < 0 || cell > maxCell) {
+        throw new GraphQLError('Invalid game move', { extensions: { code: 'BAD_USER_INPUT' } });
       }
       const currentChat = await models.Chat.findOne({
         _id: game.chat,
@@ -1857,7 +1918,76 @@ const resolvers = {
       if (playerIndex < 0) {
         throw new GraphQLError('You are not a player in this game', { extensions: { code: 'FORBIDDEN' } });
       }
-      if (game.status !== 'active' || String(game.turn) !== String(user.id) || game.board[cell]) {
+      if (game.status !== 'active' || String(game.turn) !== String(user.id)) {
+        throw new GraphQLError('This move is not allowed', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      if (game.type === 'battleship') {
+        const battleState = game.battleship?.toObject() || game.battleship;
+        if (!battleState?.boards?.length) {
+          throw new GraphQLError('Battleship state is unavailable', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+        }
+        const playerId = new mongoose.Types.ObjectId(user.id);
+        const targetPlayer = game.botOpponent
+          ? null
+          : game.players.find(player => String(player) !== String(user.id));
+        if (!game.botOpponent && !targetPlayer) {
+          throw new GraphQLError('Battleship opponent is unavailable', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+        }
+        if (battleState.shots.some(shot => String(shot.player) === String(user.id) && shot.cell === cell)) {
+          throw new GraphQLError('This cell has already been targeted', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+
+        const playerShot = fireBattleshipShot(battleState, playerId, targetPlayer, cell);
+        let nextBattleship = playerShot.state;
+        let status = 'active';
+        let winner = null;
+        let botWinner = false;
+        let turn = targetPlayer;
+
+        if (playerShot.won) {
+          status = 'completed';
+          winner = playerId;
+          turn = null;
+        } else if (game.botOpponent) {
+          const botCell = chooseBotBattleshipShot(nextBattleship.shots);
+          if (botCell < 0) {
+            throw new GraphQLError('Bot has no available move', { extensions: { code: 'INTERNAL_SERVER_ERROR' } });
+          }
+          const botShot = fireBattleshipShot(nextBattleship, null, playerId, botCell);
+          nextBattleship = botShot.state;
+          turn = botShot.won ? null : playerId;
+          if (botShot.won) {
+            status = 'completed';
+            botWinner = true;
+          }
+        }
+
+        const updated = await models.Game.findOneAndUpdate(
+          {
+            _id: game._id,
+            status: 'active',
+            turn: playerId,
+            'battleship.shots': { $not: { $elemMatch: { player: playerId, cell } } }
+          },
+          {
+            $set: {
+              battleship: nextBattleship,
+              turn,
+              winner,
+              botWinner,
+              status,
+              finishedAt: status === 'completed' ? new Date() : null
+            }
+          },
+          { new: true, runValidators: true }
+        );
+        if (!updated) {
+          throw new GraphQLError('The game changed; refresh and try again', { extensions: { code: 'CONFLICT' } });
+        }
+        if (updated.status === 'completed') invalidateActivityLeaderboard();
+        return updated;
+      }
+      if (game.board[cell]) {
         throw new GraphQLError('This move is not allowed', { extensions: { code: 'BAD_USER_INPUT' } });
       }
       const nextBoard = [...game.board];
@@ -1892,6 +2022,7 @@ const resolvers = {
       if (!updated) {
         throw new GraphQLError('The game changed; refresh and try again', { extensions: { code: 'CONFLICT' } });
       }
+      if (updated.status === 'completed') invalidateActivityLeaderboard();
       return updated;
     },
     playReactionGame: async (_, { gameId }, { models, user }) => {
@@ -1930,7 +2061,10 @@ const resolvers = {
           { $set: { botWinner: true, status: 'completed', finishedAt: now } },
           { new: true }
         );
-        if (botWin) return botWin;
+        if (botWin) {
+          invalidateActivityLeaderboard();
+          return botWin;
+        }
         throw new GraphQLError('The round is over', { extensions: { code: 'CONFLICT' } });
       }
       const updated = await models.Game.findOneAndUpdate(
@@ -1947,6 +2081,7 @@ const resolvers = {
       if (!updated) {
         throw new GraphQLError('The round is over or you false-started', { extensions: { code: 'CONFLICT' } });
       }
+      invalidateActivityLeaderboard();
       return updated;
     },
     updateUser: async (_, { name, email, telephone, avatar, bio }, { models, user }) => {
@@ -2379,6 +2514,14 @@ const resolvers = {
           orderedPlayers.push({ _id: 'bot', name: 'Бот', avatar: null });
         }
         return orderedPlayers;
+      },
+      pointsEarned(parent, args, { user }) {
+        return user?.id ? gamePointsFor(parent, user.id) : 0;
+      },
+      battleship(parent, args, { user }) {
+        return parent.type === 'battleship' && user?.id
+          ? getBattleshipView(parent.battleship, user.id)
+          : null;
       }
     },
   
@@ -2462,13 +2605,7 @@ app.options('*', cors());
 app.use((req, res, next) => {
   const forwardedProtocol = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
   const protocol = forwardedProtocol || (req.secure ? 'https' : 'http');
-  const host = String(req.headers.host || '').split(':')[0].toLowerCase();
-
-  if (host === 'api.ichor.by') {
-    return next();
-  }
-
-  if (host === 'www.ichor.by' || protocol !== 'https') {
+  if (shouldRedirectToCanonicalHost(req.headers.host, protocol)) {
     const query = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
     return res.redirect(301, `https://ichor.by${req.path}${query}`);
   }

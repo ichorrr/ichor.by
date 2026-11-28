@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 
 const GROUP_GAMES = gql`
@@ -15,6 +15,11 @@ const GROUP_GAMES = gql`
       botOpponent
       botWinner
       botRespondsAt
+      pointsEarned
+      battleship {
+        ownBoard
+        opponentBoard
+      }
       players { _id name }
       createdAt
     }
@@ -49,13 +54,19 @@ const PLAY_REACTION = gql`
   }
 `;
 
+const getCompletedGamesKey = games => games
+  .filter(game => game.status === 'completed')
+  .map(game => game._id)
+  .sort()
+  .join('|');
+
 const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
   const [opponentId, setOpponentId] = useState('');
   const [gameType, setGameType] = useState('tic_tac_toe');
   const [actionError, setActionError] = useState('');
   const [now, setNow] = useState(Date.now());
   const opponents = participants.filter(player => player._id !== myId);
-  const { data: ratingData, loading: ratingLoading, error: ratingError } = useQuery(MY_RATING, {
+  const { data: ratingData, loading: ratingLoading, error: ratingError, refetch: refetchRating } = useQuery(MY_RATING, {
     variables: { userId: myId },
     skip: !myId
   });
@@ -75,6 +86,7 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
     onCompleted: () => { setActionError(''); refetch(); },
     onError: mutationError => setActionError(mutationError.message)
   });
+  const lastCompletedGamesKey = useRef('');
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 250);
@@ -83,6 +95,13 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
 
   const score = ratingData?.getUserActivityRank?.score || 0;
   const games = data?.getChatGames || [];
+  useEffect(() => {
+    const currentKey = getCompletedGamesKey(games);
+    if (currentKey !== lastCompletedGamesKey.current) {
+      lastCompletedGamesKey.current = currentKey;
+      if (currentKey) refetchRating();
+    }
+  }, [games, refetchRating]);
   const formatPlayer = playerId => {
     const index = participants.findIndex(player => player._id === playerId);
     return index >= 0 ? participants[index].name : 'Игрок';
@@ -125,6 +144,7 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
             <select aria-label="Игра" value={gameType} onChange={event => setGameType(event.target.value)}>
               <option value="tic_tac_toe">Крестики-нолики</option>
               <option value="reaction">Гонка реакции</option>
+              <option value="battleship">Морской бой</option>
             </select>
             <button type="submit" disabled={!opponentId || (!isAdmin && score < 300) || starting}>
               {!isAdmin && score < 300 ? `Создать игру (от 300; у вас ${score})` : 'Создать игру'}
@@ -140,9 +160,10 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
           const reactionReadyAt = new Date(game.startedAt).getTime();
           const reactionReady = now >= reactionReadyAt;
           const gameWinner = game.winner ? formatPlayer(game.winner) : null;
+          const canFire = game.status === 'active' && game.turn === myId && !moving;
           return (
             <article key={game._id} style={{ borderTop: '1px solid #ddd', paddingTop: 12 }}>
-              <h3>{game.type === 'tic_tac_toe' ? 'Крестики-нолики' : 'Гонка реакции'}</h3>
+              <h3>{game.type === 'tic_tac_toe' ? 'Крестики-нолики' : game.type === 'battleship' ? 'Морской бой' : 'Гонка реакции'}</h3>
               <p>{game.players.map(player => player.name).join(' — ')}</p>
               {game.type === 'tic_tac_toe' ? (
                 <>
@@ -164,6 +185,62 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
                     ))}
                   </div>
                 </>
+              ) : game.type === 'battleship' ? (
+                game.battleship ? (
+                  <>
+                    <p>
+                      {game.status === 'completed'
+                        ? (game.botWinner ? 'Победил бот' : gameWinner ? `Победил(а): ${gameWinner}` : 'Партия завершена')
+                        : game.turn === myId ? 'Ваш ход: стреляйте по полю соперника.' : `Ход: ${formatPlayer(game.turn)}`}
+                    </p>
+                    <p>Ваш флот</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', gap: 2, width: '100%', maxWidth: 258, marginBottom: 8 }}>
+                      {game.battleship.ownBoard.map((value, cell) => (
+                        <button
+                          key={cell}
+                          type="button"
+                          disabled
+                          aria-label={`Ваше поле, ряд ${Math.floor(cell / 10) + 1}, столбец ${cell % 10 + 1}: ${value || 'вода'}`}
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1',
+                            minWidth: 0,
+                            padding: 0,
+                            border: '1px solid #aac2cc',
+                            background: value === 'hit' ? '#e46b6b' : value === 'miss' ? '#dcecf2' : value === 'ship' ? '#74aac0' : '#fff',
+                            opacity: 1
+                          }}
+                        >
+                          {value === 'hit' ? '×' : value === 'miss' ? '·' : value === 'ship' ? '■' : ''}
+                        </button>
+                      ))}
+                    </div>
+                    <p>Поле соперника</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(0, 1fr))', gap: 2, width: '100%', maxWidth: 258 }}>
+                      {game.battleship.opponentBoard.map((value, cell) => (
+                        <button
+                          key={cell}
+                          type="button"
+                          disabled={!canFire || Boolean(value)}
+                          aria-label={`Поле соперника, ряд ${Math.floor(cell / 10) + 1}, столбец ${cell % 10 + 1}: ${value === 'hit' ? 'попадание' : value === 'miss' ? 'промах' : 'неизвестно'}`}
+                          onClick={() => makeMove({ variables: { gameId: game._id, cell } })}
+                          style={{
+                            width: '100%',
+                            aspectRatio: '1',
+                            minWidth: 0,
+                            padding: 0,
+                            border: '1px solid #aac2cc',
+                            cursor: canFire && !value ? 'pointer' : 'default',
+                            background: value === 'hit' ? '#e46b6b' : value === 'miss' ? '#dcecf2' : '#fff',
+                            opacity: 1
+                          }}
+                        >
+                          {value === 'hit' ? '×' : value === 'miss' ? '·' : ''}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : <p>Игровое поле доступно только участникам партии.</p>
               ) : (
                 <>
                   <p>
@@ -189,6 +266,9 @@ const GroupGames = ({ chatId, participants, myId, isAdmin = false }) => {
                   )}
                   {game.falseStarts.length > 0 && <p>Фальстартов: {game.falseStarts.length}</p>}
                 </>
+              )}
+              {game.status === 'completed' && game.pointsEarned > 0 && (
+                <p>За игру начислено {game.pointsEarned} баллов.</p>
               )}
             </article>
           );

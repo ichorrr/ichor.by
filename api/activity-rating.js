@@ -1,8 +1,17 @@
-export const activityScore = ({ approvedPosts, comments, likes, views }) => (
+export const GAME_POINT_REWARDS = Object.freeze({ win: 10, loss: 3, draw: 5 });
+
+export const gamePointsFor = (game, playerId) => {
+  if (game.status !== 'completed' || !game.players.some(id => String(id) === String(playerId))) return 0;
+  if (game.winner && String(game.winner) === String(playerId)) return GAME_POINT_REWARDS.win;
+  return !game.winner && !game.botWinner ? GAME_POINT_REWARDS.draw : GAME_POINT_REWARDS.loss;
+};
+
+export const activityScore = ({ approvedPosts, comments, likes, views, gamePoints = 0 }) => (
   (approvedPosts * 10)
   + Math.min(comments * 2, 200)
   + Math.min(likes * 4, 400)
   + Math.min(Math.floor(views / 100), 100)
+  + gamePoints
 );
 
 export const activityFeatures = (score, isAdmin = false) => [
