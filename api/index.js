@@ -3072,7 +3072,9 @@ app.use((error, req, res, next) => {
             // return the user information from the token
             return jwt.verify(token, process.env.JWT_SECRET);
         } catch (err) {
-            // if there's a problem with the token, throw an error
+            if (['JsonWebTokenError', 'TokenExpiredError', 'NotBeforeError'].includes(err.name)) {
+              return null;
+            }
             throw new Error('Session invalid');
         }
     }

@@ -53,6 +53,14 @@ const logout = () => {
 };
 
 const { data, loading, error } = useQuery(GET_NAV_USER, { skip: !isLoggedIn });
+
+useEffect(() => {
+  if (isLoggedIn && !loading && !error && data && !data.me) {
+    localStorage.removeItem('token');
+    window.location.replace('/signin');
+  }
+}, [data, error, isLoggedIn, loading]);
+
 if (isLoggedIn && loading) return <p>Загрузка...</p>;
 if (isLoggedIn && error) {
   console.error('Error fetching user data:', error);
